@@ -17,6 +17,17 @@ function buildNodeMap(nodes: LinkedListNode[]): Map<string, LinkedListNode> {
   return map;
 }
 
+export function ensureMemoryAddresses(graph: LinkedListGraph): LinkedListGraph {
+  const g = cloneGraph(graph);
+  let baseAddr = 0x1020;
+  g.nodes.forEach((node, idx) => {
+    if (!node.address) {
+      node.address = `0x${(baseAddr + idx * 0x20).toString(16).toUpperCase()}`;
+    }
+  });
+  return g;
+}
+
 /**
  * Deterministic Simulation Engine for Linked List Operations
  */
@@ -24,17 +35,22 @@ export function generateExecutionSteps(
   initialGraph: LinkedListGraph,
   operationReq: OperationRequest
 ): ExecutionStep[] {
+  const normalizedGraph = ensureMemoryAddresses(initialGraph);
   switch (operationReq.operation) {
     case 'insertHead':
-      return simulateInsertHead(initialGraph, operationReq.value ?? 99);
+      return simulateInsertHead(normalizedGraph, operationReq.value ?? 99);
     case 'insertTail':
-      return simulateInsertTail(initialGraph, operationReq.value ?? 99);
+      return simulateInsertTail(normalizedGraph, operationReq.value ?? 99);
     case 'deleteNode':
-      return simulateDeleteNode(initialGraph, operationReq.targetValue ?? operationReq.targetId ?? '');
+      return simulateDeleteNode(normalizedGraph, operationReq.targetValue ?? operationReq.targetId ?? '');
     case 'reverseList':
-      return simulateReverseList(initialGraph);
+      return simulateReverseList(normalizedGraph);
     case 'search':
-      return simulateSearch(initialGraph, operationReq.targetValue ?? '');
+      return simulateSearch(normalizedGraph, operationReq.targetValue ?? '');
+    case 'insertDoublyHead':
+      return simulateDoublyInsertHead(normalizedGraph, operationReq.value ?? 99);
+    case 'deleteDoublyNode':
+      return simulateDoublyDeleteNode(normalizedGraph, operationReq.targetValue ?? operationReq.targetId ?? '');
     default:
       throw new Error(`Unsupported operation: ${operationReq.operation}`);
   }
@@ -452,6 +468,240 @@ function simulateSearch(
       screenReaderAnnouncement: `Search finished. Value ${targetValue} not present in list.`
     });
   }
+
+  return steps;
+}
+
+/**
+ * 6. Doubly Linked List Insert at Head Step Generator
+ */
+function simulateDoublyInsertHead(
+  startGraph: LinkedListGraph,
+  newValue: string | number
+): ExecutionStep[] {
+  const steps: ExecutionStep[] = [];
+  const newNodeId = `node_d_${Date.now() % 1000}`;
+  let g = cloneGraph(startGraph);
+  g.structureType = 'doubly';
+
+  // Step 0: Initial State
+  steps.push({
+    stepIndex: 0,
+    totalSteps: 5,
+    operation: 'insertDoublyHead',
+    description: `Initial doubly linked list before inserting new node with value ${newValue}.`,
+    codeSnippet: `Node* newNode = new Node(${newValue});`,
+    activePointers: { head: g.headId, newNode: null },
+    highlightedNodeIds: g.headId ? [g.headId] : [],
+    currentGraph: cloneGraph(g),
+    screenReaderAnnouncement: `Initial doubly linked list state. Ready to insert node with value ${newValue} at head.`
+  });
+
+  // Step 1: Allocate newNode with address
+  const newNode: LinkedListNode = {
+    id: newNodeId,
+    value: newValue,
+    next: null,
+    prev: null,
+    address: '0x1010',
+    x: 80,
+    y: 100,
+    confidence: 1.0
+  };
+  g.nodes.unshift(newNode);
+
+  steps.push({
+    stepIndex: 1,
+    totalSteps: 5,
+    operation: 'insertDoublyHead',
+    description: `Allocated new node at address ${newNode.address} with value ${newValue}. Both next and prev pointers are initialized to NULL.`,
+    codeSnippet: `Node* newNode = new Node(${newValue});\nnewNode->next = NULL;\nnewNode->prev = NULL;`,
+    activePointers: { head: startGraph.headId, newNode: newNodeId },
+    highlightedNodeIds: [newNodeId],
+    mutatedNodeId: newNodeId,
+    currentGraph: cloneGraph(g),
+    screenReaderAnnouncement: `Step 1 of 4: Allocated new node at address ${newNode.address}. newNode pointer is active.`
+  });
+
+  // Step 2: Link newNode->next = head
+  const oldHeadId = startGraph.headId;
+  const targetNewNode = g.nodes.find((n) => n.id === newNodeId)!;
+  targetNewNode.next = oldHeadId;
+
+  steps.push({
+    stepIndex: 2,
+    totalSteps: 5,
+    operation: 'insertDoublyHead',
+    description: `Set forward link: newNode->next = head (${oldHeadId || 'NULL'}).`,
+    codeSnippet: `newNode->next = head;`,
+    activePointers: { head: oldHeadId, newNode: newNodeId },
+    highlightedNodeIds: [newNodeId, ...(oldHeadId ? [oldHeadId] : [])],
+    mutatedNodeId: newNodeId,
+    currentGraph: cloneGraph(g),
+    screenReaderAnnouncement: `Step 2 of 4: Linked newNode's next pointer forward to current head.`
+  });
+
+  // Step 3: Link oldHead->prev = newNode (if old head exists)
+  if (oldHeadId) {
+    const oldHeadNode = g.nodes.find((n) => n.id === oldHeadId);
+    if (oldHeadNode) {
+      oldHeadNode.prev = newNodeId;
+    }
+
+    steps.push({
+      stepIndex: 3,
+      totalSteps: 5,
+      operation: 'insertDoublyHead',
+      description: `Set backward link: head->prev = newNode (${newNodeId}). Bidirectional pointer connection established.`,
+      codeSnippet: `if (head != NULL) head->prev = newNode;`,
+      activePointers: { head: oldHeadId, newNode: newNodeId },
+      highlightedNodeIds: [newNodeId, oldHeadId],
+      mutatedNodeId: oldHeadId,
+      currentGraph: cloneGraph(g),
+      screenReaderAnnouncement: `Step 3 of 4: Linked old head's prev pointer backward to newNode.`
+    });
+  }
+
+  // Step 4: Reassign head = newNode
+  g.headId = newNodeId;
+  targetNewNode.y = 180;
+  let startX = 80;
+  g.nodes.forEach((n) => {
+    n.x = startX;
+    n.y = 180;
+    startX += 180;
+  });
+
+  steps.push({
+    stepIndex: oldHeadId ? 4 : 3,
+    totalSteps: 5,
+    operation: 'insertDoublyHead',
+    description: `Updated head pointer: head = newNode. Insertion at head completed with forward and backward pointer integrity.`,
+    codeSnippet: `head = newNode; // Head now points to newly allocated node`,
+    activePointers: { head: newNodeId, newNode: null },
+    highlightedNodeIds: [newNodeId],
+    mutatedNodeId: newNodeId,
+    currentGraph: cloneGraph(g),
+    screenReaderAnnouncement: `Step 4 of 4: Head updated to newNode at address ${newNode.address}. Doubly linked list insertion complete.`
+  });
+
+  return steps;
+}
+
+/**
+ * 7. Doubly Linked List Delete Node Step Generator
+ */
+function simulateDoublyDeleteNode(
+  startGraph: LinkedListGraph,
+  target: string | number
+): ExecutionStep[] {
+  const steps: ExecutionStep[] = [];
+  let g = cloneGraph(startGraph);
+  g.structureType = 'doubly';
+
+  const targetNode = g.nodes.find(
+    (n) => String(n.value) === String(target) || n.id === String(target)
+  );
+
+  if (!targetNode) {
+    steps.push({
+      stepIndex: 0,
+      totalSteps: 1,
+      operation: 'deleteDoublyNode',
+      description: `Target node ${target} not found in doubly linked list.`,
+      codeSnippet: `// Node not found`,
+      activePointers: { head: g.headId },
+      highlightedNodeIds: [],
+      currentGraph: cloneGraph(g),
+      screenReaderAnnouncement: `Target node ${target} not found in doubly linked list.`
+    });
+    return steps;
+  }
+
+  // Step 0: Initial state & highlight target
+  steps.push({
+    stepIndex: 0,
+    totalSteps: 4,
+    operation: 'deleteDoublyNode',
+    description: `Identified target node with value ${targetNode.value} (Address: ${targetNode.address || 'N/A'}) for deletion.`,
+    codeSnippet: `Node* target = search(${targetNode.value});`,
+    activePointers: { head: g.headId, target: targetNode.id },
+    highlightedNodeIds: [targetNode.id],
+    currentGraph: cloneGraph(g),
+    screenReaderAnnouncement: `Target node with value ${targetNode.value} located for deletion.`
+  });
+
+  // Step 1: Update target.prev.next = target.next
+  const prevNode = targetNode.prev ? g.nodes.find((n) => n.id === targetNode.prev) : null;
+  const nextNode = targetNode.next ? g.nodes.find((n) => n.id === targetNode.next) : null;
+
+  if (prevNode) {
+    prevNode.next = targetNode.next;
+    steps.push({
+      stepIndex: 1,
+      totalSteps: 4,
+      operation: 'deleteDoublyNode',
+      description: `Bypassed forward link: target->prev->next = target->next (${nextNode?.value ?? 'NULL'}).`,
+      codeSnippet: `if (target->prev != NULL)\n  target->prev->next = target->next;`,
+      activePointers: { head: g.headId, prev: prevNode.id, target: targetNode.id },
+      highlightedNodeIds: [prevNode.id, targetNode.id],
+      mutatedNodeId: prevNode.id,
+      currentGraph: cloneGraph(g),
+      screenReaderAnnouncement: `Forward pointer of predecessor updated to bypass target node.`
+    });
+  } else {
+    // Target was head
+    g.headId = targetNode.next;
+    steps.push({
+      stepIndex: 1,
+      totalSteps: 4,
+      operation: 'deleteDoublyNode',
+      description: `Target was head node. Updated head = target->next (${nextNode?.value ?? 'NULL'}).`,
+      codeSnippet: `head = target->next;`,
+      activePointers: { head: g.headId, target: targetNode.id },
+      highlightedNodeIds: [targetNode.id],
+      mutatedNodeId: targetNode.id,
+      currentGraph: cloneGraph(g),
+      screenReaderAnnouncement: `Head pointer updated to successor node.`
+    });
+  }
+
+  // Step 2: Update target.next.prev = target.prev
+  if (nextNode) {
+    nextNode.prev = targetNode.prev;
+    steps.push({
+      stepIndex: 2,
+      totalSteps: 4,
+      operation: 'deleteDoublyNode',
+      description: `Bypassed backward link: target->next->prev = target->prev (${prevNode?.value ?? 'NULL'}).`,
+      codeSnippet: `if (target->next != NULL)\n  target->next->prev = target->prev;`,
+      activePointers: { head: g.headId, next: nextNode.id, target: targetNode.id },
+      highlightedNodeIds: [nextNode.id, targetNode.id],
+      mutatedNodeId: nextNode.id,
+      currentGraph: cloneGraph(g),
+      screenReaderAnnouncement: `Backward pointer of successor updated to bypass target node.`
+    });
+  }
+
+  // Step 3: Free target node memory
+  g.nodes = g.nodes.filter((n) => n.id !== targetNode.id);
+  let startX = 80;
+  g.nodes.forEach((n) => {
+    n.x = startX;
+    startX += 180;
+  });
+
+  steps.push({
+    stepIndex: 3,
+    totalSteps: 4,
+    operation: 'deleteDoublyNode',
+    description: `Freed memory for node (value ${targetNode.value}, address ${targetNode.address || 'N/A'}). Bidirectional links cleanly rewired.`,
+    codeSnippet: `delete target;\ntarget = NULL;`,
+    activePointers: { head: g.headId, target: null },
+    highlightedNodeIds: [],
+    currentGraph: cloneGraph(g),
+    screenReaderAnnouncement: `Deleted target node. Memory freed and doubly linked list re-established.`
+  });
 
   return steps;
 }

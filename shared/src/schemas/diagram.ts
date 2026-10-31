@@ -7,6 +7,8 @@ export const LinkedListNodeSchema = z.object({
   id: z.string().min(1, 'Node ID cannot be empty'),
   value: z.union([z.string(), z.number()]),
   next: z.string().nullable(),
+  prev: z.string().nullable().optional(),
+  address: z.string().optional(),
   x: z.number().default(0),
   y: z.number().default(0),
   confidence: z.number().min(0).max(1).default(1.0),
@@ -21,10 +23,12 @@ export const LinkedListNodeSchema = z.object({
 export type LinkedListNode = z.infer<typeof LinkedListNodeSchema>;
 
 /**
- * Full Graph Model for a Singly Linked List
+ * Full Graph Model for a Linked List (Singly, Doubly, or Circular)
  */
 export const LinkedListGraphSchema = z.object({
   headId: z.string().nullable(),
+  tailId: z.string().nullable().optional(),
+  structureType: z.enum(['singly', 'doubly', 'circular']).default('singly').optional(),
   nodes: z.array(LinkedListNodeSchema),
   isCircular: z.boolean().default(false)
 });
@@ -53,7 +57,15 @@ export type ExecutionStep = z.infer<typeof ExecutionStepSchema>;
  * Supported Interactive Operations
  */
 export const OperationRequestSchema = z.object({
-  operation: z.enum(['insertHead', 'insertTail', 'deleteNode', 'reverseList', 'search']),
+  operation: z.enum([
+    'insertHead',
+    'insertTail',
+    'deleteNode',
+    'reverseList',
+    'search',
+    'insertDoublyHead',
+    'deleteDoublyNode'
+  ]),
   value: z.union([z.string(), z.number()]).optional(),
   targetId: z.string().optional(),
   targetValue: z.union([z.string(), z.number()]).optional()

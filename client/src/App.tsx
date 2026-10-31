@@ -25,11 +25,12 @@ import {
 // Default Initial Graph (3-node standard)
 const initialDefaultGraph: LinkedListGraph = {
   headId: 'node_1',
+  structureType: 'singly',
   isCircular: false,
   nodes: [
-    { id: 'node_1', value: 15, next: 'node_2', x: 80, y: 180, confidence: 0.98 },
-    { id: 'node_2', value: 28, next: 'node_3', x: 260, y: 180, confidence: 0.96 },
-    { id: 'node_3', value: 42, next: null, x: 440, y: 180, confidence: 0.97 }
+    { id: 'node_1', value: 15, next: 'node_2', address: '0x1020', x: 80, y: 180, confidence: 0.98 },
+    { id: 'node_2', value: 28, next: 'node_3', address: '0x1040', x: 260, y: 180, confidence: 0.96 },
+    { id: 'node_3', value: 42, next: null, address: '0x1060', x: 440, y: 180, confidence: 0.97 }
   ]
 };
 
@@ -203,6 +204,38 @@ export const App: React.FC = () => {
       setGraph(g);
       setCurrentOperation('deleteNode');
       generateStepsForGraph(g, 'deleteNode', 200);
+    } else if (name === 'doubly') {
+      const doublyG: LinkedListGraph = {
+        headId: 'node_d1',
+        tailId: 'node_d3',
+        structureType: 'doubly',
+        isCircular: false,
+        nodes: [
+          { id: 'node_d1', value: 12, next: 'node_d2', prev: null, address: '0x1020', x: 80, y: 180, confidence: 0.98 },
+          { id: 'node_d2', value: 24, next: 'node_d3', prev: 'node_d1', address: '0x1040', x: 260, y: 180, confidence: 0.96 },
+          { id: 'node_d3', value: 36, next: null, prev: 'node_d2', address: '0x1060', x: 440, y: 180, confidence: 0.97 }
+        ]
+      };
+      setGraph(doublyG);
+      setCurrentOperation('insertDoublyHead');
+      generateStepsForGraph(doublyG, 'insertDoublyHead', 6);
+      setLiveAnnouncement('Loaded Doubly Linked List with forward and backward pointers.');
+    } else if (name === 'circular') {
+      const circularG: LinkedListGraph = {
+        headId: 'node_c1',
+        tailId: 'node_c3',
+        structureType: 'circular',
+        isCircular: true,
+        nodes: [
+          { id: 'node_c1', value: 10, next: 'node_c2', address: '0x3010', x: 80, y: 180, confidence: 0.98 },
+          { id: 'node_c2', value: 20, next: 'node_c3', address: '0x3020', x: 260, y: 180, confidence: 0.96 },
+          { id: 'node_c3', value: 30, next: 'node_c1', address: '0x3030', x: 440, y: 180, confidence: 0.97 }
+        ]
+      };
+      setGraph(circularG);
+      setCurrentOperation('search');
+      generateStepsForGraph(circularG, 'search', 20);
+      setLiveAnnouncement('Loaded Circular Linked List with looping tail pointer.');
     } else if (name === 'ambiguous') {
       const ambiguousG: LinkedListGraph = {
         headId: 'node_1',
@@ -334,10 +367,16 @@ export const App: React.FC = () => {
 
             {/* Interactive Sandbox Header */}
             <div className="glass-panel" style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-                    Deterministic Concept Engine (Singly Linked List)
+                    Deterministic Concept Engine (
+                    {graph.structureType === 'doubly'
+                      ? 'Doubly Linked List'
+                      : graph.isCircular
+                      ? 'Circular Linked List ↺'
+                      : 'Singly Linked List'}
+                    )
                   </h2>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     Stepping through operations with mathematically guaranteed pointer transitions.
@@ -345,14 +384,20 @@ export const App: React.FC = () => {
                 </div>
 
                 {/* Operation Selector Buttons */}
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  {[
-                    { id: 'insertHead', label: 'Insert Head' },
-                    { id: 'insertTail', label: 'Insert Tail' },
-                    { id: 'deleteNode', label: 'Delete Node' },
-                    { id: 'reverseList', label: 'Reverse List' },
-                    { id: 'search', label: 'Linear Search' }
-                  ].map((op) => (
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {(graph.structureType === 'doubly'
+                    ? [
+                        { id: 'insertDoublyHead', label: 'Insert Head (Doubly)' },
+                        { id: 'deleteDoublyNode', label: 'Delete Node (Doubly)' }
+                      ]
+                    : [
+                        { id: 'insertHead', label: 'Insert Head' },
+                        { id: 'insertTail', label: 'Insert Tail' },
+                        { id: 'deleteNode', label: 'Delete Node' },
+                        { id: 'reverseList', label: 'Reverse List' },
+                        { id: 'search', label: 'Linear Search' }
+                      ]
+                  ).map((op) => (
                     <button
                       key={op.id}
                       type="button"

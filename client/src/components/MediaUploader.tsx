@@ -15,7 +15,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   const [blurWarning, setBlurWarning] = useState<string | null>(null);
 
   // Quick preset loader
-  const handleLoadPreset = (preset: 'isc' | 'anna' | 'ambiguous') => {
+  const handleLoadPreset = (preset: 'isc' | 'anna' | 'doubly' | 'circular' | 'ambiguous') => {
     if (preset === 'isc') {
       setPreviewUrl(
         'https://images.openai.com/static-rsc-4/XkO7gSqpO5GsWl0aO5MiA2a68-Km86zCJbP7hacxn3-Do1QE2-J4RFPWiD4Zok-ZLm1nIMK9SHjzJN5m-reEt3NepgQhcNz6LwIOjlOPx1bMFvDtj0NjD7jaa-LMnjFJHJBU7my4ijNaoAQ_LausBSz1KrYgEFjjDhZ1FnR1WuM?purpose=inline'
@@ -28,6 +28,14 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       );
       setBlurWarning(null);
       onLoadBenchmarkFixture('anna');
+    } else if (preset === 'doubly') {
+      setPreviewUrl(null);
+      setBlurWarning(null);
+      onLoadBenchmarkFixture('doubly');
+    } else if (preset === 'circular') {
+      setPreviewUrl(null);
+      setBlurWarning(null);
+      onLoadBenchmarkFixture('circular');
     } else if (preset === 'ambiguous') {
       setPreviewUrl(null);
       setBlurWarning('Detected low-contrast scan. OCR confidence on label was 0.48. Triggering Gate 06 Human Correction.');
@@ -102,6 +110,22 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             onClick={() => handleLoadPreset('anna')}
           >
             Anna Univ (2019)
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', borderColor: 'var(--accent-cyan)' }}
+            onClick={() => handleLoadPreset('doubly')}
+          >
+            Doubly Linked List
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', borderColor: 'var(--accent-purple)' }}
+            onClick={() => handleLoadPreset('circular')}
+          >
+            Circular List ↺
           </button>
           <button
             type="button"

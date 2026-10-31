@@ -98,6 +98,44 @@ function runTestSuite() {
     'Gate 06 issues contain explicit human-in-the-loop review recommendation'
   );
 
+  // Test 6: Doubly Linked List Operations & Invariants
+  const doublyGraph = {
+    headId: 'd1',
+    structureType: 'doubly' as const,
+    isCircular: false,
+    nodes: [
+      { id: 'd1', value: 10, next: 'd2', prev: null, address: '0x1020', x: 80, y: 180, confidence: 1.0 },
+      { id: 'd2', value: 20, next: null, prev: 'd1', address: '0x1040', x: 260, y: 180, confidence: 1.0 }
+    ]
+  };
+  const doublyValidation = validateLinkedListInvariants(doublyGraph);
+  assert(doublyValidation.isValid === true, 'Doubly linked list graph passes bidirectional invariants');
+
+  const doublySteps = generateExecutionSteps(doublyGraph, {
+    operation: 'insertDoublyHead',
+    value: 5
+  });
+  assert(doublySteps.length === 5, 'insertDoublyHead generates exactly 5 discrete steps');
+  assert(
+    doublySteps[4].currentGraph.nodes[0].next === 'd1' && doublySteps[4].currentGraph.nodes[1].prev === doublySteps[4].currentGraph.headId,
+    'Doubly linked list correctly established forward and backward pointer links'
+  );
+
+  // Test 7: Dangling Prev Pointer Rejection
+  const invalidDoublyGraph = {
+    headId: 'd1',
+    structureType: 'doubly' as const,
+    isCircular: false,
+    nodes: [
+      { id: 'd1', value: 10, next: null, prev: 'non_existent_prev', address: '0x1020', x: 80, y: 180, confidence: 1.0 }
+    ]
+  };
+  const invalidDoublyValidation = validateLinkedListInvariants(invalidDoublyGraph);
+  assert(
+    invalidDoublyValidation.isValid === false,
+    'Gate 05 correctly rejects dangling backward (prev) pointer'
+  );
+
   console.log(`\n========================================`);
   console.log(`Results: ${passedCount} / ${totalCount} tests passed.`);
   console.log(`========================================\n`);

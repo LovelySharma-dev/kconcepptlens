@@ -88,6 +88,7 @@ export const StateInspector: React.FC<StateInspectorProps> = ({ currentStep }) =
                 <tr style={{ background: 'rgba(255, 255, 255, 0.04)', textAlign: 'left' }}>
                   <th style={{ padding: '0.6rem 0.8rem', color: 'var(--text-muted)' }}>Pointer</th>
                   <th style={{ padding: '0.6rem 0.8rem', color: 'var(--text-muted)' }}>Target Node</th>
+                  <th style={{ padding: '0.6rem 0.8rem', color: 'var(--text-muted)' }}>Address</th>
                   <th style={{ padding: '0.6rem 0.8rem', color: 'var(--text-muted)' }}>Value</th>
                 </tr>
               </thead>
@@ -109,6 +110,9 @@ export const StateInspector: React.FC<StateInspectorProps> = ({ currentStep }) =
                       </td>
                       <td style={{ padding: '0.6rem 0.8rem', fontFamily: 'var(--font-mono)' }}>
                         {targetId || <span style={{ color: 'var(--text-muted)' }}>NULL</span>}
+                      </td>
+                      <td style={{ padding: '0.6rem 0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--accent-emerald)', fontSize: '0.8rem' }}>
+                        {targetNode?.address || (targetId ? '0x1020' : '0x0000 (NULL)')}
                       </td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>
                         {targetNode ? (

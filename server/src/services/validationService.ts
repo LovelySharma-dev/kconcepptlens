@@ -63,14 +63,22 @@ export function validateLinkedListInvariants(graph: LinkedListGraph): Validation
     });
   }
 
-  // 3. Dangling pointer checks
+  // 3. Dangling pointer checks (Forward and Backward links)
   for (const node of graph.nodes) {
     if (node.next !== null && !nodeMap.has(node.next)) {
       issues.push({
         gate: 'GATE_05_INVARIANTS',
         severity: 'error',
         nodeId: node.id,
-        message: `Node "${node.id}" has a dangling pointer to non-existent node "${node.next}".`
+        message: `Node "${node.id}" has a dangling next pointer to non-existent node "${node.next}".`
+      });
+    }
+    if (node.prev !== undefined && node.prev !== null && !nodeMap.has(node.prev)) {
+      issues.push({
+        gate: 'GATE_05_INVARIANTS',
+        severity: 'error',
+        nodeId: node.id,
+        message: `Node "${node.id}" has a dangling prev pointer to non-existent node "${node.prev}".`
       });
     }
   }
