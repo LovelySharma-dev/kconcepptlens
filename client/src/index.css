@@ -14,15 +14,25 @@
   /* Legacy aliases for backward compatibility */
   --font-heading: var(--font-display);
 
-  /* Calm Light tokens. First visit uses this theme. */
-  --atlas-bg: #F7F4EF;
+  /* Core Design Tokens — Calm Light Canvas (Default) */
+  --page-bg: #F7F4EF;
+  --surface-bg: #FFFFFF;
+  --surface-elevated: #F3EFE8;
+  --surface-card: rgba(255, 255, 255, 0.94);
+  --surface-card-hover: #FFFFFF;
+
+  --atlas-bg: var(--page-bg);
   --atlas-bg-elevated: #FFFCF8;
-  --atlas-surface: #FFFFFF;
-  --atlas-surface-raised: #F3EFE8;
+  --atlas-surface: var(--surface-bg);
+  --atlas-surface-raised: var(--surface-elevated);
 
   --atlas-text: #1C1917;
   --atlas-text-secondary: #3F3A36;
-  --atlas-text-muted: #5C564F;
+  --atlas-text-muted: #524C46;
+
+  --text-primary: var(--atlas-text);
+  --text-secondary: var(--atlas-text-secondary);
+  --text-muted: var(--atlas-text-muted);
 
   --atlas-cyan: #1D6A9F;
   --atlas-violet: #7C3AED;
@@ -30,9 +40,9 @@
   --atlas-amber: #D97706;
   --atlas-coral: #E11D48;
 
-  --atlas-border: rgba(15, 23, 42, 0.08);
-  --atlas-border-medium: rgba(15, 23, 42, 0.14);
-  --atlas-border-active: rgba(2, 132, 199, 0.65);
+  --atlas-border: rgba(15, 23, 42, 0.12);
+  --atlas-border-medium: rgba(15, 23, 42, 0.22);
+  --atlas-border-active: #1D6A9F;
 
   --atlas-radius-sm: 10px;
   --atlas-radius-md: 16px;
@@ -40,29 +50,24 @@
   --atlas-radius-xl: 32px;
 
   /* Aliased System Colors */
-  --bg-primary: var(--atlas-bg);
+  --bg-primary: var(--page-bg);
   --bg-secondary: var(--atlas-bg-elevated);
-  --bg-surface: var(--atlas-surface);
-  --bg-elevated: var(--atlas-surface-raised);
-  --bg-card: rgba(255, 255, 255, 0.92);
-  --bg-card-hover: #FFFFFF;
+  --bg-surface: var(--surface-bg);
+  --bg-elevated: var(--surface-elevated);
+  --bg-card: var(--surface-card);
+  --bg-card-hover: var(--surface-card-hover);
 
-  /* Text Colors */
-  --text-primary: var(--atlas-text);
-  --text-secondary: var(--atlas-text-secondary);
-  --text-muted: var(--atlas-text-muted);
-
-  /* Semantic Accents */
+  /* Semantic Accents (WCAG AA Compliant on Light) */
   --accent-cyan: var(--atlas-cyan);
   --accent-violet: var(--atlas-violet);
   --accent-mint: var(--atlas-mint);
   --accent-amber: var(--atlas-amber);
   --accent-coral: var(--atlas-coral);
-  --accent-success: #16a34a;
+  --accent-success: #059669;
 
   /* Legacy Color Aliases */
-  --accent-blue: #0284c7;
-  --accent-indigo: #4f46e5;
+  --accent-blue: #1D6A9F;
+  --accent-indigo: #4338ca;
   --accent-purple: var(--accent-violet);
   --accent-emerald: var(--accent-mint);
   --accent-rose: var(--accent-coral);
@@ -72,6 +77,58 @@
   --border-medium: var(--atlas-border-medium);
   --border-active: var(--atlas-border-active);
   --border-focus: var(--atlas-cyan);
+
+  /* Focus Indicator System (WCAG 2.2 AA >= 3:1) */
+  --focus-ring: #1D6A9F;
+  --focus-ring-offset: 2px;
+
+  /* Primary & Secondary Actions */
+  --action-primary-bg: #1D6A9F;
+  --action-primary-text: #FFFFFF;
+  --action-primary-hover: #15527B;
+  --action-secondary-bg: var(--surface-bg);
+  --action-secondary-text: var(--text-primary);
+  --action-secondary-border: var(--border-medium);
+  --action-secondary-hover: var(--surface-elevated);
+
+  /* Semantic State Tokens (WCAG AA text >= 4.5:1 on state-bg and surface) */
+  --state-success-bg: rgba(5, 150, 105, 0.10);
+  --state-success-text: #065F46;
+  --state-success-border: rgba(5, 150, 105, 0.35);
+
+  --state-warning-bg: rgba(217, 119, 6, 0.10);
+  --state-warning-text: #92400E;
+  --state-warning-border: rgba(217, 119, 6, 0.35);
+
+  --state-error-bg: rgba(225, 29, 72, 0.08);
+  --state-error-text: #9F1239;
+  --state-error-border: rgba(225, 29, 72, 0.35);
+
+  --color-success: var(--state-success-text);
+  --color-warning: var(--state-warning-text);
+  --color-error: var(--state-error-text);
+
+  /* ADHD Focus Timer Semantic Tokens (Light Mode: No dark charcoal trap!) */
+  --timer-bg: var(--surface-bg);
+  --timer-border: var(--border-medium);
+  --timer-digits: var(--text-primary);
+  --timer-supporting-text: var(--text-muted);
+
+  --timer-status-ready-bg: rgba(29, 106, 159, 0.08);
+  --timer-status-ready-text: #1D6A9F;
+  --timer-status-ready-border: rgba(29, 106, 159, 0.30);
+
+  --timer-status-running-bg: rgba(29, 106, 159, 0.12);
+  --timer-status-running-text: #0C4A6E;
+  --timer-status-running-border: #1D6A9F;
+
+  --timer-status-paused-bg: rgba(217, 119, 6, 0.12);
+  --timer-status-paused-text: #92400E;
+  --timer-status-paused-border: #D97706;
+
+  --timer-status-completed-bg: rgba(5, 150, 105, 0.12);
+  --timer-status-completed-text: #065F46;
+  --timer-status-completed-border: #059669;
 
   /* Glow & Atmosphere (Restrained for Light Canvas) */
   --glow-cyan: rgba(2, 132, 199, 0.12);
@@ -135,28 +192,41 @@
 
   --atlas-text: #F4F1EA;
   --atlas-text-secondary: #A9B4C2;
-  --atlas-text-muted: #7C8796;
+  --page-bg: #07090E;
+  --surface-bg: #121820;
+  --surface-elevated: #1A222C;
+  --surface-card: rgba(18, 24, 32, 0.95);
+  --surface-card-hover: rgba(26, 34, 44, 0.98);
 
-  --atlas-cyan: #65E5F2;
-  --atlas-violet: #A78BFA;
-  --atlas-mint: #8CE7BD;
-  --atlas-amber: #F5BD70;
-  --atlas-coral: #FF8A8A;
+  --atlas-bg: var(--page-bg);
+  --atlas-bg-elevated: #0C1118;
+  --atlas-surface: var(--surface-bg);
+  --atlas-surface-raised: var(--surface-elevated);
 
-  --atlas-border: rgba(190, 210, 235, 0.12);
-  --atlas-border-medium: rgba(255, 255, 255, 0.14);
-  --atlas-border-active: rgba(101, 229, 242, 0.55);
-
-  --bg-primary: var(--atlas-bg);
-  --bg-secondary: var(--atlas-bg-elevated);
-  --bg-surface: var(--atlas-surface);
-  --bg-elevated: var(--atlas-surface-raised);
-  --bg-card: rgba(17, 25, 39, 0.85);
-  --bg-card-hover: rgba(23, 33, 49, 0.95);
+  --atlas-text: #F4F1EA;
+  --atlas-text-secondary: #CBD5E1;
+  --atlas-text-muted: #94A3B8;
 
   --text-primary: var(--atlas-text);
   --text-secondary: var(--atlas-text-secondary);
   --text-muted: var(--atlas-text-muted);
+
+  --atlas-cyan: #65E5F2;
+  --atlas-violet: #C4B5FD;
+  --atlas-mint: #8CE7BD;
+  --atlas-amber: #F5BD70;
+  --atlas-coral: #FFA2A2;
+
+  --atlas-border: rgba(190, 210, 235, 0.16);
+  --atlas-border-medium: rgba(190, 210, 235, 0.28);
+  --atlas-border-active: rgba(101, 229, 242, 0.65);
+
+  --bg-primary: var(--page-bg);
+  --bg-secondary: var(--atlas-bg-elevated);
+  --bg-surface: var(--surface-bg);
+  --bg-elevated: var(--surface-elevated);
+  --bg-card: var(--surface-card);
+  --bg-card-hover: var(--surface-card-hover);
 
   --accent-cyan: var(--atlas-cyan);
   --accent-violet: var(--atlas-violet);
@@ -169,6 +239,58 @@
   --border-medium: var(--atlas-border-medium);
   --border-active: var(--atlas-border-active);
   --border-focus: var(--atlas-cyan);
+
+  /* Focus Indicator System */
+  --focus-ring: #65E5F2;
+  --focus-ring-offset: 2px;
+
+  /* Primary & Secondary Actions */
+  --action-primary-bg: #0284c7;
+  --action-primary-text: #FFFFFF;
+  --action-primary-hover: #0369a1;
+  --action-secondary-bg: var(--surface-bg);
+  --action-secondary-text: var(--text-primary);
+  --action-secondary-border: var(--border-medium);
+  --action-secondary-hover: var(--surface-elevated);
+
+  /* Semantic State Tokens */
+  --state-success-bg: rgba(16, 185, 129, 0.14);
+  --state-success-text: #6EE7B7;
+  --state-success-border: rgba(16, 185, 129, 0.40);
+
+  --state-warning-bg: rgba(245, 158, 11, 0.14);
+  --state-warning-text: #FCD34D;
+  --state-warning-border: rgba(245, 158, 11, 0.40);
+
+  --state-error-bg: rgba(244, 63, 94, 0.14);
+  --state-error-text: #FDA4AF;
+  --state-error-border: rgba(244, 63, 94, 0.40);
+
+  --color-success: var(--state-success-text);
+  --color-warning: var(--state-warning-text);
+  --color-error: var(--state-error-text);
+
+  /* ADHD Focus Timer Semantic Tokens (Dark Mode) */
+  --timer-bg: var(--surface-bg);
+  --timer-border: var(--border-medium);
+  --timer-digits: var(--text-primary);
+  --timer-supporting-text: var(--text-muted);
+
+  --timer-status-ready-bg: rgba(101, 229, 242, 0.10);
+  --timer-status-ready-text: #65E5F2;
+  --timer-status-ready-border: rgba(101, 229, 242, 0.35);
+
+  --timer-status-running-bg: rgba(101, 229, 242, 0.16);
+  --timer-status-running-text: #A5F3FC;
+  --timer-status-running-border: #65E5F2;
+
+  --timer-status-paused-bg: rgba(245, 189, 112, 0.14);
+  --timer-status-paused-text: #F5BD70;
+  --timer-status-paused-border: #F5BD70;
+
+  --timer-status-completed-bg: rgba(140, 231, 189, 0.14);
+  --timer-status-completed-text: #8CE7BD;
+  --timer-status-completed-border: #8CE7BD;
 
   --glow-cyan: rgba(101, 229, 242, 0.18);
   --glow-focal: 0 0 35px rgba(101, 229, 242, 0.15);
@@ -184,21 +306,30 @@
    High Contrast Mode (WCAG 2.2 Aligned)
    ========================================================================== */
 body.high-contrast {
+  --page-bg: #000000;
+  --surface-bg: #0A0A0A;
+  --surface-elevated: #141414;
+  --surface-card: #0A0A0A;
+  --surface-card-hover: #1F1F1F;
+
   --bg-primary: #000000;
   --bg-secondary: #050505;
-  --bg-surface: #101010;
-  --bg-elevated: #1a1a1a;
-  --bg-card: #0a0a0a;
-  --bg-card-hover: #1f1f1f;
+  --bg-surface: #0A0A0A;
+  --bg-elevated: #141414;
+  --bg-card: #0A0A0A;
+  --bg-card-hover: #1F1F1F;
 
   --border-subtle: #ffffff;
   --border-medium: #ffffff;
   --border-active: #ffff00;
   --border-focus: #ffff00;
 
+  --focus-ring: #ffff00;
+  --focus-ring-offset: 3px;
+
   --text-primary: #ffffff;
   --text-secondary: #f0f0f0;
-  --text-muted: #d0d0d0;
+  --text-muted: #e0e0e0;
 
   --accent-cyan: #00ffff;
   --accent-violet: #ffffff;
@@ -207,9 +338,466 @@ body.high-contrast {
   --accent-coral: #ff4444;
   --accent-success: #00ff00;
 
+  --action-primary-bg: #000000;
+  --action-primary-text: #ffff00;
+  --action-primary-hover: #1f1f1f;
+  --action-secondary-bg: #000000;
+  --action-secondary-text: #ffffff;
+  --action-secondary-border: #ffffff;
+  --action-secondary-hover: #1f1f1f;
+
+  --state-success-bg: #000000;
+  --state-success-text: #00ff00;
+  --state-success-border: #00ff00;
+
+  --state-warning-bg: #000000;
+  --state-warning-text: #ffff00;
+  --state-warning-border: #ffff00;
+
+  --state-error-bg: #000000;
+  --state-error-text: #ff4444;
+  --state-error-border: #ff4444;
+
+  --color-success: #00ff00;
+  --color-warning: #ffff00;
+  --color-error: #ff4444;
+
+  --timer-bg: #000000;
+  --timer-border: #ffffff;
+  --timer-digits: #ffffff;
+  --timer-supporting-text: #e0e0e0;
+
+  --timer-status-ready-bg: #000000;
+  --timer-status-ready-text: #00ffff;
+  --timer-status-ready-border: #00ffff;
+
+  --timer-status-running-bg: #000000;
+  --timer-status-running-text: #ffff00;
+  --timer-status-running-border: #ffff00;
+
+  --timer-status-paused-bg: #000000;
+  --timer-status-paused-text: #00ffff;
+  --timer-status-paused-border: #00ffff;
+
+  --timer-status-completed-bg: #000000;
+  --timer-status-completed-text: #00ff00;
+  --timer-status-completed-border: #00ff00;
+
   --navbar-bg: #000000;
   --navbar-bg-scrolled: #000000;
   --navbar-shadow: 0 0 0 2px #ffffff;
+}
+
+body.high-contrast button,
+body.high-contrast input,
+body.high-contrast select,
+body.high-contrast .theme-card,
+body.high-contrast .glass-panel,
+body.high-contrast .step-bar,
+body.high-contrast .next-step {
+  border: 2px solid #ffffff !important;
+}
+
+body.high-contrast :focus-visible {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 3px !important;
+}
+
+/* ==========================================================================
+   In-App Reduced Motion & Low Stimulation Preferences (WCAG AA & Calm)
+   ========================================================================== */
+body.reduced-motion,
+body.low-stimulation,
+body.reduced-motion *,
+body.reduced-motion *::before,
+body.reduced-motion *::after,
+body.low-stimulation *,
+body.low-stimulation *::before,
+body.low-stimulation *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+body.low-stimulation {
+  --glow-cyan: none !important;
+  --glow-focal: none !important;
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="light"] body.low-stimulation,
+body.theme-light.low-stimulation {
+  --page-bg: #F4F1EC;
+  --surface-bg: #FAF8F5;
+  --surface-elevated: #EDE9E1;
+  --surface-card: #FAF8F5;
+  --surface-card-hover: #FFFFFF;
+  --border-subtle: rgba(28, 25, 23, 0.12);
+  --border-medium: rgba(28, 25, 23, 0.22);
+  --accent-cyan: #2A5D7C;
+  --accent-mint: #2E6F54;
+  --accent-amber: #8A5A1B;
+  --accent-coral: #9E3747;
+  --accent-violet: #5B4382;
+}
+
+[data-theme="dark"] body.low-stimulation,
+body.theme-dark.low-stimulation {
+  --page-bg: #101318;
+  --surface-bg: #161B22;
+  --surface-elevated: #1E242D;
+  --surface-card: #161B22;
+  --surface-card-hover: #1E242D;
+  --border-subtle: rgba(203, 213, 225, 0.14);
+  --border-medium: rgba(203, 213, 225, 0.24);
+  --accent-cyan: #72B8C8;
+  --accent-mint: #78BFA0;
+  --accent-amber: #C9A267;
+  --accent-coral: #C77A82;
+  --accent-violet: #9E8EC2;
+}
+
+body.low-stimulation *,
+body.low-stimulation *::before,
+body.low-stimulation *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* ==========================================================================
+   ADHD Space Focus Timer & Contrast-Safe Components
+   ========================================================================== */
+.adhd-timer-card {
+  background: var(--surface-bg);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  transition: border-color var(--transition-fast);
+}
+
+.adhd-timer-display {
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  background: var(--timer-bg);
+  text-align: center;
+  border: 1.5px solid var(--timer-border);
+  margin-bottom: 1.25rem;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.adhd-timer-display.status-ready {
+  border-color: var(--timer-status-ready-border);
+  background: var(--timer-status-ready-bg);
+}
+
+.adhd-timer-display.status-running {
+  border-color: var(--timer-status-running-border);
+  background: var(--timer-status-running-bg);
+}
+
+.adhd-timer-display.status-paused {
+  border-color: var(--timer-status-paused-border);
+  background: var(--timer-status-paused-bg);
+}
+
+.adhd-timer-display.status-completed {
+  border-color: var(--timer-status-completed-border);
+  background: var(--timer-status-completed-bg);
+}
+
+.adhd-timer-digits {
+  font-size: 3.4rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--timer-digits);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.status-running .adhd-timer-digits {
+  color: var(--timer-status-running-text);
+}
+
+.status-paused .adhd-timer-digits {
+  color: var(--timer-status-paused-text);
+}
+
+.status-completed .adhd-timer-digits {
+  color: var(--timer-status-completed-text);
+}
+
+.adhd-timer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 0.75rem;
+  border: 1px solid transparent;
+}
+
+.adhd-timer-status-badge.status-ready {
+  background: var(--timer-status-ready-bg);
+  color: var(--timer-status-ready-text);
+  border-color: var(--timer-status-ready-border);
+}
+
+.adhd-timer-status-badge.status-running {
+  background: var(--timer-status-running-bg);
+  color: var(--timer-status-running-text);
+  border-color: var(--timer-status-running-border);
+}
+
+.adhd-timer-status-badge.status-paused {
+  background: var(--timer-status-paused-bg);
+  color: var(--timer-status-paused-text);
+  border-color: var(--timer-status-paused-border);
+}
+
+.adhd-timer-status-badge.status-completed {
+  background: var(--timer-status-completed-bg);
+  color: var(--timer-status-completed-text);
+  border-color: var(--timer-status-completed-border);
+}
+
+.adhd-timer-supporting {
+  font-size: 0.85rem;
+  color: var(--timer-supporting-text);
+  margin-top: 0.6rem;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   Configurable Typography: Text Scaling & Line Spacing
+   ========================================================================== */
+html[data-text-scale="large"] {
+  font-size: 112.5%;
+}
+html[data-text-scale="larger"] {
+  font-size: 125%;
+}
+
+html[data-line-spacing="comfortable"] body {
+  line-height: 1.65;
+}
+html[data-line-spacing="relaxed"] body {
+  line-height: 1.95;
+}
+html[data-line-spacing="relaxed"] p,
+html[data-line-spacing="relaxed"] li,
+html[data-line-spacing="relaxed"] dd {
+  line-height: 1.95;
+  margin-bottom: 1.25em;
+}
+
+/* ==========================================================================
+   Dyslexia-Friendly Reading Typography
+   ========================================================================== */
+body.dyslexia-friendly {
+  font-family: Verdana, system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.04em;
+  word-spacing: 0.14em;
+}
+
+body.dyslexia-friendly p,
+body.dyslexia-friendly li,
+body.dyslexia-friendly dd {
+  max-width: 65ch;
+  line-height: 1.95;
+  letter-spacing: 0.045em;
+  word-spacing: 0.15em;
+}
+
+body.dyslexia-friendly h1,
+body.dyslexia-friendly h2,
+body.dyslexia-friendly h3,
+body.dyslexia-friendly h4 {
+  letter-spacing: 0.02em;
+  word-spacing: 0.08em;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   ADHD Focus Mode & Accessible Reading Ruler
+   ========================================================================== */
+body.focus-mode {
+  --focus-ring: #0284c7;
+}
+
+[data-theme="dark"] body.focus-mode {
+  --focus-ring: #65e5f2;
+}
+
+/* Ensure Focus Mode and ADHD modes never impede native vertical/horizontal document scrolling */
+body.focus-mode,
+body.adhd-friendly {
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto !important;
+}
+
+body.focus-mode #root,
+body.adhd-friendly #root,
+body.focus-mode .app-container,
+body.adhd-friendly .app-container,
+body.focus-mode .main-content,
+body.adhd-friendly .main-content {
+  overflow: visible !important;
+}
+
+.focus-mode-banner {
+  position: sticky;
+  top: 4.5rem;
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 0.65rem 1.25rem;
+  margin-bottom: 1rem;
+  background: var(--bg-surface);
+  border: 2px solid var(--accent-cyan);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+}
+
+.focus-mode-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.focus-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: rgba(2, 132, 199, 0.15);
+  color: var(--accent-cyan);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.focus-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.focus-activity, .focus-next {
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.focus-separator {
+  color: var(--text-muted);
+}
+
+.focus-mode-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.focus-btn {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.focus-icon-btn {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.focus-exit-btn {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.focus-exit-btn:hover {
+  background: #b91c1c !important;
+}
+
+/* Reading Ruler Guide (Non-blocking Aperture & Viewport Dimming) */
+.reading-ruler-guide {
+  position: fixed;
+  left: 0;
+  right: 0;
+  pointer-events: none !important;
+  touch-action: pan-y !important;
+  user-select: none !important;
+  z-index: 1040;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.48), 0 0 24px rgba(2, 132, 199, 0.25);
+  transition: top 30ms linear, height 80ms ease;
+}
+
+[data-theme="light"] .reading-ruler-guide {
+  box-shadow: 0 0 0 9999px rgba(247, 244, 239, 0.65), 0 0 24px rgba(2, 132, 199, 0.15);
+}
+
+body.high-contrast .reading-ruler-guide {
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8), 0 0 0 2px #ffff00;
+}
+
+.ruler-guide-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-cyan);
+  opacity: 0.85;
+}
+
+.ruler-guide-top {
+  top: 0;
+}
+
+.ruler-guide-bottom {
+  bottom: 0;
+}
+
+body.high-contrast .ruler-guide-line {
+  background: #ffff00;
+  height: 3px;
+  opacity: 1;
+}
+
+/* Consistent Visible Focus Indicator Across Application */
+:focus-visible {
+  outline: 3px solid var(--focus-ring, #0284c7) !important;
+  outline-offset: 2px !important;
+}
+
+/* Canvas SVG Node Keyboard Focus */
+.canvas-node:focus-visible {
+  outline: none;
 }
 
 /* ==========================================================================
@@ -2967,3 +3555,396 @@ body.high-contrast .lens-sdg-10 {
     transition: none !important;
   }
 }
+
+/* ==========================================================================
+   Inclusive Workspaces & Continuity Enhancements (Learn, Practice, About)
+   ========================================================================== */
+
+.learn-workspace-container,
+.practice-workspace-container,
+.about-page,
+.home-view {
+  width: 100%;
+  max-width: var(--content-width);
+  margin: 0 auto;
+}
+
+.representation-tabs {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+}
+
+.representation-tabs .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-card) var(--ease-smooth);
+}
+
+.representation-tabs .tab-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.guided-stages-bar {
+  scrollbar-width: thin;
+}
+
+.quiz-option {
+  transition: all var(--duration-card) var(--ease-smooth);
+  width: 100%;
+}
+
+.quiz-option:hover:not(:disabled) {
+  border-color: var(--accent-cyan) !important;
+  background: rgba(56, 189, 248, 0.05) !important;
+}
+
+/* Motor-friendly interactive touch targets (min 48px) */
+body.motor-friendly button,
+body.motor-friendly a,
+body.motor-friendly .tab-btn,
+body.motor-friendly .tag-btn,
+body.motor-friendly .quiz-option,
+body.motor-friendly input,
+body.motor-friendly select {
+  min-height: 48px !important;
+  min-width: 48px !important;
+  padding: 0.65rem 1.15rem !important;
+  font-size: 0.95rem !important;
+}
+
+/* ADHD Focus Mode highlight card */
+body.adhd-friendly .representation-content,
+body.focus-mode .representation-content {
+  border: 2px solid var(--accent-cyan);
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+/* Color-blind friendly cues */
+body.color-friendly .status-pill,
+body.color-friendly .quiz-option {
+  border-width: 2px !important;
+}
+
+/* Low-vision scaling */
+body.low-vision .representation-content p,
+body.low-vision .practice-mode-content p {
+  font-size: 1.15rem !important;
+  line-height: 1.85 !important;
+}
+
+/* ==========================================================================
+   VoiceGuide: Interactive Verbal Guide System (Phase 2)
+   ========================================================================== */
+
+/* Persistent "Guide Me" Launcher */
+.voice-guide-launcher {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 998;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.15rem;
+  border-radius: var(--radius-full);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-text);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.voice-guide-launcher:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.voice-guide-launcher:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* Active Target Element Spotlight / Outline */
+.voice-guide-active-target {
+  outline: 3px solid var(--accent-cyan) !important;
+  outline-offset: 4px !important;
+  border-radius: var(--radius-sm);
+  transition: outline 0.2s ease-in-out;
+}
+
+body.high-contrast .voice-guide-active-target {
+  outline: 4px solid #ffff00 !important;
+  outline-offset: 6px !important;
+}
+
+/* Docked Voice Guide Dialog Panel */
+.voice-guide-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: min(450px, calc(100vw - 32px));
+  max-height: min(520px, calc(100vh - 100px));
+  z-index: 1000;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  animation: voiceGuideSlideUp 0.22s var(--ease-smooth);
+}
+
+@keyframes voiceGuideSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body.reduced-motion .voice-guide-panel,
+body.low-stimulation .voice-guide-panel {
+  animation: none !important;
+}
+
+.voice-guide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  gap: 0.75rem;
+}
+
+.guide-icon-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(29, 106, 159, 0.15);
+  color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.guide-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.guide-page-pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-bg);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.guide-panel-subtitle {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* Entry Mode Selector Tabs */
+.voice-guide-modes {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-bg);
+  padding: 0.35rem 0.5rem;
+  gap: 0.25rem;
+}
+
+.guide-mode-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.guide-mode-tab:hover {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+}
+
+.guide-mode-tab.active {
+  background: var(--surface-elevated);
+  color: var(--accent-cyan);
+  border-color: var(--border-subtle);
+  font-weight: 700;
+}
+
+/* Guide Body Content */
+.voice-guide-body {
+  padding: 1.1rem 1.15rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.guide-step-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.guide-instruction-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.guide-instruction-text:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.guide-action-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: rgba(29, 106, 159, 0.08);
+  border: 1px solid rgba(29, 106, 159, 0.25);
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+}
+
+/* Speech Status Row */
+.guide-speech-status {
+  margin-top: 0.85rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-subtle);
+  font-size: 0.74rem;
+  display: flex;
+  align-items: center;
+  min-height: 1.25rem;
+}
+
+.guide-status-notice {
+  color: var(--text-muted);
+}
+
+.guide-status-active {
+  color: var(--accent-mint);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.guide-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-mint);
+}
+
+.guide-status-paused {
+  color: var(--accent-amber);
+  font-weight: 600;
+}
+
+/* Guide Controls Footer */
+.voice-guide-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* High Contrast Adaptations for Voice Guide */
+body.high-contrast .voice-guide-launcher {
+  background: #000000 !important;
+  color: #ffff00 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+body.high-contrast .voice-guide-panel {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 3px solid #ffffff !important;
+}
+
+body.high-contrast .voice-guide-header,
+body.high-contrast .voice-guide-footer,
+body.high-contrast .voice-guide-modes {
+  background: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+body.high-contrast .guide-mode-tab.active {
+  background: #1f1f1f !important;
+  color: #ffff00 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+/* Mobile responsive dock */
+@media (max-width: 480px) {
+  .voice-guide-launcher {
+    bottom: 16px;
+    right: 16px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.8rem;
+  }
+  .voice-guide-panel {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: 80vh;
+  }
+}
+

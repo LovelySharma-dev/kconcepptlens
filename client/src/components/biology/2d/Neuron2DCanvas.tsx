@@ -83,11 +83,11 @@ export const Neuron2DCanvas: React.FC<Neuron2DCanvasProps> = ({
           right: '12px',
           display: 'flex',
           gap: '0.4rem',
-          background: 'rgba(7, 11, 20, 0.75)',
+          background: 'var(--surface-card)',
           backdropFilter: 'blur(8px)',
           padding: '0.35rem 0.6rem',
           borderRadius: '8px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid var(--border-medium)',
           zIndex: 10
         }}
       >

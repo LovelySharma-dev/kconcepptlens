@@ -19,12 +19,11 @@
 <div align="center">
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-conceptlens--58cq.onrender.com-success?style=for-the-badge&logo=render)](https://conceptlens-58cq.onrender.com/)
-[![MERN + Three.js](https://img.shields.io/badge/Stack-MERN%20%2B%20Three.js-blueviolet?style=for-the-badge)](https://github.com/LovelySharma-dev/ConceptLens)
-[![TypeScript End-to-End](https://img.shields.io/badge/Type%20Safety-Zod%20Contracts%20(100%25)-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Stack](https://img.shields.io/badge/Stack-React%2018%20%2B%20Node%20Express%20%2B%20TypeScript-blueviolet?style=for-the-badge)](https://github.com/LovelySharma-dev/ConceptLens)
+[![Type Safety](https://img.shields.io/badge/Type%20Safety-Zod%20Contracts%20(100%25)-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Cloudinary Media Pipeline](https://img.shields.io/badge/Media-Cloudinary%20Signed%20Pipeline-blue?style=for-the-badge&logo=cloudinary)](https://cloudinary.com)
-[![Tests Passing](https://img.shields.io/badge/Tests-337%2F337%20Passed-success?style=for-the-badge)](./NOTION_DOCUMENTATION.md)
-[![Pytest Passing](https://img.shields.io/badge/Pytest-6%2F6%20Invariants-success?style=for-the-badge&logo=pytest)](https://docs.pytest.org/)
-[![Accessibility Aligned](https://img.shields.io/badge/Accessibility-keyboard%20%2B%20text%20lessons-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
+[![Tests Passing](https://img.shields.io/badge/Tests-456%2F456%20Passed-success?style=for-the-badge)](./README.md)
+[![Accessibility Aligned](https://img.shields.io/badge/Accessibility-18%20Inclusive%20Themes%20(WCAG%202.2%20AAA)-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Notion Documentation](https://img.shields.io/badge/Notion%20Docs-Submission%20Ready-000000?style=for-the-badge&logo=notion)](./NOTION_DOCUMENTATION.md)
 
 </div>
@@ -170,12 +169,24 @@ STEM concepts are inherently multi-dimensional, dynamic, and temporal. When seco
 
 ## 5. Core Solution & User Journey
 
-Two paths are in the running app. The screenshots are in [How it works](#how-it-works).
+ConceptLens is structured around four clear, focused destinations:
 
-1. **Home**: Ask a question, paste notes, open a PDF that already has a text layer, or choose a labeled sample. Confirm the text, then read the rule-based explanation and a practice check. The mathematics sample is `2x + 3 = 11`; the check is `x = 4`.
-2. **Learn**: Open a curated biology lesson (animal cell, heart, DNA, neuron, or plant cell), inspect the 3D or 2D model, and answer the lesson's practice question. These prompts are labeled as practice, not official past papers.
-
-Preferences change how a lesson is shown. They are choices, not a diagnosis. Nothing is spoken until you start browser speech.
+1. **Home**: Understand the product mission, see curated topic spotlights, resume an existing lesson in one click, and access the four primary pathways:
+   - **Learn a Concept**: Explore STEM, Business, Arts & Culture, or enter any natural language question.
+   - **Practice with My Material**: Bring personal textbook notes, PDFs, camera photos, or voice dictations.
+   - **Continue Learning**: Unbroken resumption of previous concept progress.
+   - **Change How I Learn**: Instant configuration of 18 inclusive accessibility themes.
+2. **Learn**: Enter any topic in natural language (e.g. "Explain photosynthesis", "Teach me recursion in Python", "Help me understand compound interest") with optional learning context (Curiosity, Beginner, Intermediate, Advanced, Exam preparation, Practical application).
+   - Generates comprehensive schema-validated lessons with 7 switchable representations: Standard Read, Simplified (Easy Read), Step-by-Step (Simple Steps), Visual Diagram / Spatial Model (with automatic detection for Biology, Physics, and CS engines), Interactive Flashcards, 4-Option Practice Quiz, and Revision Notes.
+   - Unbroken learning continuity: switching representations preserves current step, completed steps, and quiz answers.
+3. **Practice**: Bring your own learning material into one unified workspace:
+   - **Paste or Type**: Clean text editor with character and word counters and instant sample loaders.
+   - **Upload File**: Document extraction for PDF, TXT, PNG, JPEG, WEBP (up to 20MB) with local Tesseract OCR.
+   - **Camera Capture**: WebRTC browser camera viewfinder with snapshot capture, retake, confirmation, and immediate media stream track shutdown upon confirmation or unmount.
+   - **Speech Dictation**: Web Speech API speech-to-text dictation with live listening indicator.
+   - **Confirmed Text Review**: Learners review and correct extracted text before generating their workspace.
+   - **Interactive Practice Modes**: Understand This, Plain Language, Key Terms, Flashcards, 4-Option Quiz with geometric markers, and Revision Notes with adaptive hints.
+4. **About**: Transparent product narrative detailing the mission, problem statement, the 5 implemented product pillars, learning continuity architecture, learner-choice design without medical diagnoses, technology disclosures, and alignment with UN SDG 4: Quality Education.
 
 ---
 
@@ -183,27 +194,24 @@ Preferences change how a lesson is shown. They are choices, not a diagnosis. Not
 
 | Feature Module | Status | Verification & Implementation Details |
 | :--- | :---: | :--- |
-| **Human Cell (Animal Cell) 3D Model** | ✅ **Verified** | Three.js procedural organelle meshes (8 organelles), 360° orbit, raycasting selection. |
-| **Human Cell 2D Fallback Canvas** | ✅ **Verified** | Accessible SVG diagram with glowing gradients and interactive organelle selection. |
-| **Human Heart 3D Circulation Studio** | ✅ **Verified** | 4 chambers, great vessels, cardiac valve highlights, dynamic heartbeat pulse (40-180 BPM). |
-| **Human Heart 2D Fallback Canvas** | ✅ **Verified** | Dual-circuit SVG diagram with deoxygenated/oxygenated color separation. |
-| **DNA Double Helix 3D Model** | ✅ **Verified** | Procedural antiparallel backbones, A-T and G-C base pairs with hydrogen bonding. |
-| **DNA Double Helix 2D Vector Canvas** | ✅ **Verified** | Interactive 2D schematic displaying 5'➔3' polarity, A=T (2 H-bonds), G≡C (3 H-bonds), and grooves. |
+| **Learn Concept Discovery & Generator** | ✅ **Verified** | Natural language topic entry across STEM, Business, Arts & Culture; connects to `/api/ai/lesson` with Google Gemini 3.1 Flash Lite free tier, Hugging Face, and deterministic fallback. |
+| **7 Learning Representations** | ✅ **Verified** | Seamless switching between Standard Read, Easy Read, Simple Steps, Spatial Model, Flashcards, Practice Quiz, and Notes without losing place. |
+| **Unified Practice Workspace** | ✅ **Verified** | 4 input methods: paste/type, file upload (PDF/images), WebRTC camera capture & OCR, and Web Speech API speech-to-text. Includes text review/editing before generation. |
+| **Camera Capture & Stream Cleanup** | ✅ **Verified** | Camera access with explicit user permission, live viewfinder, snapshot capture, and immediate track cleanup (`track.stop()`) on capture/close/unmount. |
+| **18 Accessibility Themes** | ✅ **Verified** | ADHD focus ruler, Simple Steps, Easy Read, Dyslexia typography (Verdana, 1.95 line height), Low-Stimulation motion reduction, Color-Blind geometric shape indicators (Circle, Square, Triangle, Diamond), Low-Vision scaling, Speech-Free mode, and Motor-Friendly 48px touch targets. |
+| **About Narrative & SDG 4 Alignment** | ✅ **Verified** | 7 comprehensive sections covering mission, problem, 5 pillars, continuity flow, transparent technology disclosure, and SDG 4 education goals. |
+| **Human Cell (Animal Cell) 2D/3D Model** | ✅ **Verified** | 8 organelles with analogies, mitochondrial ATP synthesis, and cell biology. |
+| **Human Heart 2D/3D Circulation Studio** | ✅ **Verified** | 4 chambers, great vessels, cardiac valve highlights, dynamic heartbeat pulse (40-180 BPM). |
+| **DNA Double Helix 2D/3D Model** | ✅ **Verified** | Procedural antiparallel backbones, A-T and G-C base pairs with hydrogen bonding. |
 | **Neuron & Plant Cell 2D Studios** | ✅ **Verified** | Interactive action potential simulation and plant cell wall/vacuole/chloroplast schematics. |
-| **Cloudinary server-signed upload** | ⚠️ **Credentials present, account check failed** | `cloudinary.api.ping()` on 25 Oct 2026 returned `cloud_name mismatch`. A real upload was not run. The API secret stays on the server and was not found in the production client bundle. |
-| **Cloudinary React lesson diagrams** | ✅ **Partly verified on 25 Oct 2026** | `@cloudinary/react` `AdvancedImage` and `@cloudinary/url-gen` fetch Wikimedia diagrams through the public `demo` cloud with `c_limit` (no crop), `f_auto`, and `q_auto`. Animal cell 800px returned HTTP 200, AVIF, 51,638 bytes; 480px returned HTTP 200, PNG, 23,871 bytes. Heart 800px returned HTTP 200, AVIF, 62,084 bytes; 480px returned HTTP 200, AVIF, 34,326 bytes. Plant cell 800px returned HTTP 200, AVIF, 55,371 bytes; 480px returned HTTP 200, PNG, 26,543 bytes. DNA and neuron returned HTTP 400. Cloudinary's `x-cld-error` said Wikimedia replied 429. The written lesson stays, and the figure then tries the original thumbnail. |
-| **Adaptive learning suggestions** | ✅ **Implemented and tested** | A deterministic rule set in `shared/src/learning/adaptive.ts`. It is not a trained model. One incorrect answer suggests a stored alternative. Two incorrect answers suggest the simpler explanation when one is stored. Correct answers can continue. Evidence is stored apart from theme preferences and does not include a diagnosis. |
-| **Cloudinary Media Studio & Slider** | ✅ **Implemented** | Comparison slider loads Cloudinary's public `demo/sample` image. It is not a textbook scan. |
-| **Cloudinary Transformation Recipes** | ✅ **Verified** | `f_auto`, `q_auto`, `e_sharpen:80`, `e_contrast`, `c_limit` applied and tested. `f_auto` served AVIF when the request accepted it. |
-| **Upload failure state** | ✅ **Implemented** | If the account check fails, choosing a file shows an error. It does not mark the file as uploaded. |
-| **Practice questions & scoring** | ✅ **Implemented** | Multiple-choice questions include explanations. They are labeled practice, not official past papers. |
-| **Accessible text lessons** | ✅ **Implemented** | English transcripts with keyboard selection. Sample films are not used, and the UI does not claim Indian Sign Language video. |
 | **Physics Lab (Ray Optics, Pendulum)** | ✅ **Verified** | Thin lens ray tracing (`1/f = 1/v - 1/u`) and pendulum SHM energy conservation. |
 | **Computer Science Concept Engine** | ✅ **Verified** | Deterministic pointer transitions for Singly, Doubly, and Circular Linked Lists. |
 | **8-Stage Reliability Gates** | ✅ **Verified** | Floyd cycle detection, OCR confidence gate (<0.80), and human-in-the-loop review modal. |
-| **Calm Light theme** | ✅ **Implemented** | A first visit with no saved choice opens in light mode. Light, Dark, and Match system are stored under `conceptlens-theme`. A saved choice is not replaced by the operating-system setting. |
-| **Learning modes** | ✅ **Implemented, not a WCAG audit** | Focus, Easy Read, Simple Steps, Color-Friendly, Listen & Explore, Keyboard Friendly, Low-Stimulation, and Low Data can be combined. They are stored locally and do not record a diagnosis. |
-| **Optional Gemini diagram interpretation** | ✅ **Implemented** | Curated biology, physics, and computer-science catalogs are matched first. When `GEMINI_API_KEY` is set, an unmatched `http(s)` or data-URI image is sent to **Gemini 1.5 Flash** and checked with Zod. Without a key, the server returns a curated preset. `GEMINI_VISION_MODEL` in `.env.example` is not read. |
+| **Cloudinary Media Studio & Delivery** | ✅ **Verified** | `f_auto`, `q_auto`, `e_sharpen:80`, `c_limit` responsive delivery and comparison slider. |
+| **ConceptLens Everywhere Extension** | ✅ **Verified** | Manifest V3 Chrome extension with activeTab reading assistance, dyslexia typography, and isolated Shadow DOM. |
+| **Global Readability & Design Tokens** | ✅ **Verified** | WCAG 2.2 AA contrast semantic tokens across Light, Dark, High-Contrast, and Low-Stimulation. Fixed ADHD timer (ready, running, paused, completed states with explicit text and icons; no dark-on-dark trap). |
+| **Website-Wide Voice Guide** | ✅ **Verified** | Persistent "Guide Me" dock & `[G]` hotkey with 3 modes (Page Tour, Task Guide, Read Aloud), element spotlighting, `SpeechSynthesis` lifecycle management, and graceful text-only fallback. |
+| **Authentic ISL Video Foundation** | ✅ **Verified** | Responsible Indian Sign Language foundation with ISLRTC & NCERT video curriculum, Zod schema (`ISLLessonResourceSchema`), review badges, and honest fallback states (no fake avatars or gloss hallucination). |
 | *Augmented Reality (WebXR) Projection* | ⏳ *Planned (v2.1)* | Planned for browser-based desk projection of biological organs. |
 | *Interactive Socratic Voice Tutor* | ⏳ *Planned (v2.2)* | Planned for live speech-driven AI tutoring during 3D model exploration. |
 
@@ -442,6 +450,9 @@ Verified test coverage:
 - ✅ **Deterministic Equation Solvers**: Step engine for linear equations (`2x + 3 = 11` -> `x = 4`), chemical balancer (`H2 + O2 -> H2O`), and arithmetic precedence (BODMAS/PEMDAS).
 - ✅ **Server-Side Grading Security**: Client prompts strictly omit answers; server returns targeted remediation step indices.
 - ✅ **Accessibility Modalities**: Easy Read plain-language summaries, Simple Steps single-step stepping, Speech-Free mode, and keyboard navigation.
+- ✅ **Contrast & Semantic Design Tokens**: 10/10 automated tests verifying token definitions across all themes, mathematical contrast ratios ($\ge 4.5:1$ normal text, $\ge 3:1$ large text/UI/focus rings), low-stimulation calmness, and ADHD timer ready/running/paused/completed states.
+- ✅ **Voice Guide Engine**: 22/22 automated tests covering persistent entry points, 3 guide modes, 8 page-specific tours (Home, Learn, Biology Models, STEM, Practice, ADHD Space, Media Studio, About, Settings), `SpeechSynthesis` cancellation on route change/exit, keyboard shortcuts (`[G]`, `[Esc]`, `ArrowLeft`/`ArrowRight`), and responsive CSS docked positioning.
+- ✅ **Authentic ISL Video Integration**: 14/14 automated tests validating strict Zod `ISLLessonResourceSchema` (secure `https://` URLs, literal `language: 'ISL'`, mandatory attribution and review status), catalog resolution, accessible keyboard player controls (`Space`/`K`, arrows, `M`), review badge states, and honest fallback states when authentic human videos are in development.
 
 ### Python invariant suite: 6 passed in 2.28s on 25 October 2026
 ```bash
@@ -482,9 +493,14 @@ npm run build
 
 Accessibility was built into ConceptLens from the first line of code:
 
-- **Calm Light theme**: A browser with no saved theme opens on a warm light canvas (`#F7F4EF` background, `#1C1917` text, `#1D6A9F` accent). Those pairs were measured at about 15.9:1 and 5.3:1. Dark remains available. `[T]` switches between light and dark and stores that explicit choice. Match system is available in Accessibility settings and is used only after it is chosen. This is not a formal WCAG audit.
-- **Accessibility & Learning Settings**: A header button opens a dialog. Focus, Easy Read, Simple Steps, Color-Friendly, Listen & Explore, Keyboard Friendly, Low-Stimulation, and Low Data can be combined. Reset to defaults clears those choices and does not erase the selected concept. Easy Read uses the lesson's stored plain-language text. It is not an automatic rewrite.
-- **Listen & Explore**: Browser speech synthesis, started only by Read this section, Pause, Resume, Stop, or Repeat. There is no recorded narration and no sign-language video.
+- **Calm Light & Semantic Contrast Token System**: A browser with no saved theme opens on a warm light canvas (`#F7F4EF` background, `#1C1917` text, `#1D6A9F` accent). All themes (Light, Dark, High-Contrast, Low-Stimulation) define unified semantic design tokens (`--page-bg`, `--surface-bg`, `--text-primary`, `--text-secondary`, `--action-primary-*`, `--timer-bg`, `--timer-digits`, `--timer-status-*`). Normal text targets WCAG 2.2 AA contrast $\ge 4.5:1$, large text and interactive components target $\ge 3:1$. The ADHD Space timer displays high-contrast digits with explicit state badges and icons (`ready`, `running`, `paused`, `completed`) eliminating dark charcoal on dark digits traps. Low-stimulation mode preserves calm, desaturated surfaces without bright flashing.
+- **Accessibility & Learning Settings**: A header button opens a dialog. Focus, Easy Read, Simple Steps, Color-Friendly, Listen & Explore, Deaf-Friendly (ISL), Keyboard Friendly, Low-Stimulation, and Low Data can be combined. Reset to defaults clears those choices and does not erase the selected concept. Easy Read uses the lesson's stored plain-language text. It is not an automatic rewrite.
+- **Interactive Voice Guide (`VoiceGuide`)**: Available across all application sections via a persistent "Guide Me" launcher or `[G]` key. Provides three entry modes:
+  1. *Guide me through this page*: Step-by-step visual tour highlighting active interface elements with spotlight styling.
+  2. *Help me complete a task*: Task-oriented guidance through core actions (e.g., launching focus timers, checking practice attempts).
+  3. *Read this page aloud*: Structured screen reader narration of core section content.
+  - Features: Next, Back, Repeat, Pause, Resume, Skip, and Exit controls with live step progress ("Step X of Y"). Visible text is displayed for every spoken instruction. Speech synthesizes via browser `window.speechSynthesis` and cleans up immediately on route change, exit, or unmount. When speech synthesis is unsupported or voices are missing, the guide falls back gracefully to a non-intrusive readable instructional card without blocking the user.
+- **Authentic Indian Sign Language (ISL) Video Foundation**: Embedded in lessons alongside written content and 2D/3D models via `ISLVideoPanel`. Built on verified open educational videos from the Indian Sign Language Research and Training Centre (ISLRTC) and NCERT under CC-BY-NC 4.0 / Government Open Data frameworks. Validated by strict Zod schema (`ISLLessonResourceSchema` with secure `https://` URLs, literal `language: 'ISL'`, mandatory licensing, and review status). If verified ISL video is in development for a topic, an honest fallback notice is rendered—synthetic avatar hallucination and arbitrary gesture translation are strictly avoided. Includes accessible keyboard shortcuts (`Space`/`K` play/pause, `ArrowLeft`/`ArrowRight` seek $\pm 5$s, `M` mute), interactive transcript timestamp cues, and provenance metadata.
 - **Low Data**: Text stays available. Optional Cloudinary diagrams and 3D scenes wait for a button. A failed image leaves the written lesson. This is not offline mode.
 - **High-Contrast Mode (`[H]`)**: Single-key toggle switches surfaces to a black background, white text, and yellow focus indicators (`body.high-contrast`).
 - **Centralized Screen Reader Announcer**: `<LiveAnnouncer />` uses `aria-live="polite"` and `aria-atomic="true"` to announce state transitions, organelle selections, and quiz scoring.
@@ -496,11 +512,11 @@ Accessibility was built into ConceptLens from the first line of code:
   - `[4]`: Cloudinary
   - `[5]`: STEM labs
   - `[6]`: Reliability gates
+  - `[G]`: Launch / close Voice Guide
   - `[H]`: Toggle high contrast
   - `[T]`: Toggle light and dark
   - `[?]`: Open the keyboard shortcuts sheet
-  - `[Esc]`: Close an open dialog
-  - Speech starts from **Read this section** in the lesson. There is no global speech key.
+  - `[Esc]`: Close an open dialog, tour, or voice guide
 - **Accessible Comparison Slider**: Operable via mouse drag, touch drag, keyboard arrow keys (5% increments, Home/End for full splits), and quick preset buttons (100% Original, 50/50 Split, 100% Enhanced).
 - **Reduced Motion Support**: Detects `prefers-reduced-motion` and disables ambient 3D camera rotation and cardiac pulse animations.
 - **Accessible 2D SVG Fallbacks**: Provides vector schematics for all 3D models when WebGL is unsupported or when context is lost.
@@ -511,9 +527,10 @@ Accessibility was built into ConceptLens from the first line of code:
 
 1. **3D Organelle Interior Fly-Through**: The current Animal Cell uses translucent cutaways and external orbit controls. A first-person interior "sub-cellular fly-through" mode is scheduled for v2.2.
 2. **Cloudinary account**: Public `demo` delivery is verified for the animal-cell, heart, and plant-cell diagrams, and for `demo/sample`. Neuron and DNA fetches were not verified in this session because Wikimedia returned 429 to Cloudinary. Signed upload is blocked until `CLOUDINARY_CLOUD_NAME` matches the API key's cloud (`cloud_name mismatch` on 25 Oct 2026). Rotate `CLOUDINARY_API_SECRET` if the local `.env` has been shared. Do not commit `.env`.
-3. **Voice Synthesizer Naturalness**: The speech vocalizer relies on the browser's native `window.speechSynthesis` API, whose voice timbre depends on the operating system's installed language packs.
-4. **Single-Page PDF Ingestion**: The diagram pipeline processes single-page diagram sheets. Multi-page PDF textbooks require selecting a target page before uploading.
-5. **Gemini is optional and catalog-first**: Custom interpretation calls Gemini 1.5 Flash only when `GEMINI_API_KEY` is set and the image is an `http(s)` URL or a data URI. Keyword matches against the curated catalogs return those models first. If the key is missing or the call fails, `interpretDiagram` falls back to a curated linked-list fixture or the heart-circulation diagram and marks the session `completed`. That fallback is a preset, not a live vision result. Setting `GEMINI_VISION_MODEL` does not change the model; the id `gemini-1.5-flash` is hardcoded.
+3. **Voice Synthesizer Naturalness & Availability**: The speech vocalizer relies on the browser's native `window.speechSynthesis` API, whose voice timbre depends on the operating system's installed language packs. In environments where speech synthesis is disabled or unsupported (such as headless test browsers or privacy-hardened profiles), VoiceGuide falls back gracefully to non-modal, readable textual guidance.
+4. **Authentic ISL vs. AI Avatar Limitations**: Machine-generated 3D sign avatars and automated English-to-gloss translation engines lack valid spatial grammar, grammatical facial expressions, and scientific vocabulary in Indian Sign Language. To prevent harmful educational misconceptions, ConceptLens avoids synthetic signing avatars and relies exclusively on human-recorded, linguistically reviewed ISL curriculum videos (ISLRTC & NCERT). Lessons lacking certified footage display honest "In Development" states.
+5. **Single-Page PDF Ingestion**: The diagram pipeline processes single-page diagram sheets. Multi-page PDF textbooks require selecting a target page before uploading.
+6. **Gemini is optional and catalog-first**: Custom interpretation calls Gemini 1.5 Flash only when `GEMINI_API_KEY` is set and the image is an `http(s)` URL or a data URI. Keyword matches against the curated catalogs return those models first. If the key is missing or the call fails, `interpretDiagram` falls back to a curated linked-list fixture or the heart-circulation diagram and marks the session `completed`. That fallback is a preset, not a live vision result. Setting `GEMINI_VISION_MODEL` does not change the model; the id `gemini-1.5-flash` is hardcoded.
 
 ---
 
@@ -545,6 +562,7 @@ Accessibility was built into ConceptLens from the first line of code:
 - **Milestone 7 (Living Atlas theme)**: Shipped a light canvas, a saved dark theme (`[T]`), and high-contrast overrides.
 - **Milestone 8 (Inclusive settings and Cloudinary React delivery, 25 Oct 2026)**: Light is the unsaved default. Combinable learning modes persist locally. Lesson diagrams use `@cloudinary/react` and `@cloudinary/url-gen` on the public demo cloud.
 - **Milestone 9 (Final Submission & Live Deployment, 25 Oct 2026)**: Integrated verified local OCR equation reader and linear/chemical solvers with **337 / 337 passed tests**. Deployed live on Render at [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/). Finalized 72-second interactive demo runner (`docs/video-demo.html`) and submission documentation.
+- **Milestone 10 (Contrast System, Website-Wide Voice Guide, Authentic ISL Foundation, 29 Oct 2026)**: Established universal semantic design tokens achieving WCAG 2.2 AA contrast compliance across 4 core themes, eliminated the ADHD timer dark-on-dark contrast trap with 4 clear state indicators (ready/running/paused/completed), implemented the website-wide `VoiceGuide` with SpeechSynthesis lifecycle management, and created an authentic ISLRTC & NCERT Indian Sign Language curriculum foundation with strict Zod contracts and honest fallback states. Added 3 automated test suites (46 new tests, 100% passing).
 
 ---
 

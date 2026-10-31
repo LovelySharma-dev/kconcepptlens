@@ -36,25 +36,38 @@ export function isCloudinaryConfigured(): boolean {
   );
 }
 
-const ALLOWED_UPLOAD_MIMES = ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'];
+const ALLOWED_UPLOAD_MIMES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'application/pdf',
+  'video/mp4',
+  'video/webm'
+];
 export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 30 * 1024 * 1024;
 
 /** Rejects unsupported types and oversized payloads before any Cloudinary call. */
 export function inspectDirectUpload(fileData: unknown): { ok: true } | { ok: false; status: number; error: string } {
   if (typeof fileData !== 'string' || fileData.length === 0) {
     return { ok: false, status: 400, error: 'Missing fileData (data URI or URL required)' };
   }
-  if (fileData.length > Math.ceil(MAX_UPLOAD_BYTES * 1.4)) {
-    return { ok: false, status: 413, error: 'File exceeds the 15MB upload limit.' };
-  }
+  let mime = '';
   if (fileData.startsWith('data:')) {
-    const mime = fileData.slice(5, fileData.indexOf(';'));
+    mime = fileData.slice(5, fileData.indexOf(';'));
     if (!ALLOWED_UPLOAD_MIMES.includes(mime)) {
-      return { ok: false, status: 400, error: 'Only PNG, JPEG, WebP, and PDF uploads are accepted.' };
+      return { ok: false, status: 400, error: 'Only PNG, JPEG, WebP, PDF, MP4, and WebM uploads are accepted.' };
     }
   } else if (!fileData.startsWith('https://')) {
     return { ok: false, status: 400, error: 'fileData must be a data URI or an https URL.' };
   }
+
+  const isVideo = mime.startsWith('video/');
+  const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_UPLOAD_BYTES;
+  if (fileData.length > Math.ceil(maxBytes * 1.4)) {
+    return { ok: false, status: 413, error: `File exceeds the ${isVideo ? '30MB' : '15MB'} upload limit.` };
+  }
+
   return { ok: true };
 }
 
@@ -109,28 +122,31 @@ export function buildDeliveryUrl(
   crop?: { x: number; y: number; width: number; height: number },
   options: { sharpen?: boolean; contrast?: boolean; maxDimension?: number } = {}
 ): string {
-  const parts: string[] = [];
+  const segments: string[] = [];
 
+  const sizeOps: string[] = [];
   if (crop && crop.width > 0 && crop.height > 0) {
-    parts.push(
+    sizeOps.push(
       `c_crop,x_${Math.round(crop.x)},y_${Math.round(crop.y)},w_${Math.round(crop.width)},h_${Math.round(crop.height)}`
     );
+  } else if (options.maxDimension) {
+    sizeOps.push(`c_limit,w_${Math.round(options.maxDimension)},h_${Math.round(options.maxDimension)}`);
+  } else {
+    sizeOps.push('c_limit,w_900');
   }
-
-  if (options.maxDimension) {
-    parts.push(`c_limit,w_${Math.round(options.maxDimension)},h_${Math.round(options.maxDimension)}`);
-  }
+  if (sizeOps.length > 0) segments.push(sizeOps.join(','));
 
   if (options.sharpen ?? true) {
-    parts.push('e_sharpen:80');
+    segments.push('e_sharpen:80');
   }
 
   if (options.contrast ?? true) {
-    parts.push('e_contrast');
+    segments.push('e_contrast');
   }
 
-  parts.push('f_auto', 'q_auto');
-  return `https://res.cloudinary.com/${cloudName}/image/upload/${parts.join(',')}/${publicId}`;
+  segments.push('f_auto');
+  segments.push('q_auto');
+  return `https://res.cloudinary.com/${cloudName}/image/upload/${segments.join('/')}/${publicId}`;
 }
 
 /**
@@ -202,9 +218,9 @@ export async function uploadDirectToCloudinary(
     use_filename: false,
     unique_filename: true,
     resource_type: 'auto',
-    type: 'authenticated',
+    type: 'upload',
     tags: ['conceptlens', 'learner-material'],
-    allowed_formats: ['png', 'jpg', 'jpeg', 'webp', 'pdf']
+    allowed_formats: ['png', 'jpg', 'jpeg', 'webp', 'pdf', 'mp4', 'webm']
   });
 }
 

@@ -13,3 +13,8 @@ export * from './schemas/material';
 export * from './learning/materials';
 export * from './learning/evaluation';
 export * from './learning/pdfImages';
+export * from './schemas/generatedLesson';
+export * from './schemas/cloudinaryTransformation';
+export * from './learning/visualModels';
+export * from './schemas/adhdPlan';
+export * from './schemas/isl';

@@ -765,6 +765,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           onClose={() => setExplanation(null)}
           onSpeechRate={(rate) => onSpeechRate?.(rate)}
           onRetryAnswer={() => setAnswerState(null)}
+          onAnnounce={onAnnounce}
         />
       )}
 

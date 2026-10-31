@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { NaturalLanguageTransformRequestSchema } from '@conceptlens/shared';
 import {
   generateUploadSignature,
   isCloudinaryConfigured,
@@ -10,6 +11,7 @@ import {
   signedUploadAllowed,
   cloudinaryFailureReason
 } from '../config/cloudinary';
+import { executeTransformationInstruction } from '../services/cloudinaryTransformationService';
 import { Asset } from '../models/Asset';
 import { inMemoryStore, isDbConnected } from '../config/db';
 
@@ -49,8 +51,13 @@ router.get('/status', async (req: Request, res: Response) => {
       accountError,
       cloudName: configured ? process.env.CLOUDINARY_CLOUD_NAME?.trim() : null,
       folder: 'conceptlens/uploads',
-      supportedFormats: ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'],
-      maxSizeBytes: 15 * 1024 * 1024, // 15 MB for the existing media route
+      supportedFormats: ['image/png', 'image/jpeg', 'image/webp', 'application/pdf', 'video/mp4', 'video/webm'],
+      maxSizeBytes: 15 * 1024 * 1024, // 15 MB for images
+      videoMaxSizeBytes: 30 * 1024 * 1024, // 30 MB for educational videos
+      lowDataSupported: true,
+      naturalLanguageTransformSupported: true,
+      videoSupported: true,
+      aiOperationsSupported: true,
       signedUpload: uploadGate.allowed ? 'enabled' : 'disabled',
       signedUploadReason: uploadGate.reason,
       assetAccess: 'authenticated',
@@ -195,6 +202,47 @@ router.post('/transform', (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/uploads/transform-spec
+ * Natural-language Cloudinary transformation endpoint.
+ * Parses instructions ("crop to square", "low-data mobile", "lesson card", "sharpen diagram")
+ * into validated transformation specs and generated delivery URLs.
+ */
+router.post('/transform-spec', async (req: Request, res: Response) => {
+  try {
+    const parseResult = NaturalLanguageTransformRequestSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: parseResult.error.errors.map((e) => e.message).join(', ')
+      });
+    }
+
+    const { prompt, assetId, cloudName, lowDataMode, resourceType, isScientificDiagram, allowGenerativeModification } = parseResult.data;
+
+    // Use environment cloud name if not explicitly provided
+    const effectiveCloud = cloudName || (isCloudinaryConfigured() ? process.env.CLOUDINARY_CLOUD_NAME?.trim() : 'demo');
+
+    const result = await executeTransformationInstruction(prompt, assetId, {
+      cloudName: effectiveCloud,
+      lowDataMode,
+      resourceType,
+      isScientificDiagram,
+      allowGenerativeModification
+    });
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to process transformation instruction'
+    });
   }
 });
 

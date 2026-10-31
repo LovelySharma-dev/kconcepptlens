@@ -11,6 +11,7 @@ import {
   gradePracticeSubmission,
   ingestPrepared,
   parseExternalExplanation,
+  verifiedLinearSolution,
   publicEngineStatus,
   redactSecrets,
   type MaterialExplanation,
@@ -48,7 +49,8 @@ function isWeights(value: unknown): value is StrategyWeights {
 function withPythonCheck(explanation: MaterialExplanation): MaterialExplanation {
   const solved = explanation.verified.find((item) => item.startsWith('x = '));
   if (!solved) return explanation;
-  const solution = solved.slice(4).split('.')[0];
+  const solution = verifiedLinearSolution(solved);
+  if (!solution) return explanation;
   const python = runPythonEngine({ command: 'solve', text: explanation.sourceContent });
   if (!python.ok || python.data.solution == null) return explanation;
   if (python.data.solution === solution && python.data.codeExecuted === false) {

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConceptLens Everywhere</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="header-brand">
+        <img src="../icons/icon-48.png" alt="" class="header-logo" width="28" height="28">
+        <div>
+          <h1 class="header-title">ConceptLens</h1>
+          <span class="header-subtitle">Everywhere</span>
+        </div>
+      </div>
+      <span class="badge-free">Free Tier</span>
+    </header>
+
+    <p class="mission-tagline">"One concept. Different ways to understand it."</p>
+
+    <!-- Page Activation Control -->
+    <section class="section-card active-toggle-card" aria-labelledby="page-control-heading">
+      <div class="toggle-row">
+        <div>
+          <h2 id="page-control-heading" class="card-heading">Active on This Tab</h2>
+          <p class="card-desc">Inject floating toolbar & reading aids</p>
+        </div>
+        <label class="switch" aria-label="Toggle ConceptLens on this tab">
+          <input type="checkbox" id="toggle-active">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button type="button" id="btn-open-toolbar" class="btn btn-primary btn-full" style="margin-top: 0.6rem;">
+        Open Floating Toolbar <kbd>Alt+Shift+T</kbd>
+      </button>
+    </section>
+
+    <!-- Reading & Visual Controls -->
+    <section class="section-card" aria-labelledby="reading-heading">
+      <h2 id="reading-heading" class="card-heading">Reading Accessibility</h2>
+
+      <!-- Text Scale -->
+      <div class="control-group">
+        <label for="select-font-size" class="control-label">Text Scale</label>
+        <select id="select-font-size" class="select-input">
+          <option value="default">Default (100%)</option>
+          <option value="large">Large (115%)</option>
+          <option value="larger">Larger (130%)</option>
+          <option value="largest">Largest (150%)</option>
+        </select>
+      </div>
+
+      <!-- Line Spacing -->
+      <div class="control-group">
+        <label for="select-line-spacing" class="control-label">Line Spacing</label>
+        <select id="select-line-spacing" class="select-input">
+          <option value="normal">Normal (1.5)</option>
+          <option value="relaxed">Relaxed (1.8)</option>
+          <option value="loose">Loose (2.1)</option>
+        </select>
+      </div>
+
+      <!-- High Contrast Presets -->
+      <div class="control-group">
+        <label for="select-contrast" class="control-label">Contrast Mode</label>
+        <select id="select-contrast" class="select-input">
+          <option value="none">Standard Page Colors</option>
+          <option value="dark">High Contrast Dark</option>
+          <option value="light">High Contrast Light</option>
+        </select>
+      </div>
+
+      <!-- Quick Toggles -->
+      <div class="checkbox-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="check-readable-font">
+          <span>Readable Dyslexia-Friendly Font</span>
+        </label>
+      </div>
+
+      <div class="checkbox-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="check-reading-ruler">
+          <span>Reading Guide Ruler <kbd>Alt+Shift+R</kbd></span>
+        </label>
+      </div>
+
+      <div class="checkbox-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="check-focus-mode">
+          <span>Focus Mode (Dim Distractions)</span>
+        </label>
+      </div>
+
+      <!-- Reversible Reset Button -->
+      <button type="button" id="btn-reset-styles" class="btn btn-secondary btn-full" style="margin-top: 0.75rem;">
+        ↺ Reset Page to Original Styles
+      </button>
+    </section>
+
+    <!-- Selection AI Explanation Notice -->
+    <section class="section-card selection-card" aria-labelledby="ai-actions-heading">
+      <h2 id="ai-actions-heading" class="card-heading">On-Demand Selection AI</h2>
+      <p class="card-desc">
+        Highlight any educational paragraph on this page to trigger <strong>Simplify</strong>, <strong>Summarize</strong>, <strong>Explain Term</strong>, or <strong>Study This</strong> in the floating toolbar.
+      </p>
+      <div class="privacy-note">
+        🔒 <strong>Privacy First:</strong> No page content is scanned or sent automatically. Only text you explicitly highlight and submit is processed.
+      </div>
+    </section>
+
+    <!-- Backend Configuration & Health -->
+    <section class="section-card" aria-labelledby="backend-heading">
+      <div class="backend-header-row">
+        <h2 id="backend-heading" class="card-heading">Backend Status</h2>
+        <span id="backend-status-pill" class="status-pill status-checking">Checking...</span>
+      </div>
+
+      <div class="control-group" style="margin-top: 0.5rem;">
+        <label for="input-backend-url" class="control-label">API Base URL</label>
+        <div class="url-input-row">
+          <input type="url" id="input-backend-url" class="text-input" placeholder="http://localhost:5000/api">
+          <button type="button" id="btn-test-backend" class="btn btn-secondary">Test</button>
+        </div>
+      </div>
+
+      <p id="backend-details" class="backend-details-text">
+        Connecting to local ConceptLens server...
+      </p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <span>ConceptLens Everywhere v1.0.0</span>
+      <span>Pillar 5 Verified</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
