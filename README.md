@@ -1,8 +1,22 @@
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=220&section=header&text=ConceptLens&fontSize=70&fontAlignY=38&animation=fadeIn&desc=The%20Living%20Atlas&descSize=24&descAlignY=60" alt="ConceptLens animated header" width="100%" />
+
+<a href="https://github.com/LovelySharma-dev/ConceptLens">
+  <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=600&size=26&duration=3200&pause=900&color=7C3AED&center=true&vCenter=true&width=760&lines=From+Your+Textbook+to+an+Experience+You+Can+Explore.;Interactive+2D+and+3D+STEM+lessons.;Cloudinary+media+delivery.;Practice+questions+labeled+as+practice.;Learn+anything.+Your+way." alt="Animated tagline" />
+</a>
+
+</div>
+
+---
+
 # ConceptLens 🔍✨
 
 > **From Your Textbook to an Experience You Can Explore.**
 > 
 > Interactive 2D and 3D STEM lessons, with Cloudinary media delivery and practice questions that are labeled as practice. Accessibility includes keyboard access, high contrast, and English text lessons. This repository has not had a formal WCAG audit.
+
+<div align="center">
 
 [![MERN + Three.js](https://img.shields.io/badge/Stack-MERN%20%2B%20Three.js-blueviolet?style=for-the-badge)](https://github.com/LovelySharma-dev/ConceptLens)
 [![TypeScript End-to-End](https://img.shields.io/badge/Type%20Safety-Zod%20Contracts%20(100%25)-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -12,7 +26,9 @@
 [![Accessibility Aligned](https://img.shields.io/badge/Accessibility-keyboard%20%2B%20text%20lessons-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Notion Documentation](https://img.shields.io/badge/Notion%20Docs-Submission%20Ready-000000?style=for-the-badge&logo=notion)](./NOTION_DOCUMENTATION.md)
 
----
+</div>
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=6,11,20&height=3&section=header" width="100%" alt="" />
 
 ## 📖 Table of Contents
 1. [Project Overview & Tagline](#1-project-overview--tagline)
@@ -44,7 +60,11 @@
 
 The animation below is the current app: home, a labeled sample, the three steps, preferences, the start of a lesson, the confirmation, a sample explanation, and the animal-cell lesson. The stills underneath are the same frames, for anyone who prefers a page that does not move.
 
+<div align="center">
+
 ![ConceptLens flow from the home page through a labeled sample, confirmation, a sample explanation, and the animal-cell lesson](docs/readme/flow.gif)
+
+</div>
 
 ```mermaid
 flowchart TD
@@ -613,3 +633,11 @@ An interactive, self-running browser showcase video player is included in this r
 This project is licensed under the **MIT License**, as declared in `package.json`.
 
 Built with ❤️ for accessible, reliable STEM education at **SheBuilds Hacktoberfest HackDays 2026**.
+
+<div align="center">
+
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=500&size=18&duration=3000&pause=1200&color=059669&center=true&vCenter=true&width=700&lines=Learn+anything.+Your+way.;One+concept.+Different+ways+to+understand+it." alt="Animated footer tagline" />
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=140&section=footer&animation=fadeIn" alt="" width="100%" />
+
+</div>
