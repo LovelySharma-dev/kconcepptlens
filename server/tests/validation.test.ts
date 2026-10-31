@@ -86,6 +86,7 @@ import {
   gradePracticeSubmission,
   composeMaterial,
   solveLinearEquation,
+  verifiedLinearSolution,
   lensDistanceStatement,
   traceSafeAccumulator,
   balanceReaction,
@@ -992,6 +993,24 @@ async function runTestSuite() {
   } else {
     assert(false, 'The local Python engine did not return a checked solution');
   }
+
+  assert(verifiedLinearSolution('x = 4. 2(4) + (3) = 11') === '4', 'An integer solution token keeps the whole value');
+  assert(verifiedLinearSolution('x = 1.5. 2(1.5) + (1) = 4') === '1.5', 'A decimal solution token is not cut at the decimal point');
+  assert(verifiedLinearSolution('x = -0.5. 2(-0.5) + (3) = 2') === '-0.5', 'A negative decimal solution token stays intact');
+  const decimalText = 'Solve 2x + 1 = 4.';
+  const decimalExplanation = buildMaterialExplanation({ text: decimalText, sourceKind: 'learner_text' });
+  const decimalToken = decimalExplanation.verified.map((item) => verifiedLinearSolution(item)).find((item) => item != null) ?? null;
+  const decimalPython = spawnSync('python', ['python/self_learning_engine.py'], {
+    cwd: path.resolve(__dirname, '../..'),
+    input: JSON.stringify({ command: 'solve', text: decimalText }),
+    encoding: 'utf-8',
+    timeout: 8000
+  });
+  const decimalParsed = decimalPython.status === 0 && decimalPython.stdout ? JSON.parse(decimalPython.stdout) : null;
+  assert(
+    decimalToken === '1.5' && decimalParsed?.solution === decimalToken && decimalParsed?.codeExecuted === false,
+    'Python and the lesson agree on the decimal solution x = 1.5'
+  );
 
   // --- PHASE 8 ACCEPTANCE TESTS ---
 

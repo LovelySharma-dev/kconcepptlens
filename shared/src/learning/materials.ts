@@ -674,6 +674,12 @@ function formatNumber(value: number): string {
   return String(round3(value));
 }
 
+/** Reads the checked value from "x = 1.5. …" without stopping at the decimal point. */
+export function verifiedLinearSolution(item: string): string | null {
+  const match = /^x = (-?\d+(?:\.\d+)?)\./.exec(item.trim());
+  return match ? match[1] : null;
+}
+
 export interface LinearSolution {
   expression: string;
   steps: ExplanationStep[];
