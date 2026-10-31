@@ -1255,13 +1255,13 @@ html[data-keyboard-first="true"] body.high-contrast :focus-visible {
   gap: 1rem;
 }
 .lens-dialog-head,
-.lens-actions {
+.lens-dialog .lens-actions {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
   align-items: flex-start;
 }
-.lens-actions {
+.lens-dialog .lens-actions {
   flex-direction: column;
 }
 .lens-section h3,
@@ -2473,42 +2473,79 @@ body.theme-dark .learn-home {
 
 .lens-actions {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.6rem;
+  justify-content: flex-start;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
 }
 
 .lens-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0.7rem 1.25rem;
+  gap: 0.55rem;
+  min-height: 46px;
+  padding: 0.72rem 1.45rem;
   border-radius: 999px;
-  border: 1px solid var(--lens-accent);
+  border: 1.5px solid var(--lens-accent);
   background: var(--lens-accent);
   color: var(--lens-accent-ink);
   font: inherit;
   font-weight: 650;
+  font-size: 1rem;
+  line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 76, 110, 0.22);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s ease,
+              border-color 0.2s ease,
+              color 0.2s ease;
+}
+
+.lens-button .lens-button-arrow {
+  display: inline-block;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lens-button:hover .lens-button-arrow {
+  transform: translateX(3px);
+}
+
+.lens-button:focus-visible {
+  outline: 3px solid var(--accent-blue, #0284c7);
+  outline-offset: 3px;
+}
+
+.lens-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(15, 76, 110, 0.18);
 }
 
 .lens-button-quiet {
-  background: transparent;
+  background: var(--bg-surface);
   color: var(--text-primary);
-}
-
-.lens-button:hover {
-  filter: none;
-  transform: none;
+  border-color: var(--border-medium);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .lens-button:hover {
-    background: transparent;
-    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 76, 110, 0.32);
+    filter: brightness(1.08);
+  }
+
+  .lens-button-quiet:hover {
+    background: var(--bg-surface-raised);
+    border-color: var(--lens-accent);
+    color: var(--lens-accent);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    transform: translateY(-2px);
+    filter: none;
   }
 
   .lens-card:hover {
@@ -2518,8 +2555,17 @@ body.theme-dark .learn-home {
 }
 
 .lens-trust {
-  margin: 1rem 0 0;
-  font-size: 0.98rem;
+  margin: 1.2rem 0 0;
+  font-size: 0.94rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.lens-trust-dot {
+  color: var(--lens-accent);
+  font-size: 0.85rem;
 }
 
 .lens-preview {
@@ -2900,12 +2946,24 @@ body.high-contrast .lens-sdg-10 {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .lens-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lens-actions .lens-button {
+    width: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .lens-button,
+  .lens-button .lens-button-arrow,
   .lens-preview,
   .lens-card {
     animation: none;
-    transform: none;
+    transform: none !important;
+    transition: none !important;
   }
 }

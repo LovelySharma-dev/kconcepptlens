@@ -112,7 +112,21 @@ export const HomeNarrative: React.FC<HomeNarrativeProps> = ({
           </p>
           <div className="lens-actions">
             <a className="lens-button" href="#guided-demo" onClick={start}>
-              Start Learning
+              <span>Start Learning</span>
+              <svg className="lens-button-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3.33 8h9.34M8.67 4l4 4-4 4"/>
+              </svg>
+            </a>
+            <a
+              className="lens-button lens-button-quiet"
+              href="#how-it-works"
+              onClick={(event) => {
+                if (plainClick(event)) return;
+                event.preventDefault();
+                focusInPage('how-it-works');
+              }}
+            >
+              See How It Works
             </a>
             <a
               className="lens-button lens-button-quiet"
@@ -126,7 +140,10 @@ export const HomeNarrative: React.FC<HomeNarrativeProps> = ({
               Discover Our Mission
             </a>
           </div>
-          <p className="lens-trust">Your preferences. Your pace. Your way of learning.</p>
+          <div className="lens-trust">
+            <span className="lens-trust-dot" aria-hidden="true">✦</span>
+            <span>Your preferences. Your pace. Your way of learning.</span>
+          </div>
         </div>
 
         <article className="lens-preview" aria-labelledby="preview-title">
@@ -300,9 +317,25 @@ export const HomeNarrative: React.FC<HomeNarrativeProps> = ({
       <section className="lens-closeout" aria-labelledby="closing-title">
         <h2 id="closing-title">Your next breakthrough starts with understanding.</h2>
         <p>Bring a question. Choose your way of learning. Take the next step.</p>
-        <a className="lens-button" href="#guided-demo" onClick={start}>
-          Start Learning
-        </a>
+        <div className="lens-actions">
+          <a className="lens-button" href="#guided-demo" onClick={start}>
+            <span>Start Learning</span>
+            <svg className="lens-button-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M3.33 8h9.34M8.67 4l4 4-4 4"/>
+            </svg>
+          </a>
+          <a
+            className="lens-button lens-button-quiet"
+            href="#our-mission"
+            onClick={(event) => {
+              if (plainClick(event)) return;
+              event.preventDefault();
+              focusInPage('our-mission');
+            }}
+          >
+            Discover Our Mission
+          </a>
+        </div>
       </section>
     </div>
   );
