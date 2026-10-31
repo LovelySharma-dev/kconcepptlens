@@ -3,23 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ConceptLens — Interactive 72-Second Product Showcase Demo</title>
+  <title>ConceptLens — 72-Second Master Showcase Demonstration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
   <style>
+    /* ==========================================================================
+       THE LIVING ATLAS — CONCEPTLENS CINEMATIC SHOWCASE DESIGN SYSTEM
+       Visual Direction: Warm, minimal editorial design with restrained cyan/teal.
+       Deep ink text on soft alabaster background. Precision motion.
+       ========================================================================== */
+
     :root {
-      --bg-dark: #0b0f17;
-      --bg-card: #131b28;
-      --bg-light: #f8fafc;
-      --surface-border: #1e293b;
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --accent-teal: #14b8a6;
-      --accent-cyan: #06b6d4;
-      --accent-green: #10b981;
-      --accent-red: #ef4444;
-      --accent-purple: #a855f7;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+      /* Warm Living Atlas Tokens */
+      --atlas-bg: #F7F4EF;
+      --atlas-bg-elevated: #FFFCF8;
+      --atlas-surface: #FFFFFF;
+      --atlas-surface-raised: #F3EFE8;
+      --atlas-text: #1C1917;
+      --atlas-text-secondary: #3F3A36;
+      --atlas-text-muted: #5C564F;
+
+      /* Restrained Accents */
+      --atlas-cyan: #1D6A9F;
+      --atlas-teal: #0D9488;
+      --atlas-mint: #059669;
+      --atlas-amber: #D97706;
+      --atlas-coral: #E11D48;
+      --atlas-slate: #334155;
+
+      /* Borders & Shadows */
+      --atlas-border: rgba(28, 25, 23, 0.08);
+      --atlas-border-medium: rgba(28, 25, 23, 0.14);
+      --atlas-border-active: rgba(29, 106, 159, 0.45);
+      --shadow-subtle: 0 4px 20px rgba(28, 25, 23, 0.05), 0 1px 3px rgba(28, 25, 23, 0.03);
+      --shadow-cinema: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 1px rgba(0, 0, 0, 0.2);
+
+      /* Typography */
+      --font-display: 'Source Serif 4', Georgia, serif;
+      --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+      /* Timing */
+      --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     * {
@@ -29,49 +55,99 @@
     }
 
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: var(--font-sans);
+      background-color: var(--atlas-bg);
+      color: var(--atlas-text);
+      font-family: var(--font-body);
       line-height: 1.5;
       padding: 1.5rem;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      transition: background-color 0.4s ease;
     }
 
+    /* Screen capture / clean cinema mode */
+    body.clean-mode {
+      padding: 0;
+      margin: 0;
+      background: #000000;
+      overflow: hidden;
+      display: block;
+    }
+
+    body.clean-mode header,
+    body.clean-mode .sidebar,
+    body.clean-mode .controls-panel,
+    body.clean-mode footer,
+    body.clean-mode .exit-clean-hint {
+      display: none !important;
+    }
+
+    body.clean-mode .main-grid {
+      display: block;
+      max-width: 100vw;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    body.clean-mode .player-container {
+      width: 100vw;
+      height: 100vh;
+      gap: 0;
+    }
+
+    body.clean-mode .screen-canvas {
+      width: 100vw;
+      height: 100vh;
+      aspect-ratio: auto;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+
+    /* Top Header */
     header {
-      max-width: 1200px;
-      margin: 0 auto 1.5rem auto;
+      max-width: 1240px;
+      margin: 0 auto 1.25rem auto;
       width: 100%;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 1rem;
-      border-bottom: 1px solid var(--surface-border);
+      border-bottom: 1px solid var(--atlas-border);
       padding-bottom: 1rem;
+    }
+
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
       padding: 0.2rem 0.65rem;
       border-radius: 9999px;
-      background: rgba(6, 182, 212, 0.12);
-      color: var(--accent-cyan);
-      border: 1px solid rgba(6, 182, 212, 0.25);
+      background: rgba(29, 106, 159, 0.08);
+      color: var(--atlas-cyan);
+      border: 1px solid rgba(29, 106, 159, 0.2);
+      font-family: var(--font-mono);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
     }
 
-    .badge-live {
-      background: rgba(16, 185, 129, 0.12);
-      color: var(--accent-green);
-      border-color: rgba(16, 185, 129, 0.25);
+    .badge-truth {
+      background: rgba(13, 148, 136, 0.08);
+      color: var(--atlas-teal);
+      border-color: rgba(13, 148, 136, 0.25);
     }
 
     .pulse-dot {
@@ -79,28 +155,37 @@
       height: 6px;
       border-radius: 50%;
       background-color: currentColor;
-      animation: pulseAnim 2s infinite;
+      animation: pulseAnim 2.2s infinite ease-in-out;
     }
 
     @keyframes pulseAnim {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+      50% { opacity: 0.35; transform: scale(0.8); }
     }
 
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-top: 0.25rem;
+    h1.header-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--atlas-text);
+      margin-top: 0.15rem;
     }
 
-    .subtitle {
-      color: var(--text-muted);
-      font-size: 0.85rem;
+    .header-subtitle {
+      color: var(--atlas-text-muted);
+      font-size: 0.82rem;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Main Grid */
     .main-grid {
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 0 auto;
       width: 100%;
       display: grid;
@@ -109,34 +194,86 @@
       flex-grow: 1;
     }
 
-    @media (min-width: 992px) {
+    @media (min-width: 1024px) {
       .main-grid {
-        grid-template-columns: 7.5fr 4.5fr;
+        grid-template-columns: 8fr 4fr;
       }
     }
 
-    /* Video Player Canvas Frame */
+    /* Player Container */
     .player-container {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
     }
 
+    /* Video Screen Canvas */
     .screen-canvas {
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 9;
-      background: #06090e;
-      border-radius: 1rem;
+      background: #0A0D14;
+      border-radius: 14px;
       overflow: hidden;
-      border: 1px solid var(--surface-border);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--atlas-border-medium);
+      box-shadow: var(--shadow-cinema);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       user-select: none;
     }
 
+    /* Browser Chrome / Device Bezel */
+    .browser-bezel {
+      background: #111827;
+      padding: 0.45rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: #9CA3AF;
+      z-index: 10;
+    }
+
+    .bezel-dots {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .bezel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot-close { background: #EF4444; }
+    .dot-min { background: #F59E0B; }
+    .dot-max { background: #10B981; }
+
+    .bezel-url-bar {
+      background: #1F2937;
+      border-radius: 4px;
+      padding: 0.15rem 0.75rem;
+      color: #D1D5DB;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.02em;
+    }
+
+    .bezel-badge {
+      font-size: 0.6rem;
+      background: rgba(13, 148, 136, 0.2);
+      color: #2DD4BF;
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+    }
+
+    /* Viewport Area */
     .viewport {
       position: relative;
       width: 100%;
@@ -144,299 +281,627 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.75rem;
       overflow: hidden;
+      background: var(--atlas-bg);
+      color: var(--atlas-text);
+      transition: background-color 0.5s ease;
     }
 
+    /* Scene Views */
     .scene-view {
       display: none;
       width: 100%;
       height: 100%;
+      padding: 2.25rem 2.5rem;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: sceneFadeIn 0.35s var(--ease-smooth) forwards;
+      position: absolute;
+      inset: 0;
     }
 
     .scene-view.active {
       display: flex;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes sceneFadeIn {
+      from { opacity: 0; transform: scale(0.985); }
+      to { opacity: 1; transform: scale(1); }
     }
 
-    /* Scene Specific Styling */
-    .eq-hero {
-      font-family: var(--font-serif);
-      font-size: 3rem;
-      font-weight: 500;
-      letter-spacing: -0.03em;
-      color: #ffffff;
-      margin-bottom: 0.5rem;
+    /* SCENE 1: The Hook */
+    #scene1 {
+      background: #080B11;
+      color: #F8FAFC;
+    }
+
+    .s1-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #38BDF8;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .s1-equation {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      margin-bottom: 0.75rem;
+      transition: all 0.4s var(--ease-smooth);
+    }
+
+    .s1-caption {
+      font-family: var(--font-body);
+      font-size: 1.25rem;
+      color: #94A3B8;
+      font-weight: 300;
+      letter-spacing: 0.01em;
+      transition: all 0.3s ease;
+    }
+
+    /* SCENE 2: The Problem */
+    #scene2 {
+      background: #F4EFEB;
+    }
+
+    .textbook-wall {
+      background: #FFFFFF;
+      border: 1px solid rgba(28, 25, 23, 0.12);
+      border-radius: 12px;
+      padding: 1.75rem 2rem;
+      text-align: left;
+      max-width: 580px;
+      box-shadow: var(--shadow-subtle);
+      transition: all 0.6s var(--ease-smooth);
+    }
+
+    .textbook-crowded {
+      font-size: 0.85rem;
+      line-height: 1.45;
+      color: var(--atlas-text-secondary);
       transition: all 0.5s ease;
     }
 
-    .lead-caption {
-      font-size: 1.15rem;
-      color: var(--text-muted);
-      font-weight: 300;
-      letter-spacing: 0.02em;
-    }
-
-    /* Dense textbook problem view */
-    .textbook-wall {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid #1e293b;
-      padding: 1.5rem;
-      border-radius: 0.75rem;
-      text-align: left;
-      max-width: 540px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      line-height: 1.6;
-      color: #94a3b8;
-    }
-
-    .highlight-box {
-      color: var(--accent-cyan);
-      border-left: 3px solid var(--accent-cyan);
-      padding-left: 0.75rem;
-      margin-top: 0.5rem;
+    .textbook-highlight {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-left: 3px solid var(--atlas-cyan);
+      background: rgba(29, 106, 159, 0.05);
+      border-radius: 0 6px 6px 0;
       font-weight: 600;
+      color: var(--atlas-cyan);
+      font-size: 0.9rem;
     }
 
-    /* Landing Card Reveal */
-    .landing-card {
-      background: #f8fafc;
-      color: #0f172a;
-      width: 100%;
-      max-width: 520px;
-      padding: 1.5rem;
-      border-radius: 0.85rem;
+    /* SCENE 3: Meet ConceptLens (Landing Page) */
+    #scene3 {
+      background: var(--atlas-bg);
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 1.75rem;
       text-align: left;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      position: relative;
+      overflow: hidden;
     }
 
-    .landing-card h2 {
-      font-size: 1.4rem;
-      font-weight: 800;
+    .landing-hero-card {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .landing-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--atlas-cyan);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+    }
+
+    .landing-headline {
+      font-family: var(--font-display);
+      font-size: 1.85rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--atlas-text);
       letter-spacing: -0.02em;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.5rem;
     }
 
-    .btn-action {
+    .landing-lead {
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--atlas-text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .btn-start-hero {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: var(--accent-teal);
-      color: white;
+      background: var(--atlas-text);
+      color: #FFFFFF;
+      font-size: 0.82rem;
       font-weight: 600;
-      font-size: 0.8rem;
-      padding: 0.5rem 1.1rem;
-      border-radius: 0.5rem;
+      padding: 0.55rem 1.15rem;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
-      margin-top: 0.75rem;
-      transition: background 0.2s;
+      transition: transform 0.15s, background-color 0.2s;
     }
 
-    .btn-action:hover {
-      background: #0d9488;
+    .btn-start-hero:hover {
+      background: #000000;
+      transform: translateY(-1px);
     }
 
-    /* Interactive tabs in demo */
-    .demo-frame {
-      width: 100%;
-      height: 100%;
+    .sample-preview-card {
+      background: #FFFFFF;
+      border: 1px solid var(--atlas-border-medium);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .sample-preview-header {
       display: flex;
-      flex-direction: column;
       justify-content: space-between;
-      text-align: left;
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: var(--atlas-text-muted);
+      border-bottom: 1px solid var(--atlas-border);
+      padding-bottom: 0.35rem;
+      margin-bottom: 0.65rem;
     }
 
-    .demo-tabs {
+    .sample-preview-q {
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: var(--font-display);
+      color: var(--atlas-text);
+      margin-bottom: 0.5rem;
+    }
+
+    .sample-preview-steps {
+      list-style: decimal inside;
+      font-size: 0.78rem;
+      color: var(--atlas-text-secondary);
+      line-height: 1.6;
+    }
+
+    .sample-preview-answer {
+      margin-top: 0.5rem;
+      padding: 0.35rem 0.65rem;
+      background: rgba(13, 148, 136, 0.08);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--atlas-teal);
+      font-size: 0.8rem;
+    }
+
+    /* SCENE 4: Core Demonstration */
+    #scene4 {
+      background: #FFFFFF;
+      padding: 1.5rem;
+      text-align: left;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+
+    .demo-bar {
       display: flex;
-      gap: 0.4rem;
-      background: rgba(11, 15, 23, 0.7);
-      padding: 0.25rem;
-      border-radius: 0.5rem;
-      border: 1px solid var(--surface-border);
-      width: fit-content;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 0.75rem;
     }
 
-    .tab-btn {
+    .demo-title-group h2 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--atlas-text);
+    }
+
+    .demo-switcher {
+      display: flex;
+      gap: 0.35rem;
+      background: var(--atlas-surface-raised);
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--atlas-border);
+    }
+
+    .tab-pill {
       background: transparent;
       border: none;
-      color: var(--text-muted);
+      padding: 0.35rem 0.85rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
       font-weight: 600;
-      padding: 0.35rem 0.75rem;
-      border-radius: 0.35rem;
+      color: var(--atlas-text-muted);
       cursor: pointer;
-      font-family: var(--font-mono);
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
-    .tab-btn.active {
-      background: var(--accent-cyan);
-      color: #0b0f17;
+    .tab-pill.active {
+      background: #FFFFFF;
+      color: var(--atlas-cyan);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
 
-    .demo-content-box {
-      background: #0e1624;
-      border: 1px solid var(--surface-border);
-      border-radius: 0.65rem;
-      padding: 1rem 1.25rem;
-      font-size: 0.85rem;
-      line-height: 1.6;
+    .demo-stage-body {
+      background: var(--atlas-bg);
+      border: 1px solid var(--atlas-border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      transition: all 0.3s ease;
     }
 
-    /* Practice Sandbox */
-    .practice-grid {
+    .demo-mode-headline {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--atlas-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+      font-family: var(--font-mono);
+    }
+
+    .demo-mode-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--atlas-text);
+    }
+
+    .demo-footer-callout {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--atlas-text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .callout-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--atlas-cyan);
+    }
+
+    /* SCENE 5: Practice Sandbox */
+    #scene5 {
+      background: var(--atlas-bg);
+      text-align: left;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 2.5rem;
+    }
+
+    .practice-box {
+      background: #FFFFFF;
+      border: 1px solid var(--atlas-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 620px;
+      box-shadow: var(--shadow-subtle);
+      margin: 0 auto;
+    }
+
+    .practice-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--atlas-teal);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .practice-question {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--atlas-text);
+      margin: 0.35rem 0 0.2rem 0;
+    }
+
+    .practice-hint {
+      font-size: 0.75rem;
+      color: var(--atlas-text-muted);
+      margin-bottom: 0.85rem;
+      font-style: italic;
+    }
+
+    .practice-options-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      max-width: 480px;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
     }
 
-    .practice-btn {
-      background: #131b28;
-      border: 1px solid #1e293b;
-      color: #e2e8f0;
+    .practice-choice-btn {
+      background: var(--atlas-surface-raised);
+      border: 1px solid var(--atlas-border-medium);
+      color: var(--atlas-text);
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 0.65rem 0.85rem;
-      border-radius: 0.5rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
       cursor: pointer;
       text-align: left;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
-    .practice-btn:hover {
-      background: #1e293b;
-      border-color: #334155;
+    .practice-choice-btn:hover {
+      background: #FFFFFF;
+      border-color: var(--atlas-cyan);
     }
 
-    .practice-btn.correct {
-      border-color: var(--accent-green) !important;
-      background: rgba(16, 185, 129, 0.15) !important;
-      color: #34d399 !important;
+    .practice-choice-btn.selected-correct {
+      border-color: var(--atlas-mint) !important;
+      background: rgba(5, 150, 105, 0.1) !important;
+      color: #065F46 !important;
+      font-weight: 600;
     }
 
-    .practice-btn.wrong {
-      border-color: var(--accent-red) !important;
-      background: rgba(239, 68, 68, 0.15) !important;
-      color: #f87171 !important;
-    }
-
-    .feedback-note {
-      margin-top: 0.75rem;
-      font-size: 0.75rem;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.4rem;
-      background: #0b0f17;
-      border: 1px solid var(--surface-border);
+    .practice-feedback-banner {
+      font-size: 0.8rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: 6px;
+      background: var(--atlas-surface-raised);
+      border: 1px solid var(--atlas-border);
+      color: var(--atlas-text-secondary);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    /* Mission SDGs */
-    .sdg-grid {
+    /* SCENE 6: Accessibility by Choice */
+    #scene6 {
+      background: #FFFFFF;
+      text-align: left;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .access-container {
+      width: 100%;
+      max-width: 660px;
+      margin: 0 auto;
+    }
+
+    .access-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .access-card {
+      background: var(--atlas-bg);
+      border: 1px solid var(--atlas-border);
+      border-radius: 10px;
+      padding: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .access-card.highlighted {
+      border-color: var(--atlas-cyan);
+      box-shadow: 0 0 0 1px var(--atlas-cyan);
+      background: #FFFFFF;
+    }
+
+    .access-card-label {
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--atlas-text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .access-card-desc {
+      font-size: 0.72rem;
+      color: var(--atlas-text-muted);
+      margin-top: 0.35rem;
+      line-height: 1.4;
+    }
+
+    /* SCENE 7: The Mission */
+    #scene7 {
+      background: var(--atlas-bg);
+      text-align: left;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .mission-wrap {
+      max-width: 620px;
+      width: 100%;
+    }
+
+    .sdg-cards-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      width: 100%;
-      max-width: 520px;
+      gap: 1rem;
+      margin-top: 1rem;
     }
 
-    .sdg-card {
-      padding: 1rem;
-      border-radius: 0.75rem;
-      text-align: left;
+    .sdg-box {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid var(--atlas-border);
+      box-shadow: var(--shadow-subtle);
     }
 
-    .sdg-4 {
-      background: rgba(197, 25, 45, 0.15);
-      border: 1px solid rgba(197, 25, 45, 0.35);
-    }
+    .sdg-box-4 { border-top: 4px solid #C5192D; }
+    .sdg-box-10 { border-top: 4px solid #DD1367; }
 
-    .sdg-10 {
-      background: rgba(221, 19, 103, 0.15);
-      border: 1px solid rgba(221, 19, 103, 0.35);
-    }
-
-    .sdg-num {
-      font-size: 1.5rem;
+    .sdg-number {
+      font-size: 1.75rem;
       font-weight: 900;
       line-height: 1;
       margin-bottom: 0.25rem;
     }
 
-    .sdg-4 .sdg-num { color: #f87171; }
-    .sdg-10 .sdg-num { color: #f472b6; }
+    .sdg-box-4 .sdg-number { color: #C5192D; }
+    .sdg-box-10 .sdg-number { color: #DD1367; }
 
-    /* Bottom Subtitles & Audio bar */
+    .sdg-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--atlas-text);
+      margin-bottom: 0.3rem;
+    }
+
+    .sdg-copy {
+      font-size: 0.75rem;
+      color: var(--atlas-text-secondary);
+      line-height: 1.45;
+    }
+
+    /* SCENE 8: The Final Frame */
+    #scene8 {
+      background: #06090E;
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1D6A9F, #0D9488);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.35rem;
+      color: #FFFFFF;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 10px 25px rgba(29, 106, 159, 0.4);
+    }
+
+    .final-logo-title {
+      font-family: var(--font-display);
+      font-size: 2.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      margin-bottom: 0.25rem;
+    }
+
+    .final-tagline {
+      font-size: 1.15rem;
+      color: #2DD4BF;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+    }
+
+    .final-subline {
+      font-size: 0.85rem;
+      color: #94A3B8;
+      font-weight: 300;
+      margin-bottom: 1.25rem;
+    }
+
+    .final-repo-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #CBD5E1;
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0.3rem 0.85rem;
+      border-radius: 9999px;
+    }
+
+    /* Subtitles Bar */
     .subtitles-bar {
-      background: rgba(6, 9, 14, 0.95);
-      border-top: 1px solid var(--surface-border);
-      padding: 0.65rem 1rem;
+      background: #0A0D14;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.65rem 1.25rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 0.8rem;
+      color: #E2E8F0;
+      z-index: 10;
     }
 
-    .cc-text {
-      color: #e2e8f0;
-      font-weight: 500;
-    }
-
-    .audio-cue {
+    .cc-badge {
       font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--accent-cyan);
+      font-size: 0.62rem;
+      background: rgba(56, 189, 248, 0.18);
+      color: #38BDF8;
+      padding: 0.12rem 0.4rem;
+      border-radius: 3px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .audio-stem-indicator {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: #38BDF8;
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
     }
 
+    /* Scrubber Track */
     .scrubber-track {
       width: 100%;
       height: 5px;
-      background: #1e293b;
+      background: #1F2937;
       cursor: pointer;
       position: relative;
+      z-index: 10;
     }
 
     .scrubber-fill {
       height: 100%;
-      background: var(--accent-cyan);
+      background: linear-gradient(90deg, #1D6A9F, #0D9488);
       width: 0%;
       transition: width 0.1s linear;
     }
 
-    /* Playback Controls */
+    /* Controls Panel */
     .controls-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--surface-border);
-      border-radius: 0.75rem;
-      padding: 0.65rem 1rem;
+      background: #FFFFFF;
+      border: 1px solid var(--atlas-border);
+      border-radius: 12px;
+      padding: 0.75rem 1.25rem;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 0.75rem;
+      box-shadow: var(--shadow-subtle);
     }
 
     .ctrl-group {
@@ -446,33 +911,41 @@
     }
 
     .btn-ctrl {
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #334155;
+      background: var(--atlas-surface-raised);
+      color: var(--atlas-text);
+      border: 1px solid var(--atlas-border-medium);
       padding: 0.4rem 0.85rem;
-      border-radius: 0.4rem;
+      border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-    }
-
-    .btn-ctrl.primary {
-      background: var(--accent-teal);
-      border-color: var(--accent-teal);
-      color: white;
+      transition: all 0.15s ease;
+      font-family: var(--font-body);
     }
 
     .btn-ctrl:hover {
-      filter: brightness(1.1);
+      background: #FFFFFF;
+      border-color: var(--atlas-cyan);
+    }
+
+    .btn-ctrl.primary {
+      background: var(--atlas-text);
+      color: #FFFFFF;
+      border-color: var(--atlas-text);
+    }
+
+    .btn-ctrl.primary:hover {
+      background: #000000;
     }
 
     .time-readout {
       font-family: var(--font-mono);
       font-size: 0.75rem;
-      color: var(--text-muted);
+      color: var(--atlas-text-muted);
+      margin-left: 0.25rem;
     }
 
     .scene-jumps {
@@ -485,24 +958,29 @@
 
     .scene-pill {
       background: transparent;
-      border: 1px solid #1e293b;
-      color: #94a3b8;
+      border: 1px solid var(--atlas-border);
+      color: var(--atlas-text-secondary);
       font-family: var(--font-mono);
-      font-size: 0.65rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.35rem;
+      font-size: 0.68rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
       cursor: pointer;
       white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .scene-pill:hover {
+      background: var(--atlas-surface-raised);
     }
 
     .scene-pill.active {
-      background: rgba(6, 182, 212, 0.15);
-      border-color: var(--accent-cyan);
-      color: var(--accent-cyan);
+      background: rgba(29, 106, 159, 0.1);
+      border-color: var(--atlas-cyan);
+      color: var(--atlas-cyan);
       font-weight: 600;
     }
 
-    /* Side Column: Director's Notes & Verification */
+    /* Sidebar / Verification */
     .sidebar {
       display: flex;
       flex-direction: column;
@@ -510,22 +988,24 @@
     }
 
     .card {
-      background: var(--bg-card);
-      border: 1px solid var(--surface-border);
-      border-radius: 0.75rem;
-      padding: 1.15rem;
+      background: #FFFFFF;
+      border: 1px solid var(--atlas-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-subtle);
     }
 
     .card-title {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      color: var(--atlas-text-muted);
       font-weight: 700;
       margin-bottom: 0.75rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-family: var(--font-mono);
     }
 
     .meta-row {
@@ -534,19 +1014,19 @@
     }
 
     .meta-label {
-      color: var(--text-muted);
+      color: var(--atlas-text-muted);
       font-family: var(--font-mono);
       display: block;
       margin-bottom: 0.15rem;
     }
 
     .meta-value {
-      color: #f1f5f9;
+      color: var(--atlas-text);
       font-weight: 500;
     }
 
     .meta-code {
-      color: var(--accent-cyan);
+      color: var(--atlas-cyan);
       font-family: var(--font-mono);
       font-size: 0.7rem;
       word-break: break-all;
@@ -564,22 +1044,59 @@
       display: flex;
       gap: 0.5rem;
       align-items: flex-start;
+      line-height: 1.4;
     }
 
     .check-icon {
-      color: var(--accent-green);
+      color: var(--atlas-teal);
       font-weight: bold;
     }
 
+    /* Footer */
     footer {
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 1.5rem auto 0 auto;
       width: 100%;
       text-align: center;
       font-size: 0.75rem;
-      color: var(--text-muted);
-      border-top: 1px solid var(--surface-border);
+      color: var(--atlas-text-muted);
+      border-top: 1px solid var(--atlas-border);
       padding-top: 1rem;
+    }
+
+    /* Simulated Motion Cursor */
+    .sim-cursor {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+      z-index: 100;
+      transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s;
+      opacity: 0;
+    }
+
+    .sim-cursor svg {
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+    }
+
+    /* Clean exit button */
+    .exit-clean-hint {
+      display: none;
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      z-index: 9999;
+      cursor: pointer;
+    }
+
+    body.clean-mode .exit-clean-hint {
+      display: block !important;
     }
   </style>
 </head>
@@ -588,189 +1105,265 @@
   <!-- Top Header -->
   <header>
     <div>
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <div class="brand-meta">
         <span class="badge"><span class="pulse-dot"></span> 72s Showcase Demo</span>
-        <span class="badge badge-live">Deterministic Engine Verified</span>
+        <span class="badge badge-truth">Deterministic Engine Verified</span>
       </div>
-      <h1>ConceptLens — Interactive Product Video Demo</h1>
-      <p class="subtitle">"One concept. Different ways to understand it."</p>
+      <h1 class="header-title">ConceptLens — Cinematic Product Showcase</h1>
+      <p class="header-subtitle">"One concept. Different ways to understand it."</p>
     </div>
 
-    <!-- Speech & Audio Synthesis Controls -->
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
+    <!-- Header Actions -->
+    <div class="header-actions">
       <button id="toggleAudioBtn" class="btn-ctrl" onclick="toggleSpeechNarration()">
-        <span id="speechIcon">🔊</span> Narration: <span id="speechStatus" style="color:var(--accent-cyan);">Off</span>
+        <span id="speechIcon">🔊</span> Narration: <span id="speechStatus" style="color:var(--atlas-cyan);">Off</span>
       </button>
       <button class="btn-ctrl" onclick="playSignatureChime()">
-        <span>🎵</span> Test Sonic Signature
+        <span>🎵</span> Test Sonic Branding
+      </button>
+      <button class="btn-ctrl primary" onclick="toggleCleanMode()">
+        <span>🎥</span> Screen Capture Mode
       </button>
     </div>
   </header>
 
-  <!-- Main Viewport & Production Notes Grid -->
+  <!-- Clean Mode Exit Floating Button -->
+  <div class="exit-clean-hint" onclick="toggleCleanMode()">
+    Esc / Click to Exit Capture Mode
+  </div>
+
+  <!-- Main Viewport & Verification Grid -->
   <main class="main-grid">
     
-    <!-- Video Player Column -->
+    <!-- Player Column -->
     <div class="player-container">
       
-      <!-- Video Frame Screen -->
-      <div class="screen-canvas">
+      <!-- Screen Canvas (16:9 Cinema Container) -->
+      <div class="screen-canvas" id="canvasFrame">
+        
+        <!-- Browser Chrome Bezel -->
+        <div class="browser-bezel">
+          <div class="bezel-dots">
+            <span class="bezel-dot dot-close"></span>
+            <span class="bezel-dot dot-min"></span>
+            <span class="bezel-dot dot-max"></span>
+          </div>
+          <div class="bezel-url-bar">
+            <span>🔒 conceptlens.dev/learn</span>
+            <span class="bezel-badge">Local Engine Active</span>
+          </div>
+          <div style="font-size: 0.62rem; color: #6B7280;">1920 × 1080 Viewport</div>
+        </div>
+
+        <!-- Animated Simulated Mouse Cursor -->
+        <div id="simCursor" class="sim-cursor">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M5.65 2.15L20.25 11.45L12.75 13.55L17.45 21.65L14.35 23.45L9.65 15.35L4.45 19.85L5.65 2.15Z" fill="#1C1917" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <!-- Viewport Workspace -->
         <div class="viewport" id="viewport">
           
           <!-- Scene 1: The Hook (0 - 6s) -->
           <div id="scene1" class="scene-view active">
-            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-cyan); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem;">Scene 1: The Hook</span>
-            <div id="s1Equation" class="eq-hero">2x + 3 = 11</div>
-            <p id="s1Caption" class="lead-caption">One concept.</p>
+            <span class="s1-kicker">Scene 1 • The Hook</span>
+            <div id="s1Equation" class="s1-equation">2x + 3 = 11</div>
+            <p id="s1Caption" class="s1-caption">One concept.</p>
           </div>
 
           <!-- Scene 2: The Problem (6 - 13s) -->
           <div id="scene2" class="scene-view">
-            <div class="textbook-wall">
-              <span style="color: #f59e0b; font-size: 0.7rem; text-transform: uppercase;">Scene 2: The Friction</span>
-              <p style="margin-top: 0.4rem; color: #cbd5e1;">
+            <div class="textbook-wall" id="s2Textbook">
+              <span style="color: var(--atlas-amber); font-size: 0.72rem; font-family: var(--font-mono); text-transform: uppercase; font-weight: 600;">Scene 2 • The Friction</span>
+              <p class="textbook-crowded" id="s2Body">
                 Linear equations require isolating variable terms by balancing inverse operations across equivalence relations. Standard formats present proof steps in dense paragraphs without alternative modalities.
               </p>
-              <div class="highlight-box">
-                When textbooks only offer a single format, learners stall.
+              <div class="textbook-highlight" id="s2Highlight">
+                Learning isn't one-size-fits-all. When textbooks only offer a single format, learners stall.
               </div>
             </div>
           </div>
 
           <!-- Scene 3: Meet ConceptLens (13 - 20s) -->
           <div id="scene3" class="scene-view">
-            <div class="landing-card">
-              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-teal); font-weight: 700; text-transform: uppercase;">Scene 3: The Arrival</span>
-              <h2>Learn anything. Your way.</h2>
-              <p style="font-size: 0.8rem; color: #475569; margin-bottom: 0.6rem;">
-                ConceptLens adapts supported educational material to your selected presentation preferences.
-              </p>
-              <div style="background: #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 0.4rem; font-family: var(--font-mono); font-size: 0.75rem; color: #1e293b;">
-                <strong>Sample:</strong> Solve 2x + 3 = 11 → Check: x = 4
+            <div class="landing-hero-card">
+              <div>
+                <p class="landing-kicker">Meet ConceptLens</p>
+                <h2 class="landing-headline">Learn anything.<br>Your way.</h2>
+                <p class="landing-lead">
+                  Learning isn’t one-size-fits-all. ConceptLens helps transform supported learning materials into explanations that match your preferred way of understanding.
+                </p>
+                <button id="s3StartBtn" class="btn-start-hero" onclick="jumpToScene(4)">
+                  <span>Start Learning</span>
+                  <span>→</span>
+                </button>
               </div>
-              <button class="btn-action" onclick="jumpToScene(4)">
-                Start Learning →
-              </button>
+
+              <!-- Mathematics Sample Preview Card -->
+              <div class="sample-preview-card">
+                <div class="sample-preview-header">
+                  <span>Sample preview</span>
+                  <span>Simple Steps</span>
+                </div>
+                <div class="sample-preview-q">Solve 2x + 3 = 11.</div>
+                <ol class="sample-preview-steps">
+                  <li>Subtract 3 from both sides.</li>
+                  <li>Divide both sides by 2.</li>
+                  <li>Check the answer by substitution.</li>
+                </ol>
+                <div class="sample-preview-answer">Understanding: x = 4</div>
+              </div>
             </div>
           </div>
 
           <!-- Scene 4: Core Demonstration (20 - 36s) -->
           <div id="scene4" class="scene-view">
-            <div class="demo-frame">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div>
-                  <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-cyan); text-transform: uppercase;">Scene 4: Core Demo</span>
-                  <div style="font-weight: 700; font-size: 0.95rem;">Solve 2x + 3 = 11</div>
+            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+              <div class="demo-bar">
+                <div class="demo-title-group">
+                  <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--atlas-cyan); text-transform: uppercase; font-weight: 600;">Scene 4 • Core Demonstration</span>
+                  <h2>Solve 2x + 3 = 11</h2>
                 </div>
-                <div class="demo-tabs">
-                  <button id="tabStandard" class="tab-btn active" onclick="setDemoMode('standard')">Standard</button>
-                  <button id="tabEasy" class="tab-btn" onclick="setDemoMode('easy')">Easy Read</button>
-                  <button id="tabSteps" class="tab-btn" onclick="setDemoMode('steps')">Simple Steps</button>
+                <div class="demo-switcher">
+                  <button id="tabStandard" class="tab-pill active" onclick="setDemoMode('standard')">Standard</button>
+                  <button id="tabEasy" class="tab-pill" onclick="setDemoMode('easy')">Easy Read</button>
+                  <button id="tabSteps" class="tab-pill" onclick="setDemoMode('steps')">Simple Steps</button>
                 </div>
               </div>
 
-              <div id="demoContent" class="demo-content-box">
-                <!-- Populated dynamically via JS -->
+              <!-- Main Dynamic Content Box -->
+              <div id="demoContent" class="demo-stage-body">
+                <!-- Dynamically populated via JavaScript -->
               </div>
 
-              <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">
-                <span id="demoCallout" style="color: var(--accent-cyan); font-weight: 600; font-family: var(--font-mono);">Same question.</span>
-                <span>Deterministic checked arithmetic</span>
+              <!-- Footnote & Verified Strategy Status -->
+              <div class="demo-footer-callout">
+                <span id="demoCallout" class="callout-badge">Same question.</span>
+                <span>Rule-based arithmetic: Checked linear equation (ax + b = c)</span>
               </div>
             </div>
           </div>
 
           <!-- Scene 5: Interactive Practice (36 - 47s) -->
           <div id="scene5" class="scene-view">
-            <div style="text-align: left; width: 100%; max-width: 500px;">
-              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-green); text-transform: uppercase;">Scene 5: Active Practice</span>
-              <h3 style="font-size: 1rem; font-weight: 700; margin: 0.25rem 0 0.2rem 0;">Which operation should be undone first in 2x + 3 = 11?</h3>
-              <p style="font-size: 0.7rem; color: var(--text-muted); font-style: italic;">Note: The answer key (x = 4) is omitted until attempted.</p>
+            <div class="practice-box">
+              <span class="practice-tag">Scene 5 • Active Practice</span>
+              <h3 class="practice-question">Which operation should be undone first in 2x + 3 = 11?</h3>
+              <p class="practice-hint">Undo the number that is added or subtracted before you divide. (Answer key hidden)</p>
 
-              <div class="practice-grid">
-                <button class="practice-btn" onclick="handlePractice(0)">A) Subtract 3</button>
-                <button class="practice-btn" onclick="handlePractice(1)">B) Divide by 2</button>
-                <button class="practice-btn" onclick="handlePractice(2)">C) Add 3</button>
-                <button class="practice-btn" onclick="handlePractice(3)">D) Multiply by 2</button>
+              <div class="practice-options-grid">
+                <button id="practiceBtn0" class="practice-choice-btn" onclick="handlePractice(0)">A) Subtract 3</button>
+                <button id="practiceBtn1" class="practice-choice-btn" onclick="handlePractice(1)">B) Divide by 2</button>
+                <button id="practiceBtn2" class="practice-choice-btn" onclick="handlePractice(2)">C) Add 3</button>
+                <button id="practiceBtn3" class="practice-choice-btn" onclick="handlePractice(3)">D) Multiply by 2</button>
               </div>
 
-              <div id="practiceFeedback" class="feedback-note">
-                Select an option above to trigger verified feedback.
+              <div id="practiceFeedback" class="practice-feedback-banner">
+                Select an option above to trigger verified rule-based feedback.
               </div>
             </div>
           </div>
 
           <!-- Scene 6: Accessibility by Choice (47 - 57s) -->
           <div id="scene6" class="scene-view">
-            <div style="text-align: left; width: 100%; max-width: 520px;">
-              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-purple); text-transform: uppercase;">Scene 6: Accessibility by Choice</span>
-              <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.65rem;">Accessibility isn't one setting. Choose what works for you.</h3>
+            <div class="access-container">
+              <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--atlas-teal); text-transform: uppercase; font-weight: 600;">Scene 6 • Accessibility by Choice</span>
+              <h2 style="font-family: var(--font-display); font-size: 1.45rem; margin: 0.25rem 0 0.5rem 0;">Accessibility isn't one setting. Choose what works for you.</h2>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-                <div style="background: #131b28; border: 1px solid #1e293b; padding: 0.65rem; border-radius: 0.5rem;">
-                  <span style="color: var(--accent-teal); font-weight: 700; font-size: 0.75rem;">Dyslexia</span>
-                  <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">Large scale & relaxed line height.</p>
+              <div class="access-grid">
+                <div class="access-card highlighted" id="cardEasyRead">
+                  <div class="access-card-label">
+                    <span>Easy Read</span>
+                    <span style="color:var(--atlas-cyan)">●</span>
+                  </div>
+                  <p class="access-card-desc">Short sentences, plain vocabulary, and clear word meanings.</p>
                 </div>
-                <div style="background: #131b28; border: 1px solid #1e293b; padding: 0.65rem; border-radius: 0.5rem;">
-                  <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.75rem;">Speech-Free</span>
-                  <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">Removes audio cues for calm focus.</p>
+                <div class="access-card highlighted" id="cardSimpleSteps">
+                  <div class="access-card-label">
+                    <span>Simple Steps</span>
+                    <span style="color:var(--atlas-teal)">●</span>
+                  </div>
+                  <p class="access-card-desc">Predictable sequence, one stage visible at a time.</p>
                 </div>
-                <div style="background: #131b28; border: 1px solid #1e293b; padding: 0.65rem; border-radius: 0.5rem;">
-                  <span style="color: #f59e0b; font-weight: 700; font-size: 0.75rem;">Low-Stim</span>
-                  <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">Distraction-free quiet interface.</p>
+                <div class="access-card" id="cardLowStim">
+                  <div class="access-card-label">
+                    <span>Low-Stimulation</span>
+                    <span style="color:var(--atlas-amber)">●</span>
+                  </div>
+                  <p class="access-card-desc">Zero decorative motion, calm palette, quiet focus.</p>
+                </div>
+                <div class="access-card" id="cardKeyboard">
+                  <div class="access-card-label">
+                    <span>Keyboard-First</span>
+                    <span style="color:var(--atlas-cyan)">●</span>
+                  </div>
+                  <p class="access-card-desc">Full keyboard path with distinct focus rings.</p>
+                </div>
+                <div class="access-card" id="cardSpeechFree">
+                  <div class="access-card-label">
+                    <span>Speech-Free</span>
+                    <span style="color:var(--atlas-slate)">●</span>
+                  </div>
+                  <p class="access-card-desc">Information delivered in text. Speaking is never required.</p>
+                </div>
+                <div class="access-card" id="cardLowVision">
+                  <div class="access-card-label">
+                    <span>Low-Vision</span>
+                    <span style="color:var(--atlas-coral)">●</span>
+                  </div>
+                  <p class="access-card-desc">Enlarged text scale (120%) and room to zoom.</p>
                 </div>
               </div>
-              <p style="font-size: 0.7rem; color: var(--text-muted); font-style: italic; margin-top: 0.6rem;">
-                Preferences are choices, not medical diagnoses.
+              <p style="font-size: 0.72rem; color: var(--atlas-text-muted); font-style: italic; margin-top: 0.85rem;">
+                Preferences are choices, not medical diagnoses. Performance is never used to infer a disability.
               </p>
             </div>
           </div>
 
-          <!-- Scene 7: Our Mission (57 - 65s) -->
+          <!-- Scene 7: The Mission (57 - 65s) -->
           <div id="scene7" class="scene-view">
-            <div style="text-align: left; width: 100%; max-width: 520px;">
-              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-cyan); text-transform: uppercase;">Scene 7: Our Mission</span>
-              <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.65rem;">More ways to engage with learning.</h3>
+            <div class="mission-wrap">
+              <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--atlas-cyan); text-transform: uppercase; font-weight: 600;">Scene 7 • Our Mission</span>
+              <h2 style="font-family: var(--font-display); font-size: 1.45rem; margin: 0.25rem 0 0.5rem 0;">More ways to engage with learning.</h2>
 
-              <div class="sdg-grid">
-                <div class="sdg-card sdg-4">
-                  <div class="sdg-num">4</div>
-                  <h4 style="font-size: 0.8rem; font-weight: 700; color: white;">Quality Education</h4>
-                  <p style="font-size: 0.7rem; color: #cbd5e1; margin-top: 0.2rem;">Accessible, equitable learning tailored to learner presentation preferences.</p>
+              <div class="sdg-cards-row">
+                <div class="sdg-box sdg-box-4">
+                  <div class="sdg-number">4</div>
+                  <div class="sdg-title">Quality Education</div>
+                  <p class="sdg-copy">Support inclusive and equitable quality education by making learning material easier to understand through alternative explanations and manageable steps.</p>
                 </div>
-                <div class="sdg-card sdg-10">
-                  <div class="sdg-num">10</div>
-                  <h4 style="font-size: 0.8rem; font-weight: 700; color: white;">Reduced Inequalities</h4>
-                  <p style="font-size: 0.7rem; color: #cbd5e1; margin-top: 0.2rem;">Eliminating barriers created by rigid, monolithic textbook formats.</p>
+                <div class="sdg-box sdg-box-10">
+                  <div class="sdg-number">10</div>
+                  <div class="sdg-title">Reduced Inequalities</div>
+                  <p class="sdg-copy">Help reduce learning barriers by providing alternative ways to engage with educational material and accommodating different presentation preferences.</p>
                 </div>
               </div>
-              <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.5rem;">
-                ConceptLens aims to support these goals. Not endorsed by the United Nations.
+              <p style="font-size: 0.68rem; color: var(--atlas-text-muted); margin-top: 0.85rem;">
+                ConceptLens aims to support these goals. It is not a United Nations program, and it is not endorsed by the United Nations.
               </p>
             </div>
           </div>
 
           <!-- Scene 8: The Final Frame (65 - 72s) -->
           <div id="scene8" class="scene-view">
-            <div style="width: 44px; height: 44px; border-radius: 0.75rem; background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan)); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0b0f17; font-size: 1.1rem; margin-bottom: 0.5rem;">
-              CL
-            </div>
-            <h2 style="font-size: 1.75rem; font-weight: 900; letter-spacing: -0.02em;">CONCEPTLENS</h2>
-            <p style="color: var(--accent-teal); font-weight: 600; font-size: 0.95rem; margin: 0.2rem 0;">"Learn anything. Your way."</p>
-            <p style="color: var(--text-muted); font-size: 0.75rem;">One concept. Different ways to understand it.</p>
-            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: #64748b; margin-top: 0.75rem;">github.com/LovelySharma-dev/ConceptLens</span>
+            <div class="brand-mark">CL</div>
+            <h1 class="final-logo-title">CONCEPTLENS</h1>
+            <p class="final-tagline">"Learn anything. Your way."</p>
+            <p class="final-subline">One concept. Different ways to understand it.</p>
+            <span class="final-repo-badge">github.com/LovelySharma-dev/ConceptLens</span>
           </div>
 
         </div>
 
-        <!-- Video Captions Overlay -->
+        <!-- Subtitles Bar -->
         <div class="subtitles-bar">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-family: var(--font-mono); font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); padding: 0.15rem 0.4rem; border-radius: 0.2rem; font-weight: 700;">CC</span>
-            <span id="ccText" class="cc-text">"One concept. Different ways to understand it."</span>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span class="cc-badge">CC</span>
+            <span id="ccText">"One concept. Different ways to understand it."</span>
           </div>
-          <div id="cueText" class="audio-cue">
-            <span class="pulse-dot"></span> <span>Audio: Low piano pulse (Db)</span>
+          <div id="cueText" class="audio-stem-indicator">
+            <span class="pulse-dot"></span> <span>Audio: Low piano pulse in Db</span>
           </div>
         </div>
 
@@ -778,6 +1371,7 @@
         <div class="scrubber-track" onclick="seekClick(event)">
           <div id="scrubberFill" class="scrubber-fill"></div>
         </div>
+
       </div>
 
       <!-- Playback Controls Bar -->
@@ -790,14 +1384,14 @@
           <span id="timecode" class="time-readout">00:00 / 01:12</span>
         </div>
 
-        <!-- Scene Jump Buttons -->
+        <!-- Jump to Specific Scenes -->
         <div class="scene-jumps">
           <button class="scene-pill active" onclick="jumpToScene(1)">1: Hook</button>
           <button class="scene-pill" onclick="jumpToScene(2)">2: Problem</button>
-          <button class="scene-pill" onclick="jumpToScene(3)">3: Arrival</button>
+          <button class="scene-pill" onclick="jumpToScene(3)">3: Meet</button>
           <button class="scene-pill" onclick="jumpToScene(4)">4: Core</button>
           <button class="scene-pill" onclick="jumpToScene(5)">5: Practice</button>
-          <button class="scene-pill" onclick="jumpToScene(6)">6: Access</button>
+          <button class="scene-pill" onclick="jumpToScene(6)">6: Choice</button>
           <button class="scene-pill" onclick="jumpToScene(7)">7: Mission</button>
           <button class="scene-pill" onclick="jumpToScene(8)">8: Final</button>
         </div>
@@ -805,60 +1399,60 @@
 
     </div>
 
-    <!-- Production Notes & Truthfulness Verification Sidebar -->
+    <!-- Director's Notes & Verification Sidebar -->
     <aside class="sidebar">
       
-      <!-- Current Scene Metadata -->
+      <!-- Current Scene Metadata Card -->
       <div class="card">
         <div class="card-title">
-          <span>Director's Log</span>
+          <span>Director's Monitor</span>
           <span id="sceneBadge" class="badge">Scene 1 (0–6s)</span>
         </div>
         <div class="meta-row">
-          <span class="meta-label">Camera & Motion:</span>
-          <span id="cameraMeta" class="meta-value">Static macro framing on deep slate (#0B0F17). Focus on raw equation typography.</span>
+          <span class="meta-label">Camera & Motion Direction:</span>
+          <span id="cameraMeta" class="meta-value">Minimal typography transition on deep slate (#080B11). Restrained typographic morph into plain language.</span>
         </div>
         <div class="meta-row">
-          <span class="meta-label">Audio Design Stem:</span>
-          <span id="audioMeta" class="meta-value">Sub-bass 45Hz pulse, tape-filtered acoustic piano chord in Db.</span>
+          <span class="meta-label">Sound Design Stem:</span>
+          <span id="audioMeta" class="meta-value">Sub-bass 45Hz tape pulse, resonant acoustic piano chord in Db.</span>
         </div>
         <div class="meta-row">
           <span class="meta-label">Codebase Verification:</span>
-          <span id="codeMeta" class="meta-code">shared/src/learning/materials.ts (Linear solver)</span>
+          <span id="codeMeta" class="meta-code">shared/src/learning/materials.ts (Linear equation solver)</span>
         </div>
       </div>
 
-      <!-- 5 Key Takeaways Checklist -->
+      <!-- Core 5 Takeaways Checklist -->
       <div class="card">
-        <div class="card-title">Core Video Takeaways</div>
+        <div class="card-title">5 Mandatory Takeaways</div>
         <ul class="takeaways-list">
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>1. Problem:</strong> Static textbook presentations fail diverse learners.</span>
+            <span><strong>1. Problem:</strong> Learning content does not work equally well for everyone.</span>
           </li>
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>2. Agency:</strong> Learners choose how material is structured.</span>
+            <span><strong>2. Agency:</strong> ConceptLens lets learners choose how supported material is presented.</span>
           </li>
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>3. Real Differences:</strong> Standard, Easy Read, and Simple Steps on 2x + 3 = 11.</span>
+            <span><strong>3. Real Differences:</strong> Standard, Easy Read, and Simple Steps on <code>2x + 3 = 11</code>.</span>
           </li>
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>4. Guided Practice:</strong> Rule-based checks without pre-revealing answers.</span>
+            <span><strong>4. Guided Practice:</strong> Rule-based feedback without exposing solutions beforehand.</span>
           </li>
           <li>
             <span class="check-icon">✓</span>
-            <span><strong>5. Real Software:</strong> 100% verified deterministic code—no fake AI mockups.</span>
+            <span><strong>5. Real Software:</strong> 100% verified deterministic rule engine—no fake AI mockups.</span>
           </li>
         </ul>
       </div>
 
       <!-- Technical Integrity Notice -->
-      <div class="card" style="font-size: 0.75rem; color: #94a3b8; border-color: rgba(20, 184, 166, 0.3);">
-        <strong style="color: #f1f5f9; display: block; margin-bottom: 0.25rem;">⚖️ Technical Honesty Mandate</strong>
-        The Python and TypeScript engines are strictly rule-based arithmetic solvers and keyword classifiers. No proprietary deep learning models are claimed.
+      <div class="card" style="font-size: 0.75rem; color: var(--atlas-text-secondary); border-color: rgba(29, 106, 159, 0.25);">
+        <strong style="color: var(--atlas-text); display: block; margin-bottom: 0.25rem;">⚖️ Technical Honesty Mandate</strong>
+        The Python and TypeScript engines are deterministic, rule-based arithmetic solvers and keyword classifiers. Universal subject comprehension is not claimed.
       </div>
 
     </aside>
@@ -867,10 +1461,10 @@
 
   <!-- Footer -->
   <footer>
-    ConceptLens — SheBuilds Hacktoberfest HackDays 2026 • Aligned with UN SDGs 4 & 10 (Not endorsed by the UN)
+    ConceptLens — Master Video Showcase Production System • Aligned with UN SDGs 4 & 10 (Not endorsed by the UN)
   </footer>
 
-  <!-- Script Logic -->
+  <!-- Script Implementation -->
   <script>
     const TOTAL_SECONDS = 72;
     let currentTime = 0;
@@ -879,101 +1473,107 @@
     let audioContext = null;
     let speechEnabled = false;
 
+    // SCENES DEFINITIONS SYNCHRONIZED WITH MASTER STORYBOARD
     const SCENES = [
       { id: 1, start: 0, end: 6, title: "Scene 1: The Hook",
-        camera: "Static macro framing on deep slate (#0B0F17). Focus on raw equation typography.",
-        audio: "Sub-bass 45Hz pulse, tape-filtered acoustic piano chord in Db.",
-        code: "shared/src/learning/materials.ts (2x + 3 = 11)",
+        camera: "Minimal typography transition on deep slate (#080B11). Pure equation transforms into plain wording.",
+        audio: "Sub-bass 45Hz tape pulse, resonant acoustic piano chord in Db.",
+        code: "shared/src/learning/materials.ts (solveLinearEquation)",
         caption: "One concept. Different ways to understand it.",
         speechText: "One concept. Different ways to understand it.",
-        cue: "Low piano pulse (Db)"
+        cue: "Low piano pulse in Db"
       },
       { id: 2, start: 6, end: 13, title: "Scene 2: The Problem",
-        camera: "Gentle pull-out from 120% zoom to 100%. Dense textbook layout breathing into whitespace.",
-        audio: "Piano motif starts quiet arpeggio; friction resolves to open space.",
-        code: "client/src/index.css (Editorial typography & line spacing)",
-        caption: "Learning isn't one-size-fits-all. When textbooks only offer a single format, learners get left behind.",
-        speechText: "Learning isn't one-size-fits-all. When textbooks only offer a single format, learners get left behind.",
+        camera: "Dense textbook prose expands into open breathing space, highlighting the core mathematical operation.",
+        audio: "Gentle momentum begins; subtle unresolved harmonic tension clearing into open space.",
+        code: "client/src/index.css (Living Atlas typography tokens)",
+        caption: "Learning isn't one-size-fits-all. When textbooks only offer a single format, learners stall.",
+        speechText: "Learning isn't one-size-fits-all. When textbooks only offer a single format, learners stall.",
         cue: "Gentle piano momentum"
       },
-      { id: 3, start: 13, end: 20, title: "Scene 3: The Arrival",
-        camera: "Camera push-in (100% to 115%) focusing on Hero headline and math sample preview card.",
-        audio: "Warm acoustic bass entrance; crisp tactile relay click on 'Start Learning'.",
-        code: "client/src/components/home/HomeNarrative.tsx (Hero & preview card)",
-        caption: "Meet ConceptLens. An accessible learning platform built to adapt educational material to you.",
-        speechText: "Meet ConceptLens. An accessible learning platform built to adapt educational material to you.",
-        cue: "Warm bass lift"
+      { id: 3, start: 13, end: 20, title: "Scene 3: Meet ConceptLens",
+        camera: "Smooth camera push into the verified ConceptLens landing page and sample preview card.",
+        audio: "Warm acoustic bass lift; crisp tactile click on 'Start Learning'.",
+        code: "client/src/components/home/HomeNarrative.tsx (Hero section & preview)",
+        caption: "Meet ConceptLens. Learning, presented your way.",
+        speechText: "Meet ConceptLens. Learning, presented your way.",
+        cue: "Warm acoustic bass lift"
       },
       { id: 4, start: 20, end: 36, title: "Scene 4: Core Demonstration",
-        camera: "Crisp capture focused on real three-column comparison & workspace mode toggles.",
-        audio: "Steady rhythmic synth pulse begins. 82 BPM clockwork precision.",
+        camera: "Crisp view of equation workspace transitioning from Standard to Easy Read to Simple Steps.",
+        audio: "Rhythmic clockwork pulse at 82 BPM; crisp UI selection transients.",
         code: "client/src/components/learn/GuidedDemo.tsx (Standard vs Easy Read vs Simple Steps)",
         caption: "Same question. Different presentation. Your pace.",
-        speechText: "Take a foundational equation: 2x plus 3 equals 11. Switch seamlessly from standard academic text, to plain-language Easy Read, or step-by-step Simple Steps.",
-        cue: "Rhythmic UI clicks & pulse"
+        speechText: "Same question. Different presentation. Your pace. Take 2x plus 3 equals 11. Switch from standard explanation, to plain language Easy Read, to step-by-step Simple Steps.",
+        cue: "Clockwork rhythmic pulse"
       },
-      { id: 5, start: 36, end: 47, title: "Scene 5: Interactive Practice",
-        camera: "Focused crop on Practice Sandbox fieldset; correct answer omitted until attempted.",
-        audio: "Woodblock tap on selection, uplifting harmonic chime on verified correct answer.",
+      { id: 5, start: 36, end: 47, title: "Scene 5: Active Practice",
+        camera: "Focused crop on Practice Sandbox. Selection of 'Subtract 3' triggers verified rule feedback.",
+        audio: "Tactile woodblock tap on selection, uplifting two-note harmonic success chime.",
         code: "shared/src/learning/materials.ts (linearPractice without pre-revealed keys)",
         caption: "Understand. Try. Learn from the next step.",
-        speechText: "Understand, try, and learn from rule-based checks that guide you without giving away the answer.",
+        speechText: "Understand. Try. Learn from the next step. Verified feedback guides you without revealing the answer first.",
         cue: "Woodblock tap & success chime"
       },
       { id: 6, start: 47, end: 57, title: "Scene 6: Accessibility by Choice",
-        camera: "Split-screen editorial layout: Preference switches on left, live app transformations on right.",
-        audio: "Layered organic clicks synced to each toggle; broad warm piano voicings.",
-        code: "shared/src/learning/themes.ts (dyslexia, speech-free, low-stim)",
+        camera: "Refined multi-card matrix of real preferences: Easy Read, Simple Steps, Low-Stimulation, Speech-Free.",
+        audio: "Layered organic clicks synchronized to each toggle; broad warm piano voicings.",
+        code: "shared/src/learning/themes.ts (Easy Read, Simple Steps, Low-Stimulation)",
         caption: "Accessibility isn't one setting. Choose what works for you.",
-        speechText: "Accessibility isn't a single setting. Choose dyslexia-friendly spacing, speech-free quiet, or low-stimulation views.",
+        speechText: "Accessibility isn't one setting. Choose what works for you.",
         cue: "Layered harmonic progression"
       },
       { id: 7, start: 57, end: 65, title: "Scene 7: Our Mission",
-        camera: "Slow, elegant pan across restrained editorial cards for UN SDGs 4 & 10.",
-        audio: "Music reaches emotional apex; lush piano, gentle strings, resonant low-end.",
+        camera: "Restrained, editorial visual reference to UN Sustainable Development Goals 4 and 10.",
+        audio: "Warm resonant finish; lush piano chords with gentle decay.",
         code: "client/src/components/home/HomeNarrative.tsx (SDG 4 & SDG 10 cards)",
-        caption: "Building toward United Nations Goals 4 and 10—because every learner deserves a fair opportunity.",
-        speechText: "Aligned with United Nations Goals 4 and 10, because every learner deserves a fair opportunity to understand.",
+        caption: "More ways to engage with learning.",
+        speechText: "More ways to engage with learning.",
         cue: "Warm resonant finish"
       },
       { id: 8, start: 65, end: 72, title: "Scene 8: The Final Frame",
-        camera: "Centered static lock. Equation resolves into x = 4, dissolves into clean ConceptLens branding.",
-        audio: "Pure three-note signature chime (Db5 - Ab5 - F6) with warm analog reverb tail into silence.",
-        code: "Brand signature: ConceptLens — Learn anything. Your way.",
+        camera: "Centered lock. Equation resolves into x = 4, then dissolves into clean ConceptLens branding.",
+        audio: "Pure three-note signature chime (Db5 - Ab5 - F6) with warm analog decay into soft silence.",
+        code: "ConceptLens — One concept. Different ways to understand it.",
         caption: "CONCEPTLENS — Learn anything. Your way. One concept. Different ways to understand it.",
         speechText: "ConceptLens. Learn anything. Your way.",
-        cue: "Signature 3-Note Chime"
+        cue: "Signature 3-Note Chime (Db5 - Ab5 - F6)"
       }
     ];
 
+    // Real mathematical data directly from shared/src/learning/materials.ts
     const DEMO_MODES = {
       standard: {
         title: "Standard Academic Presentation",
-        body: "The source writes 2x + 3 = 11. The solution is a value of x, not the equation itself. Subtract 3 from both sides to isolate the variable term, then divide both sides by 2 to solve for x.",
+        body: "The source writes 2x + 3 = 11. The solution is a value of x, not the equation itself. Subtract 3 from both sides to isolate the variable term (2x = 8), then divide both sides by 2 to solve for x (x = 4).",
         callout: "Same question.",
-        steps: "4 of 4 steps visible. Full academic phrasing."
+        stepsBadge: "4 of 4 steps visible • Standard terminology"
       },
       easy: {
         title: "Easy Read (Plain Language)",
-        body: "2x + 3 = 11 means both sides are equal. An equation says two amounts match. The letter x is a variable. Undo the added 3 first. Subtract 3 from both sides. Then divide both sides by 2. x is 4.",
+        body: "2x + 3 = 11 means both sides are equal. An equation says two amounts match. The letter x is a variable, which stands for a number you do not know yet. Undo the added 3 first. Subtract 3 from both sides. Then divide both sides by 2. x is 4.",
         callout: "Different presentation.",
-        steps: "Short sentences, plain vocabulary."
+        stepsBadge: "Short sentences • Plain vocabulary • Core concept explained"
       },
       steps: {
         title: "Simple Steps (Isolated Progression)",
-        body: "Step 1 of 4: Subtract 3 from both sides.\nResult: 2x = 8.\n[Next step: Divide both sides by 2 → x = 4]",
+        body: "Step 1 of 4: Subtract 3 from both sides.\n→ 2x = 8\n\n[Step 2: Divide both sides by 2 → x = 4]\n[Step 3: Substitute 4 back: 2(4) + 3 = 11 ✓]",
         callout: "Your pace.",
-        steps: "1 of 4 steps visible at a time."
+        stepsBadge: "1 step visible at a time • Previous / Next navigation"
       }
     };
 
+    // Web Audio Synthesizer
     function initAudio() {
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
     }
 
-    function playTone(freq, duration, type = 'sine', gainVal = 0.15) {
+    function playTone(freq, duration, type = 'sine', gainVal = 0.12) {
       try {
         initAudio();
         const osc = audioContext.createOscillator();
@@ -989,27 +1589,29 @@
       } catch(e) {}
     }
 
+    // Three-note sonic signature: Db5 (554.37Hz), Ab5 (830.61Hz), F6 (1396.91Hz)
     function playSignatureChime() {
       initAudio();
-      // Three-note signature chime: Db5 (554.37Hz), Ab5 (830.61Hz), F6 (1396.91Hz)
-      playTone(554.37, 1.2, 'triangle', 0.18);
-      setTimeout(() => playTone(830.61, 1.4, 'triangle', 0.15), 180);
-      setTimeout(() => playTone(1396.91, 1.8, 'sine', 0.12), 360);
+      playTone(554.37, 1.4, 'triangle', 0.16);
+      setTimeout(() => playTone(830.61, 1.6, 'triangle', 0.14), 190);
+      setTimeout(() => playTone(1396.91, 2.0, 'sine', 0.11), 380);
     }
 
     function playClick() {
-      playTone(1200, 0.04, 'triangle', 0.08);
+      playTone(1400, 0.035, 'triangle', 0.07);
     }
 
     function playSuccess() {
-      playTone(523.25, 0.3, 'sine', 0.15); // C5
-      setTimeout(() => playTone(659.25, 0.5, 'sine', 0.15), 120); // E5
+      playTone(523.25, 0.35, 'sine', 0.14); // C5
+      setTimeout(() => playTone(659.25, 0.55, 'sine', 0.14), 130); // E5
     }
 
+    // Speech Synthesis
     function toggleSpeechNarration() {
       speechEnabled = !speechEnabled;
-      document.getElementById('speechStatus').textContent = speechEnabled ? 'On' : 'Off';
-      document.getElementById('speechStatus').style.color = speechEnabled ? 'var(--accent-green)' : 'var(--accent-cyan)';
+      const statusEl = document.getElementById('speechStatus');
+      statusEl.textContent = speechEnabled ? 'On' : 'Off';
+      statusEl.style.color = speechEnabled ? 'var(--atlas-teal)' : 'var(--atlas-cyan)';
       if (speechEnabled) {
         speakCurrentScene();
       } else {
@@ -1022,7 +1624,7 @@
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
-      utterance.pitch = 1.05;
+      utterance.pitch = 1.02;
       window.speechSynthesis.speak(utterance);
     }
 
@@ -1035,14 +1637,15 @@
       }
     }
 
+    // Interactive Demo Switching
     function setDemoMode(modeKey) {
       playClick();
       const mode = DEMO_MODES[modeKey];
       const box = document.getElementById('demoContent');
       box.innerHTML = `
-        <div style="font-weight: 700; color: var(--accent-teal); font-size: 0.8rem; margin-bottom: 0.25rem;">${mode.title}</div>
-        <p style="white-space: pre-line; color: #cbd5e1; font-size: 0.8rem; line-height: 1.5; font-family: var(--font-mono);">${mode.body}</p>
-        <span style="font-size: 0.65rem; color: #64748b; font-family: var(--font-mono); margin-top: 0.4rem; display: block;">${mode.steps}</span>
+        <div class="demo-mode-headline">${mode.title}</div>
+        <p class="demo-mode-text" style="white-space: pre-line;">${mode.body}</p>
+        <span style="font-size: 0.72rem; color: var(--atlas-text-muted); font-family: var(--font-mono); margin-top: 0.6rem; display: block;">${mode.stepsBadge}</span>
       `;
       document.getElementById('demoCallout').textContent = mode.callout;
       ['standard', 'easy', 'steps'].forEach(key => {
@@ -1054,22 +1657,23 @@
       });
     }
 
+    // Interactive Practice
     function handlePractice(index) {
       const feedback = document.getElementById('practiceFeedback');
-      const buttons = document.querySelectorAll('.practice-btn');
-      buttons.forEach(b => b.classList.remove('correct', 'wrong'));
+      const buttons = [0, 1, 2, 3].map(i => document.getElementById('practiceBtn' + i));
+      buttons.forEach(b => b.classList.remove('selected-correct'));
 
-      if (index === 0) { // Subtract 3 (Correct)
+      if (index === 0) { // Subtract 3 (Correct verified operation)
         playSuccess();
-        buttons[0].classList.add('correct');
-        feedback.innerHTML = '<span style="color: var(--accent-green); font-weight: bold;">✓ Correct.</span> That is the operation to undo first.';
+        buttons[0].classList.add('selected-correct');
+        feedback.innerHTML = '<span style="color: var(--atlas-teal); font-weight: 700;">✓ Correct.</span> That is the operation to undo first.';
       } else {
         playTone(220, 0.15, 'sawtooth', 0.08);
-        buttons[index].classList.add('wrong');
-        feedback.innerHTML = '<span style="color: var(--accent-red); font-weight: bold;">✗ Not quite.</span> Undo the added constant (3) before dividing.';
+        feedback.innerHTML = '<span style="color: var(--atlas-coral); font-weight: 700;">✗ Notice:</span> Undo the added constant (3) before dividing.';
       }
     }
 
+    // Timeline Engine
     function updateView(time) {
       const scene = SCENES.find(s => time >= s.start && time < s.end) || SCENES[SCENES.length - 1];
 
@@ -1082,50 +1686,72 @@
         }
       }
 
-      // Micro-animations within scenes
+      // Simulated Cursor Motion & Dynamic Scene Orchestration
+      const cursor = document.getElementById('simCursor');
       if (scene.id === 1) {
+        cursor.style.opacity = '0';
         const eq = document.getElementById('s1Equation');
         const cap = document.getElementById('s1Caption');
         if (time >= 3.2) {
-          eq.textContent = "Undo 3 first → Subtract 3";
+          eq.textContent = "Undo 3 first → 2x = 8";
           cap.textContent = "Different ways to understand it.";
         } else {
           eq.textContent = "2x + 3 = 11";
           cap.textContent = "One concept.";
         }
+      } else if (scene.id === 3) {
+        cursor.style.opacity = '1';
+        cursor.style.transform = 'translate(190px, 340px)';
+      } else if (scene.id === 4) {
+        cursor.style.opacity = '1';
+        if (time < 25) {
+          cursor.style.transform = 'translate(510px, 75px)';
+          setDemoMode('standard');
+        } else if (time < 30) {
+          cursor.style.transform = 'translate(590px, 75px)';
+          setDemoMode('easy');
+        } else {
+          cursor.style.transform = 'translate(670px, 75px)';
+          setDemoMode('steps');
+        }
+      } else if (scene.id === 5) {
+        cursor.style.opacity = '1';
+        if (time < 41) {
+          cursor.style.transform = 'translate(260px, 250px)';
+        } else {
+          cursor.style.transform = 'translate(310px, 280px)';
+          handlePractice(0);
+        }
+      } else {
+        cursor.style.opacity = '0';
       }
 
-      if (scene.id === 4) {
-        if (time < 25) setDemoMode('standard');
-        else if (time < 30) setDemoMode('easy');
-        else setDemoMode('steps');
-      }
-
-      if (scene.id === 8 && time >= 66 && time < 67) {
+      // Trigger 3-Note Signature Chime in Scene 8
+      if (scene.id === 8 && time >= 66.0 && time < 66.6) {
         playSignatureChime();
       }
 
-      // Update Subtitles & Audio Cue
+      // Update Subtitles & Audio Stem
       document.getElementById('ccText').textContent = `"${scene.caption}"`;
-      document.getElementById('cueText').innerHTML = `<span class="pulse-dot"></span> Audio: ${scene.cue}`;
+      document.getElementById('cueText').innerHTML = `<span class="pulse-dot"></span> <span>Audio: ${scene.cue}</span>`;
 
-      // Update Scrubber
+      // Update Scrubber Track
       const pct = (time / TOTAL_SECONDS) * 100;
       document.getElementById('scrubberFill').style.width = `${pct}%`;
 
-      // Update Timecode
+      // Update Timecode Readout
       const mins = Math.floor(time / 60).toString().padStart(2, '0');
       const secs = Math.floor(time % 60).toString().padStart(2, '0');
       document.getElementById('timecode').textContent = `${mins}:${secs} / 01:12`;
 
-      // Update Scene Pills
+      // Update Scene Jump Pills
       const pills = document.querySelectorAll('.scene-pill');
       pills.forEach((pill, idx) => {
         if (idx + 1 === scene.id) pill.classList.add('active');
         else pill.classList.remove('active');
       });
 
-      // Update Director's Notes
+      // Update Director's Monitor Sidebar
       document.getElementById('sceneBadge').textContent = `${scene.title} (${scene.start}–${scene.end}s)`;
       document.getElementById('cameraMeta').textContent = scene.camera;
       document.getElementById('audioMeta').textContent = scene.audio;
@@ -1189,6 +1815,32 @@
       lastSpokenSceneId = null;
       updateView(currentTime);
     }
+
+    function toggleCleanMode() {
+      document.body.classList.toggle('clean-mode');
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.key >= '1' && e.key <= '8') {
+        jumpToScene(parseInt(e.key, 10));
+      } else if (e.key === 'c' || e.key === 'C') {
+        toggleCleanMode();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleSpeechNarration();
+      } else if (e.key === 'Escape' && document.body.classList.contains('clean-mode')) {
+        toggleCleanMode();
+      } else if (e.key === 'ArrowRight') {
+        currentTime = Math.min(TOTAL_SECONDS, currentTime + 3);
+        updateView(currentTime);
+      } else if (e.key === 'ArrowLeft') {
+        currentTime = Math.max(0, currentTime - 3);
+        updateView(currentTime);
+      }
+    });
 
     // Default initialization
     setDemoMode('standard');
