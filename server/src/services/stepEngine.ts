@@ -178,8 +178,13 @@ function simulateReverseList(startGraph: LinkedListGraph): ExecutionStep[] {
   let curr: string | null = g.headId;
   let stepCount = 1;
   const nodeMap = buildNodeMap(g.nodes);
+  const seen = new Set<string>();
 
   while (curr !== null && nodeMap.has(curr)) {
+    if (seen.has(curr)) {
+      throw new Error('Refusing to reverse a structure that contains a cycle.');
+    }
+    seen.add(curr);
     const currentNode: LinkedListNode = nodeMap.get(curr)!;
     const nextNodeId: string | null = currentNode.next;
 

@@ -47,7 +47,7 @@ export function generateDeterministicStudyPlan(goal: string, conceptId?: string)
 
   let tasks: ADHDTaskItem[] = [];
 
-  if (lowerGoal.includes('cell') || conceptId === 'human_cell' || conceptId === 'plant_cell') {
+  if (lowerGoal.includes('cell') || conceptId === 'human_cell') {
     tasks = [
       {
         id: 'task_1',

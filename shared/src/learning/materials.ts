@@ -36,7 +36,7 @@ export interface IngestResult {
   httpStatus: number;
   error: string | null;
   processed: boolean;
-  extractionStatus: 'extracted' | 'provider_required' | 'uncertain' | 'failed' | 'empty' | 'sample' | 'rejected';
+  extractionStatus: 'extracted' | 'provider_required' | 'uncertain' | 'failed' | 'empty' | 'sample' | 'rejected' | 'password_required' | 'incorrect_password' | 'unsupported_encryption';
   format: DetectedFormat | 'text' | null;
   byteLength: number;
   text: string;
@@ -346,6 +346,23 @@ function decodePdfLiteral(token: string): string {
   return out;
 }
 
+/** Parentheses inside a compressed stream are not words. Reject that noise instead of showing it as the paper. */
+export function isReadablePdfText(text: string): boolean {
+  const sample = text.replace(/\0/g, '').trim();
+  if (!sample) return false;
+  const examined = sample.slice(0, 8000);
+  let letters = 0;
+  let weird = 0;
+  for (const ch of examined) {
+    const code = ch.codePointAt(0) ?? 0;
+    if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) letters += 1;
+    if (!(code === 9 || code === 10 || code === 13 || (code >= 32 && code <= 126))) weird += 1;
+  }
+  if (weird / examined.length > 0.08) return false;
+  if (examined.length < 80) return letters >= 4 && /[A-Za-z]{4,}/.test(sample);
+  return letters / examined.length >= 0.35;
+}
+
 export function extractPdfTextLayer(bytes: Uint8Array): { ok: true; text: string } | { ok: false; reason: 'malformed' | 'no_text_layer' } {
   if (detectFormat(bytes) !== 'pdf') return { ok: false, reason: 'malformed' };
   const raw = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
@@ -355,10 +372,10 @@ export function extractPdfTextLayer(bytes: Uint8Array): { ok: true; text: string
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(raw))) {
     const decoded = decodePdfLiteral(match[0]).replace(/\s+/g, ' ').trim();
-    if (decoded) pieces.push(decoded);
+    if (decoded && isReadablePdfText(decoded)) pieces.push(decoded);
   }
   const text = pieces.join(' ').replace(/\s+/g, ' ').trim();
-  if (!text) return { ok: false, reason: 'no_text_layer' };
+  if (!text || !isReadablePdfText(text)) return { ok: false, reason: 'no_text_layer' };
   return { ok: true, text };
 }
 
@@ -1903,6 +1920,7 @@ export function ingestPrepared(input: {
   bytes?: Uint8Array;
   declaredMime?: string | null;
   sampleId?: string | null;
+  password?: string;
 }): IngestResult {
   if (input.kind === 'sample') {
     const sample = input.sampleId ? sampleById(input.sampleId) : null;

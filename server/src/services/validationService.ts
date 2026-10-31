@@ -5,10 +5,51 @@ import {
   ValidationIssue
 } from '@conceptlens/shared';
 
+export interface CycleEdge {
+  fromId: string;
+  toId: string;
+}
+
+export type LinkedListValidation = ValidationResult & {
+  cycleEdge: CycleEdge | null;
+};
+
+/**
+ * The edge that returns to a node already visited from head.
+ * Floyd's algorithm decides that a cycle exists. This walk names the edge
+ * the learner has to repair. A self-loop is the node pointing at itself.
+ */
+export function findCycleClosingEdge(graph: LinkedListGraph): CycleEdge | null {
+  const nodeMap = new Map<string, LinkedListNode>();
+  for (const node of graph.nodes) nodeMap.set(node.id, node);
+  if (!graph.headId || !nodeMap.has(graph.headId)) return null;
+
+  const seen = new Set<string>();
+  let previous: string | null = null;
+  let current: string | null = graph.headId;
+  const limit = graph.nodes.length + 1;
+  let guard = 0;
+
+  while (current && guard++ <= limit) {
+    if (seen.has(current)) {
+      return previous ? { fromId: previous, toId: current } : null;
+    }
+    seen.add(current);
+    const node = nodeMap.get(current);
+    if (!node) return null;
+    if (node.next && !nodeMap.has(node.next)) return null;
+    previous = current;
+    current = node.next;
+  }
+
+  return null;
+}
+
 /**
  * Validates a singly linked list against all structural invariants (Gate 05 & Gate 06)
  */
-export function validateLinkedListInvariants(graph: LinkedListGraph): ValidationResult {
+export function validateLinkedListInvariants(graph: LinkedListGraph): LinkedListValidation {
+  const cycleEdge = findCycleClosingEdge(graph);
   const issues: ValidationIssue[] = [];
   const nodeMap = new Map<string, LinkedListNode>();
 
@@ -101,7 +142,8 @@ export function validateLinkedListInvariants(graph: LinkedListGraph): Validation
       needsHumanReview: issues.some((i) => i.gate === 'GATE_06_HUMAN_REVIEW'),
       issues,
       floydCycleDetected: false,
-      orphanNodeIds: []
+      orphanNodeIds: [],
+      cycleEdge
     };
   }
 
@@ -166,6 +208,7 @@ export function validateLinkedListInvariants(graph: LinkedListGraph): Validation
     issues,
     validatedGraph: !hasErrors ? graph : null,
     floydCycleDetected,
-    orphanNodeIds
+    orphanNodeIds,
+    cycleEdge
   };
 }

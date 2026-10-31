@@ -174,7 +174,7 @@ async function runExtensionTestSuite() {
   });
 
   await test('Text selection bounds reject oversized selections >15,000 characters', () => {
-    const normalText = 'This is a normal educational paragraph describing chloroplasts in plant cells.';
+    const normalText = 'This is a normal educational paragraph describing mitochondria in human cells.';
     assert(validateSelectionForAi(normalText).valid);
     const oversized = 'A'.repeat(15001);
     const res = validateSelectionForAi(oversized);
@@ -209,9 +209,9 @@ async function runExtensionTestSuite() {
         json: async () => ({
           success: true,
           data: {
-            originalText: 'Photosynthesis occurs in chloroplasts.',
-            simplifiedText: 'Plants make food in green cell parts.',
-            keyTerms: [{ term: 'Chloroplast', definition: 'Part of plant cell.' }],
+            originalText: 'Cellular respiration occurs in mitochondria.',
+            simplifiedText: 'Cells generate energy inside mitochondria.',
+            keyTerms: [{ term: 'Mitochondria', definition: 'The powerhouse of the cell.' }],
             uncertaintyNotes: [],
             metadata: { generationMethod: 'gemini', model: 'gemini-3.1-flash-lite', fallbackUsed: false }
           }
@@ -219,12 +219,12 @@ async function runExtensionTestSuite() {
       };
     };
 
-    const res = await mockBackgroundCallAi('/simplify', { text: 'Photosynthesis occurs in chloroplasts.' }, mockFetch);
+    const res = await mockBackgroundCallAi('/simplify', { text: 'Cellular respiration occurs in mitochondria.' }, mockFetch);
     assert(capturedUrl.endsWith('/api/ai/simplify'));
-    assert(capturedBody.includes('Photosynthesis'));
+    assert(capturedBody.includes('Cellular respiration'));
     const json = await res.json();
     assert.strictEqual(json.success, true);
-    assert.strictEqual(json.data.simplifiedText, 'Plants make food in green cell parts.');
+    assert.strictEqual(json.data.simplifiedText, 'Cells generate energy inside mitochondria.');
   });
 
   await test('Summarize request proxy dispatches correctly to /api/ai/summarize', async () => {

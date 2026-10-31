@@ -27,6 +27,9 @@ const CloudinaryMediaStudio = lazy(() =>
 const ISLPlayer = lazy(() =>
   import('./components/ISLPlayer').then((m) => ({ default: m.ISLPlayer }))
 );
+const ISLCatalogWorkspace = lazy(() =>
+  import('./components/isl/ISLCatalogWorkspace').then((m) => ({ default: m.ISLCatalogWorkspace }))
+);
 const InteractivePhysicsStudio = lazy(() =>
   import('./components/InteractivePhysicsStudio').then((m) => ({ default: m.InteractivePhysicsStudio }))
 );
@@ -39,12 +42,13 @@ const PracticeSandbox = lazy(() =>
 const LearnWorkspace = lazy(() =>
   import('./components/learn/LearnWorkspace').then((m) => ({ default: m.LearnWorkspace }))
 );
+const PointerLieLesson = lazy(() =>
+  import('./components/learn/PointerLieLesson').then((m) => ({ default: m.PointerLieLesson }))
+);
 const PracticeWorkspace = lazy(() =>
   import('./components/practice/PracticeWorkspace').then((m) => ({ default: m.PracticeWorkspace }))
 );
-const AboutPage = lazy(() =>
-  import('./components/about/AboutPage').then((m) => ({ default: m.AboutPage }))
-);
+const AboutPage = lazy(() => import('./components/about/AboutPage'));
 const HomeView = lazy(() =>
   import('./components/home/HomeView').then((m) => ({ default: m.HomeView }))
 );
@@ -94,7 +98,7 @@ import {
   Home,
   Box,
   Award,
-  ShieldAlert,
+  Info,
   HelpCircle,
   Eye,
   Atom,
@@ -271,6 +275,7 @@ export const App: React.FC = () => {
     orphanNodeIds: []
   });
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [islSubTab, setIslSubTab] = useState<'catalog' | 'player'>('catalog');
 
   useEffect(() => {
     const state = learningDomState(preferences);
@@ -285,7 +290,7 @@ export const App: React.FC = () => {
 
   // Load and generate initial steps for CS
   const generateStepsForGraph = useCallback(
-    async (targetGraph: LinkedListGraph, op: string = 'insertHead', val: number = 9) => {
+    async (targetGraph: LinkedListGraph, op: string = 'insertHead', val: number = 9, announce = true) => {
       try {
         const res = await fetch('/api/diagrams/simulate', {
           method: 'POST',
@@ -304,7 +309,7 @@ export const App: React.FC = () => {
         if (json.success && json.data.steps.length > 0) {
           setSteps(json.data.steps);
           setCurrentStepIndex(0);
-          setLiveAnnouncement(json.data.steps[0].screenReaderAnnouncement);
+          if (announce) setLiveAnnouncement(json.data.steps[0].screenReaderAnnouncement);
         }
       } catch (err) {
         console.error('Failed to generate steps:', err);
@@ -314,7 +319,7 @@ export const App: React.FC = () => {
   );
 
   useEffect(() => {
-    generateStepsForGraph(initialDefaultGraph, 'insertHead', 9);
+    generateStepsForGraph(initialDefaultGraph, 'insertHead', 9, false);
   }, [generateStepsForGraph]);
 
   // Auto-play interval for CS
@@ -397,6 +402,11 @@ export const App: React.FC = () => {
       } else if (e.key === 't' || e.key === 'T') {
         toggleTheme();
       } else if (e.key === 'g' || e.key === 'G') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent('conceptlens:open-guide', { detail: { mode: 'navigate' } }));
+          return;
+        }
         const launcher = document.querySelector<HTMLButtonElement>('.voice-guide-launcher');
         if (launcher) launcher.click();
       }
@@ -507,9 +517,14 @@ export const App: React.FC = () => {
             type="button"
             className={`tab-btn ${activeTab === 'about' ? 'active' : ''}`}
             aria-current={activeTab === 'about' ? 'page' : undefined}
-            onClick={() => { setActiveTab('about'); setMenuOpen(false); }}
+            onClick={() => {
+              setActiveTab('about');
+              setMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: 'instant' });
+            }}
+            title="About ConceptLens Mission & Architecture"
           >
-            <ShieldAlert size={15} />
+            <Info size={15} />
             <span>About</span>
           </button>
         </nav>
@@ -552,10 +567,8 @@ export const App: React.FC = () => {
               setLiveAnnouncement(preferences.lowData ? 'Low data off.' : 'Low data on. Diagrams stay unloaded until you ask.');
             }}
             aria-pressed={preferences.lowData}
-            aria-label={preferences.lowData ? 'Low data on' : 'Low data off'}
           >
-            <span>Low data</span>
-            <span className="theme-card-status">{preferences.lowData ? 'On' : 'Off'}</span>
+            <span>Low data <span className="theme-card-status">{preferences.lowData ? 'On' : 'Off'}</span></span>
           </button>
 
           <button
@@ -585,14 +598,10 @@ export const App: React.FC = () => {
               );
             }}
             aria-pressed={preferences.focusMode || preferences.adhdFriendly}
-            aria-label={preferences.focusMode || preferences.adhdFriendly ? 'Focus mode on' : 'Focus mode off'}
-            title="Toggle ADHD Focus Mode (reading ruler & reduced distractions)"
+            title="Toggle ADHD Focus Mode (reading ruler and reduced distractions)"
           >
             <Focus size={16} aria-hidden="true" />
-            <span>Focus</span>
-            <span className="theme-card-status">
-              {preferences.focusMode || preferences.adhdFriendly ? 'On' : 'Off'}
-            </span>
+            <span>Focus <span className="theme-card-status">{preferences.focusMode || preferences.adhdFriendly ? 'On' : 'Off'}</span></span>
           </button>
 
           <button
@@ -618,7 +627,7 @@ export const App: React.FC = () => {
               if (launcher) launcher.click();
             }}
             title="Interactive Voice & Task Guide [G]"
-            aria-label="Interactive Voice & Task Guide"
+            aria-label="Guide Me. Interactive Voice and Task Guide"
           >
             <Compass size={16} aria-hidden="true" />
             <span>Guide Me</span>
@@ -681,18 +690,38 @@ export const App: React.FC = () => {
           {activeTab === 'home' && (
             <HomeView
               preferences={preferences}
-              onNavigateLearn={() => setActiveTab('learn')}
-              onNavigatePractice={() => setActiveTab('practice')}
-              onNavigateADHD={() => setActiveTab('adhd')}
+              onPreferences={setPreferences}
+              onNavigateLearn={() => { setActiveTab('learn'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              onNavigatePractice={() => { setActiveTab('practice'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              onNavigateADHD={() => { setActiveTab('adhd'); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              onNavigateAbout={() => { setActiveTab('about'); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}
+              onNavigateISL={() => { setActiveTab('isl'); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}
               onOpenAccessibility={() => setLensOpen(true)}
-              onLaunchTopic={handleLaunchTopic}
               onAnnounce={setLiveAnnouncement}
+              onOpenAtlas={() => {
+                setActiveTab('learn');
+                window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+              }}
+              onOpenPointerLie={() => {
+                setActiveTab('learn');
+                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const tryScroll = (attempt = 0) => {
+                  const target = document.getElementById('pointer-lie');
+                  if (target) {
+                    target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+                    return;
+                  }
+                  if (attempt < 40) window.setTimeout(() => tryScroll(attempt + 1), 50);
+                };
+                window.setTimeout(() => tryScroll(), 0);
+              }}
             />
           )}
 
           {/* TAB 2: LEARN */}
           {activeTab === 'learn' && (
-            <LearnWorkspace
+            <>
+              <LearnWorkspace
               preferences={preferences}
               onPreferences={setPreferences}
               onAnnounce={setLiveAnnouncement}
@@ -701,7 +730,16 @@ export const App: React.FC = () => {
                 setActiveStemDomain(domain);
                 setActiveTab('stem');
               }}
+              onNavigateISL={() => setActiveTab('isl')}
             />
+              <Suspense fallback={<p role="status">Loading the linked-list lesson.</p>}>
+                <PointerLieLesson
+                  onAnnounce={setLiveAnnouncement}
+                  highContrast={preferences.highContrast}
+                  colorFriendly={preferences.colorFriendly}
+                />
+              </Suspense>
+              </>
           )}
 
           {/* TAB: DEDICATED BIOLOGY INTERACTIVE ATLAS */}
@@ -738,8 +776,7 @@ export const App: React.FC = () => {
                     { id: 'human_cell', label: 'Human Cell' },
                     { id: 'human_heart', label: 'Human Heart' },
                     { id: 'dna_helix', label: 'DNA Double Helix' },
-                    { id: 'neuron', label: 'Neuron' },
-                    { id: 'plant_cell', label: 'Plant Cell' }
+                    { id: 'neuron', label: 'Neuron' }
                   ].map((t) => (
                     <button
                       key={t.id}
@@ -827,17 +864,65 @@ export const App: React.FC = () => {
 
         {/* TAB 5: INCLUSIVE ISL CLASSROOM */}
         {activeTab === 'isl' && (
-          <ISLPlayer
-            onLoadLessonIntoSandbox={(lessonGraph, op) => {
-              setActiveStemDomain('data_structure');
-              setGraph(lessonGraph);
-              setCurrentOperation(op);
-              setActiveTab('stem');
-              generateStepsForGraph(lessonGraph, op, 9);
-              setLiveAnnouncement('Loaded the linked-list text lesson into the studio. This is not a sign-language video.');
-            }}
-            onOpenKeyboardShortcuts={() => setIsShortcutsOpen(true)}
-          />
+          <div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={`btn-secondary ${islSubTab === 'catalog' ? 'active' : ''}`}
+                onClick={() => {
+                  setIslSubTab('catalog');
+                  setLiveAnnouncement('Switched to Authentic ISL Curriculum Catalog.');
+                }}
+                style={{
+                  fontSize: '0.85rem',
+                  padding: '0.45rem 0.9rem',
+                  background: islSubTab === 'catalog' ? 'rgba(56, 189, 248, 0.18)' : undefined,
+                  borderColor: islSubTab === 'catalog' ? 'var(--accent-cyan)' : undefined,
+                  color: islSubTab === 'catalog' ? '#f8fafc' : undefined
+                }}
+              >
+                Authentic ISL Catalog
+              </button>
+              <button
+                type="button"
+                className={`btn-secondary ${islSubTab === 'player' ? 'active' : ''}`}
+                onClick={() => {
+                  setIslSubTab('player');
+                  setLiveAnnouncement('Switched to Accessible Text Lessons.');
+                }}
+                style={{
+                  fontSize: '0.85rem',
+                  padding: '0.45rem 0.9rem',
+                  background: islSubTab === 'player' ? 'rgba(192, 132, 252, 0.18)' : undefined,
+                  borderColor: islSubTab === 'player' ? '#c084fc' : undefined,
+                  color: islSubTab === 'player' ? '#f8fafc' : undefined
+                }}
+              >
+                Accessible Text Lessons (CS)
+              </button>
+            </div>
+
+            {islSubTab === 'catalog' ? (
+              <Suspense fallback={<p role="status">Loading the Authentic ISL Curriculum Catalog...</p>}>
+                <ISLCatalogWorkspace
+                  onAnnounce={setLiveAnnouncement}
+                  onOpenKeyboardShortcuts={() => setIsShortcutsOpen(true)}
+                />
+              </Suspense>
+            ) : (
+              <ISLPlayer
+                onLoadLessonIntoSandbox={(lessonGraph, op) => {
+                  setActiveStemDomain('data_structure');
+                  setGraph(lessonGraph);
+                  setCurrentOperation(op);
+                  setActiveTab('stem');
+                  generateStepsForGraph(lessonGraph, op, 9);
+                  setLiveAnnouncement('Loaded the linked-list text lesson into the studio. This is not a sign-language video.');
+                }}
+                onOpenKeyboardShortcuts={() => setIsShortcutsOpen(true)}
+              />
+            )}
+          </div>
         )}
 
         {/* TAB 6: STEM & UNIVERSAL LABS (Physics, Ray Optics, Chemistry, Computer Science) */}

@@ -22,8 +22,8 @@
 [![Stack](https://img.shields.io/badge/Stack-React%2018%20%2B%20Node%20Express%20%2B%20TypeScript-blueviolet?style=for-the-badge)](https://github.com/LovelySharma-dev/ConceptLens)
 [![Type Safety](https://img.shields.io/badge/Type%20Safety-Zod%20Contracts%20(100%25)-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Cloudinary Media Pipeline](https://img.shields.io/badge/Media-Cloudinary%20Signed%20Pipeline-blue?style=for-the-badge&logo=cloudinary)](https://cloudinary.com)
-[![Tests Passing](https://img.shields.io/badge/Tests-456%2F456%20Passed-success?style=for-the-badge)](./README.md)
-[![Accessibility Aligned](https://img.shields.io/badge/Accessibility-18%20Inclusive%20Themes%20(WCAG%202.2%20AAA)-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
+[![Tests](https://img.shields.io/badge/Tests-run%20npm%20test-success?style=for-the-badge)](./README.md)
+[![Accessibility](https://img.shields.io/badge/Accessibility-themes%20included%2C%20no%20formal%20WCAG%20audit-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Notion Documentation](https://img.shields.io/badge/Notion%20Docs-Submission%20Ready-000000?style=for-the-badge&logo=notion)](./NOTION_DOCUMENTATION.md)
 
 </div>
@@ -126,12 +126,12 @@ Preferences change the presentation. They are choices, not a diagnosis. Nothing 
 > **Live Deployment:** [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/)
 
 Textbook learning forces students to decode multi-dimensional physical, biological, and mathematical structures from ink printed on flat paper. ConceptLens bridges the gap between paper textbooks and cognitive understanding:
-- Accepts a question, pasted notes, a PDF that already has a text layer, or a labeled sample. You confirm that text before it is explained. Photographs and scanned pages are not read, because OCR is not configured.
-- Converts diagrams into **real-time 3D and 2D procedural models** (Human Cell, Cardiac Cycle, DNA Double Helix, Neuron Action Potentials, and Plant Cell Ultrastructure).
-- Provides an **interactive before/after image comparison slider** with keyboard, touch, and mouse controls.
+- The home screen opens on one lesson: a four-node list that reverses only after Floyd’s cycle check passes. Breaking the list stops the lesson. Repairing the closing arrow lets it continue. That check runs on the server. The drawing is the model state, not a separate animation.
+- Accepts a question, pasted notes, a PDF that already has a text layer, or a labeled sample. You confirm that text before it is explained. PDF text is read with pypdfium2. Compressed PDF bytes are not treated as document text. A paper longer than 20,000 characters is truncated, and the review notice says so. A password-protected PDF and a file the parser cannot read are reported as failures. A PDF with no text layer still asks for the local OCR reader instead of returning symbols. The signature lesson does not read a photograph into a data structure. Image OCR runs only when the local Tesseract worker is ready; otherwise the app does not invent text.
+- Converts curated biology topics into **2D and 3D procedural models** (animal cell, heart, DNA, neuron, and plant cell). These are illustrations for those lessons, not a scan of an arbitrary textbook page.
+- On the local runner, the home screen also shows one project-account illustration of a plant cell in four deliveries: the stored original, Explore (`c_limit,w_960/f_auto/q_auto`), Focus (a crop that keeps the chloroplast label), and Low data (`c_limit,w_320/f_auto/q_auto:low`). Those addresses are on the configured cloud. For this PNG, every delivery returned `image/png`. `f_auto` did not turn it into WebP. The public `demo` cloud is not used as evidence of this account. On 30 October 2026 the Render service at the live URL did not have `GET /api/uploads/learning-media` (HTTP 404) and `GET /api/uploads/status` reported Cloudinary as not configured.
 - Practice questions are written for those topics and labeled as practice, not as official past papers.
-- Enforces an **8-Stage Zero-Hallucination Reliability Pipeline** so students and judges never encounter fabricated facts.
-- Opens as a **light study canvas** (The Living Atlas). `[T]` switches to **Dark Observatory** and remembers the choice. `[H]` turns on high contrast.
+- Opens as a **light study canvas** (The Living Atlas). `[T]` switches theme. `[H]` turns on high contrast. Focus mode keeps the page scrollable.
 
 ---
 
@@ -196,8 +196,8 @@ ConceptLens is structured around four clear, focused destinations:
 | :--- | :---: | :--- |
 | **Learn Concept Discovery & Generator** | ✅ **Verified** | Natural language topic entry across STEM, Business, Arts & Culture; connects to `/api/ai/lesson` with Google Gemini 3.1 Flash Lite free tier, Hugging Face, and deterministic fallback. |
 | **7 Learning Representations** | ✅ **Verified** | Seamless switching between Standard Read, Easy Read, Simple Steps, Spatial Model, Flashcards, Practice Quiz, and Notes without losing place. |
-| **Unified Practice Workspace** | ✅ **Verified** | 4 input methods: paste/type, file upload (PDF/images), WebRTC camera capture & OCR, and Web Speech API speech-to-text. Includes text review/editing before generation. |
-| **Camera Capture & Stream Cleanup** | ✅ **Verified** | Camera access with explicit user permission, live viewfinder, snapshot capture, and immediate track cleanup (`track.stop()`) on capture/close/unmount. |
+| **Unified Practice Workspace** | Implemented | Paste, type, file upload, camera capture, and speech dictation are in the workspace. Image OCR runs only when the local Tesseract worker is ready. The signature lesson does not use OCR. |
+| **Camera Capture & Stream Cleanup** | Implemented | Camera access with explicit user permission, live viewfinder, snapshot capture, and `track.stop()` on capture, close, or unmount. A captured photo is not automatically turned into a linked list. |
 | **18 Accessibility Themes** | ✅ **Verified** | ADHD focus ruler, Simple Steps, Easy Read, Dyslexia typography (Verdana, 1.95 line height), Low-Stimulation motion reduction, Color-Blind geometric shape indicators (Circle, Square, Triangle, Diamond), Low-Vision scaling, Speech-Free mode, and Motor-Friendly 48px touch targets. |
 | **About Narrative & SDG 4 Alignment** | ✅ **Verified** | 7 comprehensive sections covering mission, problem, 5 pillars, continuity flow, transparent technology disclosure, and SDG 4 education goals. |
 | **Human Cell (Animal Cell) 2D/3D Model** | ✅ **Verified** | 8 organelles with analogies, mitochondrial ATP synthesis, and cell biology. |
@@ -205,13 +205,13 @@ ConceptLens is structured around four clear, focused destinations:
 | **DNA Double Helix 2D/3D Model** | ✅ **Verified** | Procedural antiparallel backbones, A-T and G-C base pairs with hydrogen bonding. |
 | **Neuron & Plant Cell 2D Studios** | ✅ **Verified** | Interactive action potential simulation and plant cell wall/vacuole/chloroplast schematics. |
 | **Physics Lab (Ray Optics, Pendulum)** | ✅ **Verified** | Thin lens ray tracing (`1/f = 1/v - 1/u`) and pendulum SHM energy conservation. |
-| **Computer Science Concept Engine** | ✅ **Verified** | Deterministic pointer transitions for Singly, Doubly, and Circular Linked Lists. |
-| **8-Stage Reliability Gates** | ✅ **Verified** | Floyd cycle detection, OCR confidence gate (<0.80), and human-in-the-loop review modal. |
-| **Cloudinary Media Studio & Delivery** | ✅ **Verified** | `f_auto`, `q_auto`, `e_sharpen:80`, `c_limit` responsive delivery and comparison slider. |
+| **Computer Science Concept Engine** | Implemented and unit-tested | Deterministic reversal steps for a singly linked list. A cycle fails Floyd’s check, names the closing edge, and `generateExecutionSteps` throws instead of animating it. See `server/tests/pointerLie.test.ts`. |
+| **8-Stage Reliability Gates** | Implemented for linked lists | Floyd cycle detection, a confidence warning below 0.80, and a review path. This does not mean every screen on the site passed every gate. |
+| **Cloudinary Media Studio & Delivery** | Project asset verified locally. Not on the current Render deploy. | The local home lesson loads `conceptlens/learning/plant-cell-illustration` from the configured cloud, with separate Explore, Focus, and Low data URLs. Those responses were `image/png`. A public demo image is not substituted when the account is unavailable. The live Render service checked on 30 October 2026 does not serve this route and has no Cloudinary credentials configured. |
 | **ConceptLens Everywhere Extension** | ✅ **Verified** | Manifest V3 Chrome extension with activeTab reading assistance, dyslexia typography, and isolated Shadow DOM. |
-| **Global Readability & Design Tokens** | ✅ **Verified** | WCAG 2.2 AA contrast semantic tokens across Light, Dark, High-Contrast, and Low-Stimulation. Fixed ADHD timer (ready, running, paused, completed states with explicit text and icons; no dark-on-dark trap). |
-| **Website-Wide Voice Guide** | ✅ **Verified** | Persistent "Guide Me" dock & `[G]` hotkey with 3 modes (Page Tour, Task Guide, Read Aloud), element spotlighting, `SpeechSynthesis` lifecycle management, and graceful text-only fallback. |
-| **Authentic ISL Video Foundation** | ✅ **Verified** | Responsible Indian Sign Language foundation with ISLRTC & NCERT video curriculum, Zod schema (`ISLLessonResourceSchema`), review badges, and honest fallback states (no fake avatars or gloss hallucination). |
+| **Global Readability & Design Tokens** | Token review only | Light, dark, high-contrast, and low-stimulation tokens exist. The ADHD timer has ready, running, paused, and completed labels. This is not a formal WCAG 2.2 audit and not a conformance claim. |
+| **Website-Wide Voice Guide** | Implemented | "Guide Me" and `[G]` use browser speech, with visible text when speech is unavailable. Not re-checked against every page in this pass. |
+| **ISL resources** | Not in the finale demo | The schema and an unavailable state exist so the app does not invent sign language. This demo does not play a verified Indian Sign Language video. |
 | *Augmented Reality (WebXR) Projection* | ⏳ *Planned (v2.1)* | Planned for browser-based desk projection of biological organs. |
 | *Interactive Socratic Voice Tutor* | ⏳ *Planned (v2.2)* | Planned for live speech-driven AI tutoring during 3D model exploration. |
 
@@ -312,7 +312,7 @@ sequenceDiagram
 - **3D Graphics**: Three.js `^0.186.1` with procedural geometries and `OrbitControls`.
 - **Backend**: Express 4.19, TypeScript, tsx, Helmet, Morgan, CORS.
 - **Data Contracts**: Zod 3.23 shared schemas (`@conceptlens/shared`).
-- **Media Engine**: Cloudinary Node SDK `^2.4.0` for server-signed uploads. Client delivery uses `@cloudinary/react` and `@cloudinary/url-gen`. `next-cloudinary` is not used. The Next.js Cloudinary skill was installed and was not applied to this Vite app.
+- **Media Engine**: Cloudinary Node SDK `^2.4.0` for server-signed uploads. Client delivery of public lesson diagrams uses `@cloudinary/react` (`AdvancedImage`) and `@cloudinary/url-gen`, the same packages installed by the official [create-cloudinary-react](https://github.com/cloudinary-devs/create-cloudinary-react) starter kit (MIT, React + Vite scaffold). That kit was not used to generate ConceptLens. Running it here would create a separate React 19 app and write the cloud name into a client `.env`. The plant-cell Media Lab stays on the Express proxy so the project cloud name is not placed in the browser bundle. `next-cloudinary` is not used.
 - **Persistence**: MongoDB Mongoose with resilient in-memory session caching when MongoDB is not running locally.
 - **Python Microservice**: FastAPI, Pytest, NumPy, NetworkX, Pillow.
 
@@ -408,13 +408,16 @@ Set `CLIENT_ORIGIN` to the deployed origin. MongoDB is optional; the API falls b
 
 ### Running Locally
 ```bash
-# Terminal 1: Start backend Express API (Port 5000)
-npm run dev:server
+npm run dev
+```
+`npm run dev` starts the API, waits until `http://127.0.0.1:5000/api/health` returns 200, and only then starts Vite on port 5173. The wait is a health check, not a fixed delay. If the API never answers, Vite still starts and the failure is printed. Proxy errors are not hidden. MongoDB is optional: if it is unreachable, the API logs the in-memory fallback and still serves routes that do not need a database, including PDF extraction.
 
-# Terminal 2: Start frontend Vite dev server (Port 5173)
+The two processes can also be started separately:
+```bash
+npm run dev:server
 npm run dev:client
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:5173](http://localhost:5173) in your browser. Vite proxies `/api` to `http://localhost:5000`.
 
 ---
 
@@ -490,6 +493,18 @@ npm run build
 ---
 
 ## 12. Accessibility & Fallback Design
+
+Checked on 30 October 2026 while repairing Focus mode and the signature lesson:
+
+| Check | Result |
+| --- | --- |
+| Focus mode scrolling | Fixed in code. The reading ruler no longer uses a full-viewport shadow, and the page scroll stays on the document. Confirm with a mouse wheel and with Page Down after turning Focus on. |
+| Keyboard on the signature lesson | Space, arrows, and R apply only while focus is inside the lesson, so they do not block scrolling elsewhere. |
+| Cycle state | The word Stopped, the word CYCLE on the edge, and a polite status region. Color is not the only signal. |
+| Reduced motion | The lesson steps one click at a time when `prefers-reduced-motion` is set. |
+| Contrast | Design tokens target readable text. No formal WCAG audit was run, and no conformance level is claimed. |
+| Speech | Browser speech can be stopped from the Voice Guide. Not re-tested on every route in this pass. |
+| ISL | No verified ISL video is part of this demo. |
 
 Accessibility was built into ConceptLens from the first line of code:
 
@@ -574,7 +589,20 @@ Accessibility was built into ConceptLens from the first line of code:
 
 ---
 
-## 17. Judging Walkthrough Script (3 Minutes)
+## 17. Finale walkthrough (about 90 seconds)
+
+Use the home screen. The API must be running. Do not improvise a success state if the status line says the engine is offline.
+
+1. **The problem.** A static arrow cannot show a pointer changing. The heading is “We will not teach a structure we cannot prove.”
+2. **A valid reversal.** Press “Watch the reversal.” The inspector shows `prev`, `curr`, and `next` from the step the server returned.
+3. **The break.** Press “Break the structure.” The list 10 → 20 → 30 → 40 points back to 20.
+4. **The stop.** The status reads Stopped. The edge is labeled CYCLE. Playback does not start.
+5. **The repair.** Press “Repair this pointer.” The same check now passes, and the reversal can play.
+6. **The pictures.** This step is the local runner, not the live Render URL. Under the list, open Explore, then Focus, then Low data. They are three delivery URLs for one illustration on the project Cloudinary account. Focus keeps the chloroplast label. Low data is 320 pixels wide. The returned format for this drawing is PNG. The pixels are not parsed into the list.
+
+The longer notes below are an older script. Where they disagree with this walkthrough, follow this walkthrough.
+
+## 17b. Earlier judging notes
 
 - **0:00 – 0:20 (The Hook & Problem)**:
   "Hello judges! We present ConceptLens, The Living Atlas: *From Your Textbook to an Experience You Can Explore.* Every year, millions of students struggle to understand 3D biology and physics concepts from flat, static textbook paper. ConceptLens transforms static educational materials into interactive experiences. The studio opens in a light study canvas; `[T]` switches to Dark Observatory."

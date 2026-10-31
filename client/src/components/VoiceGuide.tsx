@@ -11,11 +11,23 @@ import {
   Compass,
   CheckCircle2,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Map
 } from 'lucide-react';
 import type { LearningPreferences } from '@conceptlens/shared';
+import { describeFocusedElement } from '../a11y/describeFocus';
+import { getAvailableLandmarks, goToLandmark, goToMainHeading } from '../a11y/pageLandmarks';
+import {
+  pauseConceptLensSpeech,
+  resumeConceptLensSpeech,
+  speakConceptLens,
+  speechSynthesisAvailable,
+  stopConceptLensSpeech
+} from '../a11y/speechBus';
 
-export type GuideMode = 'tour' | 'task' | 'read';
+export const OPEN_GUIDE_EVENT = 'conceptlens:open-guide';
+
+export type GuideMode = 'tour' | 'task' | 'read' | 'navigate';
 
 export interface GuideStep {
   id: string;
@@ -52,23 +64,23 @@ export const PAGE_TOURS: Record<string, PageTourDefinition> = {
       {
         id: 'home-purpose',
         title: 'Welcome to ConceptLens',
-        instruction: 'ConceptLens (The Living Atlas) provides inclusive STEM learning aligned with UN SDG 4. One scientific concept is represented in multiple ways—visual diagrams, simple steps, plain language, and active practice—so every learner understands.',
-        spokenText: 'Welcome to ConceptLens. One concept, different ways to understand it. ConceptLens breaks cognitive and sensory barriers in STEM education.',
-        targetSelector: '.brand'
+        instruction: 'You are on the home page. The first choice is Find My Way to Learn. It is optional, and it does not ask for a diagnosis. The page later explains the UN SDG 4 connection and what this product does not claim to achieve.',
+        spokenText: 'Welcome to ConceptLens. You are on the home page. Find My Way to Learn is optional.',
+        targetSelector: '#hero-title'
       },
       {
         id: 'home-start',
-        title: 'Start Learning',
-        instruction: 'Select "Explore Curriculum" or pick a highlighted subject below to begin interactive study. Your learning continuity is saved automatically.',
-        spokenText: 'To start learning, choose Explore Curriculum or select any highlighted subject.',
-        targetSelector: '.brand, .btn-primary'
+        title: 'What you can do here',
+        instruction: 'You can open Learn to explore interactive diagrams, read clear explanations, listen to audio overviews, or try practice questions. Practice is a separate space for your own notes.',
+        spokenText: 'See, read, and listen open in Learn. Listening starts only when you press the button.',
+        targetSelector: '#living-atlas'
       },
       {
         id: 'home-ways',
-        title: 'Different Ways to Learn',
-        instruction: 'Interactive previews let you experience ADHD focus rulers, dyslexia typography, high contrast, and simplified steps before enabling them.',
-        spokenText: 'Try different representations like ADHD focus mode, dyslexia-friendly spacing, and high contrast.',
-        targetSelector: '.setting-btn, [role="tablist"]'
+        title: 'Start Learning',
+        instruction: 'Next, open Learn to explore the living atlas, or choose Practice to upload study materials. You can close this guide at any time.',
+        spokenText: 'A useful next step is to explore concepts in Learn or practice with your own notes.',
+        targetSelector: '#living-atlas'
       }
     ],
     taskSteps: [
@@ -100,7 +112,7 @@ export const PAGE_TOURS: Record<string, PageTourDefinition> = {
       {
         id: 'learn-discovery',
         title: 'Subject Discovery',
-        instruction: 'Discover subjects using the curated topic pills or enter any STEM concept into the AI lesson studio query box.',
+        instruction: 'You are in Learn. Discover subjects using the curated topic pills or enter any STEM concept into the AI lesson studio query box.',
         spokenText: 'Subject Discovery: Select a topic from the syllabus pills or type any concept to explore.',
         targetSelector: '.tag-btn, .curated-pills'
       },
@@ -269,7 +281,7 @@ export const PAGE_TOURS: Record<string, PageTourDefinition> = {
       {
         id: 'practice-extract',
         title: 'Local Text Extraction & OCR Review',
-        instruction: 'PDF text layers are read locally in your browser. Photos use client-side OCR. You can review and edit extracted text before generating questions.',
+        instruction: 'You are in Practice. Paste text, upload a PDF or image, or take a photo. The PDF reader extracts text. You can correct it before a lesson is created. If the file has no readable text, the page says so instead of inventing any.',
         spokenText: 'All text extraction is processed safely. You can review and edit the text before generating questions.',
         targetSelector: 'textarea, .text-input'
       },
@@ -430,9 +442,9 @@ export const PAGE_TOURS: Record<string, PageTourDefinition> = {
     overviewSteps: [
       {
         id: 'a11y-themes',
-        title: '18 Typed Presentation Themes',
-        instruction: 'ConceptLens provides 18 presentation modes across Focus, Vision, Hearing, and Pace. Choices are interface preferences, never medical diagnoses.',
-        spokenText: 'ConceptLens offers 18 accessibility and learning themes. Choices customize the interface without storing medical diagnoses.',
+        title: '18 interface themes',
+        instruction: 'ConceptLens lists 18 interface themes across Focus, Vision, Hearing, and Pace. Some change the lesson. Others record a preference. None of them is a medical diagnosis.',
+        spokenText: 'ConceptLens lists 18 interface themes. Some change the lesson. Others record a preference. None of them stores a medical diagnosis.',
         targetSelector: '.theme-center, #learning-theme-dialog'
       },
       {
@@ -536,12 +548,18 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [readAloudIdx, setReadAloudIdx] = useState(0);
+  const [navMessage, setNavMessage] = useState('');
+  const [landmarkTick, setLandmarkTick] = useState(0);
 
   const guidePanelRef = useRef<HTMLDivElement>(null);
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
   const activeTargetRef = useRef<Element | null>(null);
 
-  // Check speech synthesis support
-  const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  const speechSupported = speechSynthesisAvailable();
+  const navModel = getAvailableLandmarks(isLensOpen ? 'home' : activeTab);
+  // landmarkTick forces a refresh after navigation when sections mount
+  void landmarkTick;
 
   // Determine current page tour
   const currentTourKey = isLensOpen ? 'accessibility' : (PAGE_TOURS[activeTab] ? activeTab : 'home');
@@ -550,14 +568,11 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
   const currentSteps: GuideStep[] = mode === 'task' ? currentTour.taskSteps : currentTour.overviewSteps;
   const currentStep: GuideStep | undefined = currentSteps[stepIndex] || currentSteps[0];
 
-  // Stop active speech synthesis
   const stopSpeech = useCallback(() => {
-    if (speechSupported) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      setIsPaused(false);
-    }
-  }, [speechSupported]);
+    stopConceptLensSpeech();
+    setIsSpeaking(false);
+    setIsPaused(false);
+  }, []);
 
   // Clean up element highlight
   const clearTargetHighlight = useCallback(() => {
@@ -599,50 +614,66 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
     }
   }, [clearTargetHighlight, preferences.reducedMotion, preferences.lowStimulation]);
 
-  // Speak text safely with fallback
-  const speakText = useCallback((textToSpeak: string) => {
-    stopSpeech();
-    if (!isNarrationEnabled || !speechSupported || !textToSpeak) return;
+  const speechRateRef = useRef(preferences.speechRate || 1);
+  speechRateRef.current = preferences.speechRate || 1;
+  const narrationEnabledRef = useRef(isNarrationEnabled);
+  narrationEnabledRef.current = isNarrationEnabled;
+  const highlightTargetRef = useRef(highlightTarget);
+  highlightTargetRef.current = highlightTarget;
+  const onAnnounceRef = useRef(onAnnounce);
+  onAnnounceRef.current = onAnnounce;
 
-    try {
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.rate = preferences.speechRate || 1.0;
-      utterance.onstart = () => {
+  const speakText = useCallback((textToSpeak: string) => {
+    if (!narrationEnabledRef.current || !textToSpeak) return;
+    const started = speakConceptLens(textToSpeak, speechRateRef.current, {
+      onStart: () => {
         setIsSpeaking(true);
         setIsPaused(false);
-      };
-      utterance.onend = () => {
+      },
+      onEnd: () => {
         setIsSpeaking(false);
         setIsPaused(false);
-      };
-      utterance.onerror = () => {
+      },
+      onError: () => {
         setIsSpeaking(false);
         setIsPaused(false);
-      };
-      window.speechSynthesis.speak(utterance);
-    } catch {
+      }
+    });
+    if (!started) {
       setIsSpeaking(false);
+      setIsPaused(false);
     }
-  }, [isNarrationEnabled, speechSupported, preferences.speechRate, stopSpeech]);
+  }, []);
 
-  // Step change trigger: highlight element & narrate step
+  // Tour and read modes speak after an explicit open or step change. Navigate never autoplays.
+  // Preference changes must not restart speech — keep this effect keyed to guide position only.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || mode === 'navigate') return;
 
     if (mode === 'tour' || mode === 'task') {
       if (currentStep) {
-        highlightTarget(currentStep);
+        highlightTargetRef.current(currentStep);
         speakText(currentStep.spokenText || currentStep.instruction);
-        onAnnounce?.(`Guide Step ${stepIndex + 1} of ${currentSteps.length}: ${currentStep.title}. ${currentStep.instruction}`);
+        onAnnounceRef.current?.(
+          `Guide Step ${stepIndex + 1} of ${currentSteps.length}: ${currentStep.title}. ${currentStep.instruction}`
+        );
       }
     } else if (mode === 'read') {
       const readText = currentTour.readAloudText[readAloudIdx];
       if (readText) {
         speakText(readText);
-        onAnnounce?.(readText);
+        onAnnounceRef.current?.(readText);
       }
     }
-  }, [isOpen, mode, stepIndex, readAloudIdx, currentStep, highlightTarget, speakText, onAnnounce, currentTour, currentSteps.length]);
+  }, [isOpen, mode, stepIndex, readAloudIdx, currentStep, currentTour.readAloudText, currentSteps.length, speakText]);
+
+  useEffect(() => {
+    if (!isOpen || mode !== 'navigate') return;
+    const overview = navModel.overview;
+    setNavMessage(overview);
+    onAnnounce?.(overview);
+    setLandmarkTick((value) => value + 1);
+  }, [isOpen, mode, activeTab, isLensOpen, onAnnounce, navModel.overview]);
 
   // Clean up on unmount or tab/page switch
   useEffect(() => {
@@ -660,14 +691,54 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
     clearTargetHighlight();
   }, [activeTab, isLensOpen, stopSpeech, clearTargetHighlight]);
 
-  // Keyboard navigation & trap prevention
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
+  const handleClose = useCallback(() => {
+    stopSpeech();
+    clearTargetHighlight();
+    setIsOpen(false);
+    onAnnounce?.('Closed guide.');
+    window.setTimeout(() => {
+      (previouslyFocused.current || launcherRef.current)?.focus();
+    }, 0);
+  }, [stopSpeech, clearTargetHighlight, onAnnounce]);
 
+  const handleOpen = useCallback((nextMode: GuideMode = 'tour') => {
+    previouslyFocused.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setMode(nextMode);
+    setIsOpen(true);
+    setStepIndex(0);
+    setReadAloudIdx(0);
+    setNavMessage('');
+    onAnnounce?.(
+      nextMode === 'navigate'
+        ? `Opened navigation guide for ${currentTour.pageTitle}. Speech starts only when you press Listen.`
+        : `Opened interactive guide for ${currentTour.pageTitle}.`
+    );
+  }, [onAnnounce, currentTour.pageTitle]);
+
+  useEffect(() => {
+    const onOpenEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ mode?: GuideMode }>).detail;
+      handleOpen(detail?.mode === 'navigate' ? 'navigate' : detail?.mode || 'tour');
+    };
+    window.addEventListener(OPEN_GUIDE_EVENT, onOpenEvent as EventListener);
+    return () => window.removeEventListener(OPEN_GUIDE_EVENT, onOpenEvent as EventListener);
+  }, [handleOpen]);
+
+  // Keyboard navigation & focus trap inside the guide panel
+  useEffect(() => {
+    if (!isOpen) return;
+    const root = guidePanelRef.current;
+    const frame = window.requestAnimationFrame(() => {
+      root?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')?.focus();
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         handleClose();
-      } else if (e.key === 'ArrowRight' && (mode === 'tour' || mode === 'task')) {
+        return;
+      }
+      if (e.key === 'ArrowRight' && (mode === 'tour' || mode === 'task')) {
         if (stepIndex < currentSteps.length - 1) {
           e.preventDefault();
           setStepIndex((i) => i + 1);
@@ -678,27 +749,34 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
           setStepIndex((i) => i - 1);
         }
       }
+      if (e.key !== 'Tab' || !root) return;
+      const items = Array.from(root.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(
+        (node) => !node.hasAttribute('disabled')
+      );
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, mode, stepIndex, currentSteps.length]);
-
-  const handleOpen = () => {
-    setIsOpen(true);
-    setStepIndex(0);
-    setReadAloudIdx(0);
-    onAnnounce?.(`Opened interactive guide for ${currentTour.pageTitle}.`);
-  };
-
-  const handleClose = () => {
-    stopSpeech();
-    clearTargetHighlight();
-    setIsOpen(false);
-    onAnnounce?.('Closed guide.');
-  };
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, mode, stepIndex, currentSteps.length, handleClose]);
 
   const handleNext = () => {
+    if (mode === 'navigate') {
+      handleClose();
+      return;
+    }
     if (mode === 'read') {
       if (readAloudIdx < currentTour.readAloudText.length - 1) {
         setReadAloudIdx((i) => i + 1);
@@ -715,6 +793,7 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
   };
 
   const handleBack = () => {
+    if (mode === 'navigate') return;
     if (mode === 'read') {
       if (readAloudIdx > 0) setReadAloudIdx((i) => i - 1);
     } else {
@@ -723,6 +802,12 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
   };
 
   const handleRepeat = () => {
+    if (mode === 'navigate') {
+      const text = navMessage || navModel.overview;
+      onAnnounce?.(text);
+      speakText(text);
+      return;
+    }
     if (mode === 'read') {
       const readText = currentTour.readAloudText[readAloudIdx];
       if (readText) speakText(readText);
@@ -734,16 +819,61 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
   const handleTogglePause = () => {
     if (!speechSupported) return;
     if (isPaused) {
-      window.speechSynthesis.resume();
+      resumeConceptLensSpeech();
       setIsPaused(false);
       setIsSpeaking(true);
       onAnnounce?.('Speech resumed.');
     } else {
-      window.speechSynthesis.pause();
+      pauseConceptLensSpeech();
       setIsPaused(true);
       setIsSpeaking(false);
       onAnnounce?.('Speech paused.');
     }
+  };
+
+  const reduceMotion = preferences.reducedMotion || preferences.lowStimulation;
+
+  const publishNav = (message: string, speak = false) => {
+    setNavMessage(message);
+    onAnnounce?.(message);
+    if (speak) speakText(message);
+  };
+
+  const handleDescribeFocus = () => {
+    const active = document.activeElement;
+    const insideGuide = !!(active && guidePanelRef.current?.contains(active));
+    // Inside the dialog, describe the control the learner left (or last navigated to), not the guide button.
+    const target = insideGuide && previouslyFocused.current ? previouslyFocused.current : active;
+    const description = describeFocusedElement(target);
+    publishNav(description, true);
+  };
+
+  const handleGoMainHeading = () => {
+    const ok = goToMainHeading(reduceMotion);
+    if (ok) {
+      const heading = document.querySelector<HTMLElement>('main h1, #hero-title, h1');
+      if (heading) previouslyFocused.current = heading;
+    }
+    publishNav(ok ? 'Moved to the main heading.' : 'No main heading was found on this page.', true);
+  };
+
+  const handleGoLandmark = (selector: string, label: string) => {
+    const ok = goToLandmark(selector, reduceMotion);
+    if (ok) {
+      try {
+        const el = document.querySelector(selector);
+        if (el instanceof HTMLElement) previouslyFocused.current = el;
+      } catch {
+        /* ignore */
+      }
+    }
+    publishNav(ok ? `Moved to ${label}.` : `${label} is not available on this page right now.`, true);
+    setLandmarkTick((value) => value + 1);
+  };
+
+  const handleListenOverview = () => {
+    const text = navModel.overview;
+    publishNav(text, true);
   };
 
   const handleToggleNarration = () => {
@@ -754,7 +884,8 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
     } else {
       setIsNarrationEnabled(true);
       onAnnounce?.('Voice narration enabled.');
-      if (currentStep) {
+      // Do not auto-speak on unmute in Navigate — learner presses Listen explicitly.
+      if (mode !== 'navigate' && currentStep) {
         speakText(currentStep.spokenText || currentStep.instruction);
       }
     }
@@ -766,12 +897,13 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
       {!isOpen && (
         <button
           type="button"
+          ref={launcherRef}
           className="voice-guide-launcher"
-          onClick={handleOpen}
+          onClick={() => handleOpen('tour')}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
           aria-label={`Guide Me: Interactive verbal walkthrough for ${currentTour.pageTitle}`}
-          title="Interactive Voice & Task Guide [G]"
+          title="Interactive Voice & Task Guide [G]. Shift+G opens navigation."
         >
           <Compass size={18} aria-hidden="true" />
           <span className="guide-launcher-label">Guide Me</span>
@@ -801,6 +933,7 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
                   {mode === 'tour' && `Page Tour • Step ${stepIndex + 1} of ${currentSteps.length}`}
                   {mode === 'task' && `Task Guide • Step ${stepIndex + 1} of ${currentSteps.length}`}
                   {mode === 'read' && `Read Aloud • Section ${readAloudIdx + 1} of ${currentTour.readAloudText.length}`}
+                  {mode === 'navigate' && 'Navigation • Sections on this page'}
                 </div>
               </div>
             </div>
@@ -872,11 +1005,62 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
               <BookOpen size={13} aria-hidden="true" />
               <span>Read Aloud</span>
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'navigate'}
+              className={`guide-mode-tab ${mode === 'navigate' ? 'active' : ''}`}
+              onClick={() => setMode('navigate')}
+            >
+              <Map size={13} aria-hidden="true" />
+              <span>Navigate</span>
+            </button>
           </div>
 
           {/* MAIN STEP / INSTRUCTION BODY */}
           <div className="voice-guide-body">
-            {mode === 'read' ? (
+            {mode === 'navigate' ? (
+              <div className="guide-step-container">
+                <h4 className="guide-step-title">Where you are</h4>
+                <p className="guide-instruction-text" tabIndex={0}>
+                  {navMessage || navModel.overview}
+                </p>
+                <p className="guide-action-hint" style={{ marginTop: '0.5rem' }}>
+                  Speech starts only when you press Listen, Repeat, or a section button. This guide does not replace your screen reader.
+                </p>
+                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <strong style={{ fontSize: '0.85rem' }}>Sections available now</strong>
+                  {navModel.landmarks.length === 0 && (
+                    <p className="guide-instruction-text">No listed sections are mounted on this page yet.</p>
+                  )}
+                  {navModel.landmarks.map((landmark) => (
+                    <button
+                      key={landmark.id}
+                      type="button"
+                      className="btn-secondary"
+                      style={{ fontSize: '0.82rem', justifyContent: 'flex-start' }}
+                      onClick={() => handleGoLandmark(landmark.selector, landmark.label)}
+                    >
+                      Go to {landmark.label}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  <button type="button" className="btn-primary" style={{ fontSize: '0.82rem' }} onClick={handleListenOverview}>
+                    Listen to overview
+                  </button>
+                  <button type="button" className="btn-secondary" style={{ fontSize: '0.82rem' }} onClick={handleDescribeFocus}>
+                    Describe focused control
+                  </button>
+                  <button type="button" className="btn-secondary" style={{ fontSize: '0.82rem' }} onClick={handleGoMainHeading}>
+                    Main heading
+                  </button>
+                  <button type="button" className="btn-secondary" style={{ fontSize: '0.82rem' }} onClick={() => { stopSpeech(); onAnnounce?.('ConceptLens speech stopped. Screen reader announcements stay available.'); }}>
+                    Stop speech
+                  </button>
+                </div>
+              </div>
+            ) : mode === 'read' ? (
               <div className="guide-read-container">
                 <p className="guide-instruction-text" tabIndex={0}>
                   {currentTour.readAloudText[readAloudIdx]}
@@ -961,7 +1145,7 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
               <button
                 type="button"
                 className="btn-secondary"
-                disabled={mode === 'read' ? readAloudIdx === 0 : stepIndex === 0}
+                disabled={mode === 'navigate' || (mode === 'read' ? readAloudIdx === 0 : stepIndex === 0)}
                 onClick={handleBack}
                 style={{ fontSize: '0.78rem', padding: '0.35rem 0.65rem' }}
                 aria-label="Previous step"
@@ -1018,7 +1202,9 @@ export const VoiceGuide: React.FC<VoiceGuideProps> = ({
                 style={{ fontSize: '0.78rem', padding: '0.35rem 0.8rem' }}
               >
                 <span>
-                  {mode === 'read'
+                  {mode === 'navigate'
+                    ? 'Done'
+                    : mode === 'read'
                     ? readAloudIdx >= currentTour.readAloudText.length - 1
                       ? 'Finish'
                       : 'Next'

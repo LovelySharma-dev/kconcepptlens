@@ -164,18 +164,6 @@ export const LESSON_OBJECTIVES: Record<string, LearningObjective[]> = {
       statement: 'Trace the direction a signal travels.',
       conceptIds: ['dendrites', 'soma', 'axon_hillock', 'axon_and_myelin', 'axon_terminals']
     }
-  ],
-  plant_cell: [
-    {
-      id: 'plant-structures',
-      statement: 'Identify structures that plant cells have.',
-      conceptIds: ['cell_wall', 'central_vacuole', 'chloroplasts', 'nucleus']
-    },
-    {
-      id: 'plant-energy',
-      statement: 'Describe where a plant cell captures light.',
-      conceptIds: ['chloroplasts']
-    }
   ]
 };
 

@@ -319,18 +319,6 @@ export const SDG_CONNECTIONS: Record<string, SdgConnection> = {
     lessonBasis: 'Heart lesson description of double circulation.',
     sourceTitle: 'United Nations Sustainable Development Goal 3',
     sourceUrl: 'https://sdgs.un.org/goals/goal3'
-  },
-  plant_cell: {
-    conceptId: 'plant_cell',
-    sdg: 15,
-    title: 'Life on Land',
-    target: 'Target 15.1: conservation, restoration, and sustainable use of terrestrial and inland freshwater ecosystems.',
-    why: 'The lesson includes chloroplasts, where land plants capture light. Terrestrial ecosystems in this target depend on that plant biology. The lesson does not measure biodiversity.',
-    application: 'Knowing what a chloroplast does makes later lessons about forests and crops easier to connect to a cell.',
-    followUp: 'Which structure in this lesson captures light?',
-    lessonBasis: 'Plant-cell lesson structures for the cell wall and chloroplasts.',
-    sourceTitle: 'United Nations Sustainable Development Goal 15',
-    sourceUrl: 'https://sdgs.un.org/goals/goal15'
   }
 };
 

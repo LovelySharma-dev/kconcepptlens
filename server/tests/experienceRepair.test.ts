@@ -32,6 +32,7 @@ async function runExperienceRepairSuite() {
   const indexCss = fs.readFileSync(path.join(clientDir, 'index.css'), 'utf-8');
   const focusRulerCode = fs.readFileSync(path.join(clientDir, 'components/FocusRuler.tsx'), 'utf-8');
   const homeViewCode = fs.readFileSync(path.join(clientDir, 'components/home/HomeView.tsx'), 'utf-8');
+  const learnDemonstrationsCode = fs.readFileSync(path.join(clientDir, 'components/learn/LearnDemonstrations.tsx'), 'utf-8');
   const learnWorkspaceCode = fs.readFileSync(path.join(clientDir, 'components/learn/LearnWorkspace.tsx'), 'utf-8');
   const appCode = fs.readFileSync(path.join(clientDir, 'App.tsx'), 'utf-8');
 
@@ -39,11 +40,14 @@ async function runExperienceRepairSuite() {
   // 1. PRIORITY 1: FOCUS MODE SCROLLING REPAIR
   // ==========================================
 
-  await test('Focus Mode CSS rules ensure document root and body remain vertically scrollable', () => {
+  await test('Focus Mode keeps document scrolling on the viewport and does not lock body', () => {
     assert(indexCss.includes('body.focus-mode'), 'index.css must target body.focus-mode');
     assert(indexCss.includes('body.adhd-friendly'), 'index.css must target body.adhd-friendly');
-    assert(indexCss.includes('overflow-y: auto !important;'), 'body must enforce overflow-y: auto !important');
-    assert(indexCss.includes('overscroll-behavior-y: auto !important;'), 'body must enforce overscroll-behavior-y: auto !important');
+    assert(indexCss.includes('overflow: visible !important;'), 'focus mode must keep body overflow visible so the viewport can scroll');
+    assert(indexCss.includes('overflow-y: auto;'), 'html must remain the vertical scrollport');
+    assert(!indexCss.includes('overflow-y: auto !important;'), 'focus mode must not force a body scrollport');
+    assert(!indexCss.includes('box-shadow: 0 0 0 9999px'), 'the reading ruler must not paint a full-viewport shadow that swallows wheel events');
+    assert(indexCss.includes('.reading-ruler-shade'), 'dimming must use separate shade layers');
   });
 
   await test('Focus Mode containers (#root, .app-container, .main-content) do not trap or clip overflow', () => {
@@ -58,6 +62,7 @@ async function runExperienceRepairSuite() {
     assert(indexCss.includes('pointer-events: none !important;'), 'reading ruler must not intercept mouse or click events');
     assert(indexCss.includes('touch-action: pan-y !important;'), 'reading ruler must permit touch vertical scrolling');
     assert(focusRulerCode.includes("pointerEvents: 'none'"), 'FocusRuler component must pass pointerEvents: none');
+    assert(focusRulerCode.includes('reading-ruler-shade'), 'FocusRuler must dim with shade layers instead of a viewport shadow');
     assert(focusRulerCode.includes("touchAction: 'pan-y'"), 'FocusRuler component must pass touchAction: pan-y');
   });
 
@@ -75,11 +80,10 @@ async function runExperienceRepairSuite() {
   // ==========================================
 
   await test('Available visual models registry defines exactly 8 real interactive models', () => {
-    assert.strictEqual(AVAILABLE_VISUAL_MODELS.length, 8, 'There must be exactly 8 verified interactive models');
+    assert.strictEqual(AVAILABLE_VISUAL_MODELS.length, 7, 'There must be exactly 7 verified interactive models');
     const expectedIds = [
       'human_cell',
       'human_heart',
-      'plant_cell',
       'dna_helix',
       'neuron',
       'physics_optics',
@@ -101,9 +105,6 @@ async function runExperienceRepairSuite() {
 
     const heartMatch = detectInteractiveVisualModel('Human heart cardiovascular systemic circulation');
     assert(heartMatch && heartMatch.id === 'human_heart', 'Must match human_heart for cardiovascular');
-
-    const plantMatch = detectInteractiveVisualModel('Photosynthesis in plant chloroplast thylakoid');
-    assert(plantMatch && plantMatch.id === 'plant_cell', 'Must match plant_cell for chloroplast');
 
     const dnaMatch = detectInteractiveVisualModel('Watson-Crick DNA double helix nucleotide pairs');
     assert(dnaMatch && dnaMatch.id === 'dna_helix', 'Must match dna_helix for dna');
@@ -145,40 +146,41 @@ async function runExperienceRepairSuite() {
   // ==========================================
 
   await test('Landing page contains exact required editorial section eyebrow and heading', () => {
-    assert(homeViewCode.includes('OUR APPROACH TO LEARNING'), 'Must contain eyebrow: OUR APPROACH TO LEARNING');
-    assert(homeViewCode.includes('Education should adapt to people. Not the other way around.'),
+    assert(learnDemonstrationsCode.includes('OUR APPROACH TO LEARNING'), 'Must contain eyebrow: OUR APPROACH TO LEARNING');
+    assert(learnDemonstrationsCode.includes('Education should adapt to people. Not the other way around.'),
       'Must contain heading: Education should adapt to people. Not the other way around.');
-    assert(homeViewCode.includes('ConceptLens brings these learning experiences together'),
+    assert(learnDemonstrationsCode.includes('ConceptLens brings these learning experiences together'),
       'Must contain supporting explanation of multi-modal learning without losing progress');
   });
 
   await test('Landing page renders 4 distinct editorial features with interactive elements', () => {
     // Feature 1
-    assert(homeViewCode.includes('Make the experience fit you.'), 'Must contain Feature 1 heading');
-    assert(homeViewCode.includes('ADHD Focus & Ruler'), 'Must include ADHD preview toggle');
-    assert(homeViewCode.includes('Dyslexia Typography'), 'Must include Dyslexia preview toggle');
-    assert(homeViewCode.includes('High Contrast'), 'Must include Contrast preview toggle');
+    assert(learnDemonstrationsCode.includes('Make the experience fit you.'), 'Must contain Feature 1 heading');
+    assert(learnDemonstrationsCode.includes('ADHD Focus & Ruler'), 'Must include ADHD preview toggle');
+    assert(learnDemonstrationsCode.includes('Dyslexia Typography'), 'Must include Dyslexia preview toggle');
+    assert(learnDemonstrationsCode.includes('High Contrast'), 'Must include Contrast preview toggle');
 
     // Feature 2
-    assert(homeViewCode.includes('Start with what you already have.'), 'Must contain Feature 2 heading');
-    assert(homeViewCode.includes('1. Your Study Material'), 'Must include Step 1 in ingestion workflow');
-    assert(homeViewCode.includes('2. Review Extracted Text'), 'Must include Step 2 review step');
-    assert(homeViewCode.includes('3. Learn and Practise'), 'Must include Step 3 learn & practise');
+    assert(learnDemonstrationsCode.includes('Start with what you already have.'), 'Must contain Feature 2 heading');
+    assert(learnDemonstrationsCode.includes('1. Your Study Material'), 'Must include Step 1 in ingestion workflow');
+    assert(learnDemonstrationsCode.includes('2. Review Extracted Text'), 'Must include Step 2 review step');
+    assert(learnDemonstrationsCode.includes('3. Learn and Practise'), 'Must include Step 3 learn & practise');
 
     // Feature 3
-    assert(homeViewCode.includes('See how concepts work.'), 'Must contain Feature 3 heading');
-    assert(homeViewCode.includes('The Animal Cell'), 'Must include interactive organelle specimen');
-    assert(homeViewCode.includes('Mitochondria'), 'Must include interactive mitochondria selector');
+    assert(learnDemonstrationsCode.includes('See how concepts work.'), 'Must contain Feature 3 heading');
+    assert(learnDemonstrationsCode.includes('The Animal Cell'), 'Must include interactive organelle specimen');
+    assert(learnDemonstrationsCode.includes('Mitochondria'), 'Must include interactive mitochondria selector');
 
     // Feature 4
-    assert(homeViewCode.includes('One idea. Multiple ways to understand it.'), 'Must contain Feature 4 heading');
-    assert(homeViewCode.includes('Read') && homeViewCode.includes('Understand') && homeViewCode.includes('Explore') && homeViewCode.includes('Practise'),
+    assert(learnDemonstrationsCode.includes('One idea. Multiple ways to understand it.'), 'Must contain Feature 4 heading');
+    assert(learnDemonstrationsCode.includes('Read') && learnDemonstrationsCode.includes('Understand') && learnDemonstrationsCode.includes('Explore') && learnDemonstrationsCode.includes('Practise'),
       'Must contain connected journey path');
   });
 
   await test('Landing page contains closing statement and primary call to action', () => {
-    assert(homeViewCode.includes('Your learning journey should move with you.'), 'Must contain closing statement');
-    assert(homeViewCode.includes('Start learning'), 'Must contain primary CTA: Start learning');
+    assert(homeViewCode.includes('Your next discovery starts here.'), 'Must contain closing statement');
+    assert(homeViewCode.includes('Start Exploring'), 'Must contain primary CTA: Start Exploring');
+    assert(homeViewCode.includes('Your learning journey should move with you.'), 'Must keep the continuity sentence');
   });
 
   // ==========================================

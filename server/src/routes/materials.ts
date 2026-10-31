@@ -10,6 +10,7 @@ import {
   defaultStrategyWeights,
   gradePracticeSubmission,
   ingestPrepared,
+  isReadablePdfText,
   parseExternalExplanation,
   verifiedLinearSolution,
   publicEngineStatus,
@@ -19,7 +20,7 @@ import {
   type StrategyWeights
 } from '@conceptlens/shared';
 import { isCloudinaryConfigured } from '../config/cloudinary';
-import { ocrEngineStatus, readPage } from '../services/pageOcr';
+import { ocrEngineStatus, readPage, readPdfTextLayer } from '../services/pageOcr';
 import { runPythonEngine } from '../services/pythonEngine';
 
 const router = Router();
@@ -146,14 +147,87 @@ router.post('/ingest', async (req: Request, res: Response) => {
     text: body.text,
     bytes,
     declaredMime: body.declaredMime,
-    sampleId: body.sampleId
+    sampleId: body.sampleId,
+    password: body.password
   });
+  if (bytes && result.format === 'pdf') {
+    const recovered = readPdfTextLayer(bytes, body.password);
+    if (!recovered.ok && (recovered.status === 'password' || recovered.status === 'password_required')) {
+      result = {
+        ...result,
+        accepted: true,
+        httpStatus: 200,
+        error: null,
+        processed: false,
+        extractionStatus: 'password_required',
+        text: '',
+        note: 'This PDF is password-protected. Enter the document password to unlock and extract its text.'
+      };
+    } else if (!recovered.ok && recovered.status === 'incorrect_password') {
+      result = {
+        ...result,
+        accepted: true,
+        httpStatus: 200,
+        error: null,
+        processed: false,
+        extractionStatus: 'incorrect_password',
+        text: '',
+        note: 'The password entered was incorrect for this document. Please try again.'
+      };
+    } else if (!recovered.ok && recovered.status === 'unsupported_encryption') {
+      result = {
+        ...result,
+        accepted: false,
+        httpStatus: 400,
+        error: 'This PDF uses an unsupported encryption algorithm or security handler.',
+        processed: false,
+        extractionStatus: 'unsupported_encryption',
+        text: '',
+        note: 'This PDF uses an unsupported encryption algorithm or security handler.'
+      };
+    } else if (!recovered.ok && recovered.status === 'empty') {
+      result = {
+        ...result,
+        accepted: true,
+        httpStatus: 200,
+        error: null,
+        processed: false,
+        extractionStatus: 'empty',
+        text: '',
+        note: 'This PDF has no extractable text layer. An OCR scan is required.'
+      };
+    } else if (!recovered.ok && (recovered.status === 'failed' || recovered.status === 'malformed') && !(result.processed && isReadablePdfText(result.text))) {
+      result = {
+        ...result,
+        accepted: false,
+        httpStatus: 400,
+        error: 'The PDF could not be read. No text was invented for it.',
+        processed: false,
+        extractionStatus: 'failed',
+        text: '',
+        note: 'The PDF could not be read. No text was invented for it.'
+      };
+    } else if (recovered.ok && isReadablePdfText(recovered.text) && (!result.processed || !isReadablePdfText(result.text) || recovered.text.length > result.text.length + 200)) {
+      result = {
+        ...result,
+        accepted: true,
+        httpStatus: 200,
+        error: null,
+        processed: true,
+        extractionStatus: 'extracted',
+        text: recovered.text,
+        note: recovered.truncated
+          ? 'Text was read from the PDF. Only the first 20,000 characters are kept, so the rest of a long paper is not included.'
+          : 'Text was read from the PDF text layer. Embedded images were not interpreted.'
+      };
+    }
+  }
   const format = result.format;
   const needsReading =
     Boolean(bytes) &&
     (format === 'jpeg' || format === 'png' || format === 'webp' || (format === 'pdf' && result.extractionStatus === 'provider_required'));
   if (needsReading && bytes && (format === 'jpeg' || format === 'png' || format === 'webp' || format === 'pdf')) {
-    const reading = await readPage(bytes, format);
+    const reading = await readPage(bytes, format, body.password);
     result = applyOcrReading(result, reading);
   }
   return res.status(result.httpStatus).json({

@@ -2,7 +2,7 @@
 
 | Document Version | 2.0.0 |
 | :--- | :--- |
-| **Status** | Approved & Ready for Implementation |
+| **Status** | Finale demo is the linked-list proof on the home screen. Older sections below describe a wider product, including ISL video and official past papers, that this demonstration does not claim. |
 | **Author** | ConceptLens Product & Engineering Team |
 | **Target Audience** | Computer Science Students (ISC Class XII, CBSE, University DSA), Inclusive Learners (Deaf/Hard of Hearing), Educators |
 | **Tech Stack** | MERN + T3 (React 19/18 + Vite, Node.js + Express + TypeScript, MongoDB/Mongoose, Cloudinary, Zod) |
@@ -11,10 +11,15 @@
 
 ## 1. Executive Summary & Product Vision
 
-### 1.1 Vision
+### 1.1 What the finale actually demonstrates
+A learner opens ConceptLens and meets one idea: a singly linked list is taught only when the structure matches the lesson. A four-node list reverses step by step. A cycle is refused by Floyd’s check, the closing edge is named, and the learner clears that edge before the reversal is allowed to continue. Under that lesson, on the local runner, one plant-cell illustration on the project Cloudinary account is delivered as Explore, Focus, and Low data. The checked Render deployment does not serve that route. Those pixels are not treated as a scan of the list.
+
+Reviewed Indian Sign Language video, official past-paper claims, and measured learning gains are outside this demonstration.
+
+### 1.2 Vision for the wider product
 **ConceptLens 2.0** is an accessible, AI-assisted learning platform that transforms static study materials and handwritten notes into interactive, deterministic lessons, connects them to real Previous-Year Questions (PYQs), and provides diverse modalities of learning including reviewed Indian Sign Language (ISL) explanations.
 
-### 1.2 Core Philosophy: Reliability Before Expansion
+### 1.3 Core Philosophy: Reliability Before Expansion
 The single biggest risk in AI-assisted educational tooling is attempting to support arbitrary diagrams and unrestricted subjects with unvalidated AI output. A weak pipeline trusts raw model outputs, leading to hallucinated pointers, broken graph invariants, and student confusion. 
 
 ConceptLens 2.0 adheres to a strict principle: **Every AI-generated result must be validated against structural invariants, traceable to original media coordinates, and fully recoverable through human-in-the-loop correction when confidence is marginal.**

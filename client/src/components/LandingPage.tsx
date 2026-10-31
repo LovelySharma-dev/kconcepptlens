@@ -28,6 +28,7 @@ import { LearningWorkspace, type AnswerState } from './learn/LearningWorkspace';
 import { GuidedDemo } from './learn/GuidedDemo';
 import { clearEvidenceRaw, clearProgress, readProgress } from './biology/LearningPaths';
 import { HomeNarrative } from './home/HomeNarrative';
+import { Lock } from 'lucide-react';
 
 interface LandingPageProps {
   preferences: LearningPreferences;
@@ -52,14 +53,13 @@ interface StoredSession {
 
 const SOURCE_KINDS: MaterialSourceKind[] = ['learner_text', 'pdf_text_layer', 'sample', 'image_ocr', 'scanned_pdf'];
 const SESSION_KEY = 'conceptlens-material-session';
-const BIOLOGY_TOPICS: BiologyTopicId[] = ['human_cell', 'human_heart', 'dna_helix', 'neuron', 'plant_cell'];
+const BIOLOGY_TOPICS: BiologyTopicId[] = ['human_cell', 'human_heart', 'dna_helix', 'neuron'];
 
 const BIOLOGY_LABELS: Record<BiologyTopicId, string> = {
   human_cell: 'Human cell',
   human_heart: 'Human heart',
   dna_helix: 'DNA helix',
-  neuron: 'Neuron',
-  plant_cell: 'Plant cell'
+  neuron: 'Neuron'
 };
 
 function readWeights(value: unknown): StrategyWeights {
@@ -155,6 +155,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [clearOpen, setClearOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<WorkspacePanel>('explanation');
   const abortRef = useRef<AbortController | null>(null);
+  const [pendingPasswordFile, setPendingPasswordFile] = useState<{ binary: string; name: string; type: string } | null>(null);
+  const [pdfPasswordInput, setPdfPasswordInput] = useState('');
+  const [pdfPasswordError, setPdfPasswordError] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -318,6 +321,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         fileName: file.name,
         declaredMime: file.type
       }, controller.signal);
+      if (json.data?.extractionStatus === 'password_required' || json.data?.extractionStatus === 'incorrect_password') {
+        setPendingPasswordFile({ binary, name: file.name, type: file.type });
+        setPdfPasswordError(json.data.note || 'Password required to unlock this PDF.');
+        setStatus(json.data.note || 'This PDF is password-protected. Enter the password to unlock it.');
+        onAnnounce('This PDF requires a password to open.');
+        return;
+      }
+
       const origin = json.data?.readingOrigin;
       const kind: MaterialSourceKind =
         origin === 'image_ocr' || origin === 'scanned_pdf'
@@ -336,6 +347,60 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     } catch (error) {
       if ((error as Error).name === 'AbortError') return;
       setStatus((error as Error).message || 'The request did not reach the server. Nothing was processed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const unlockPasswordPdf = async (password: string) => {
+    if (!pendingPasswordFile) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setStatus('Decrypting and reading the PDF...');
+    try {
+      const json = await postJson<{
+        success: boolean;
+        processed: boolean;
+        data: { text: string; note: string; extractionStatus: string; demo: boolean; readingOrigin?: MaterialSourceKind | null } | null;
+      }>('/api/materials/ingest', {
+        kind: 'file',
+        fileBase64: btoa(pendingPasswordFile.binary),
+        fileName: pendingPasswordFile.name,
+        declaredMime: pendingPasswordFile.type,
+        password
+      }, controller.signal);
+
+      if (json.data?.extractionStatus === 'password_required' || json.data?.extractionStatus === 'incorrect_password') {
+        setPdfPasswordError(json.data.note || 'Incorrect password.');
+        setStatus(json.data.note || 'Incorrect password. Please verify and re-enter.');
+        onAnnounce('Incorrect password. Please verify and re-enter.');
+        return;
+      }
+
+      setPendingPasswordFile(null);
+      setPdfPasswordInput('');
+      setPdfPasswordError(null);
+
+      const origin = json.data?.readingOrigin;
+      const kind: MaterialSourceKind =
+        origin === 'image_ocr' || origin === 'scanned_pdf'
+          ? origin
+          : json.processed
+            ? 'pdf_text_layer'
+            : 'learner_text';
+      setPendingText(json.data?.text ?? '');
+      setPendingNote(json.data?.note ?? 'The file was not read.');
+      setPendingKind(kind);
+      setPendingSample(null);
+      setPendingDemo(false);
+      setExplanation(null);
+      setStatus(json.processed ? 'Text was unlocked and extracted. Confirm it before the explanation.' : json.data?.note || 'The file was not interpreted.');
+      onAnnounce(json.processed ? 'Password accepted. Extracted text is ready to confirm.' : 'The file was not interpreted.');
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
+      setPdfPasswordError((error as Error).message || 'Decryption failed.');
+      setStatus((error as Error).message || 'Decryption failed.');
     } finally {
       setBusy(false);
     }
@@ -652,6 +717,60 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Cancel processing
           </button>
         )}
+        {pendingPasswordFile && (
+          <div className="composer" style={{ border: '1.5px solid var(--accent-amber)', padding: '1rem', borderRadius: 'var(--radius-md)', background: 'rgba(245, 158, 11, 0.08)', marginTop: '0.75rem' }}>
+            <label htmlFor="pdf-password-field" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-amber)', fontWeight: 700 }}>
+              <Lock size={16} /> Password-Protected PDF: {pendingPasswordFile.name}
+            </label>
+            <p style={{ margin: '0.25rem 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              {pdfPasswordError || 'Enter the password to decrypt and extract the study text.'}
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                id="pdf-password-field"
+                type="password"
+                value={pdfPasswordInput}
+                onChange={(e) => setPdfPasswordInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && pdfPasswordInput.trim()) {
+                    void unlockPasswordPdf(pdfPasswordInput);
+                  }
+                }}
+                placeholder="Enter PDF password..."
+                style={{
+                  flex: '1 1 200px',
+                  padding: '0.5rem 0.75rem',
+                  fontSize: '0.9rem',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-medium)',
+                  background: 'var(--surface-elevated)',
+                  color: 'var(--text-primary)'
+                }}
+              />
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={busy || !pdfPasswordInput.trim()}
+                onClick={() => void unlockPasswordPdf(pdfPasswordInput)}
+              >
+                Unlock & Extract
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setPendingPasswordFile(null);
+                  setPdfPasswordInput('');
+                  setPdfPasswordError(null);
+                  setStatus('Cancelled PDF password unlock.');
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {pendingKind && !explanation && (
           <div className="confirm-panel">
             <h3>{pendingDemo ? 'Sample text' : 'Confirm the text'}</h3>

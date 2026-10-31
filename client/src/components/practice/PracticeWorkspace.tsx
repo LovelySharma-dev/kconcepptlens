@@ -26,7 +26,8 @@ import {
   ListOrdered,
   Lightbulb,
   Edit3,
-  Trash2
+  Trash2,
+  Lock
 } from 'lucide-react';
 
 export type PracticeInputTab = 'text' | 'file' | 'camera' | 'speech';
@@ -63,6 +64,9 @@ export const PracticeWorkspace: React.FC<PracticeWorkspaceProps> = ({
   // File Upload State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileProgress, setFileProgress] = useState<string | null>(null);
+  const [pendingPasswordFile, setPendingPasswordFile] = useState<{ fileBase64: string; fileName: string; declaredMime: string } | null>(null);
+  const [pdfPasswordInput, setPdfPasswordInput] = useState('');
+  const [pdfPasswordError, setPdfPasswordError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Camera State
@@ -304,14 +308,62 @@ export const PracticeWorkspace: React.FC<PracticeWorkspaceProps> = ({
         throw new Error(json.error || 'File extraction failed.');
       }
 
-      const extracted = json.data.text || '';
+      const extracted = (json.data.text || '').trim();
+      if (!json.data.processed || !extracted) {
+        throw new Error(json.data.note || 'No readable text was found in this file. A scanned page needs the local reader, or you can type the text.');
+      }
       setConfirmedText(extracted);
-      setFileProgress(`Extracted ${extracted.length} characters successfully from ${file.name}.`);
-      onAnnounce(`Extracted text from ${file.name}. Review and edit below before generating lesson.`);
+      setFileProgress(json.data.note ? `${json.data.note} ${extracted.length} characters from ${file.name}.` : `Extracted ${extracted.length} characters from ${file.name}.`);
+      onAnnounce(`Extracted text from ${file.name}. Review and edit below before generating the workspace.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Extraction error';
       setFileProgress(`Extraction notice: ${msg}`);
       onAnnounce(`Extraction notice: ${msg}`);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleUnlockPasswordPdf = async (password: string) => {
+    if (!pendingPasswordFile) return;
+    setIsExtracting(true);
+    setFileProgress('Decrypting and reading PDF...');
+    try {
+      const res = await fetch('/api/materials/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'file',
+          fileBase64: pendingPasswordFile.fileBase64,
+          declaredMime: pendingPasswordFile.declaredMime,
+          password
+        })
+      });
+
+      const json = await res.json();
+      if (json.data?.extractionStatus === 'password_required' || json.data?.extractionStatus === 'incorrect_password') {
+        setPdfPasswordError(json.data.note || 'Incorrect password.');
+        setFileProgress(json.data.note || 'Incorrect password. Please verify and re-enter.');
+        onAnnounce('Incorrect password. Please verify and re-enter.');
+        return;
+      }
+
+      const extracted = (json.data?.text || '').trim();
+      if (!json.data?.processed || !extracted) {
+        throw new Error(json.data?.note || 'No readable text was found in this file after unlock.');
+      }
+
+      setConfirmedText(extracted);
+      setFileProgress(`Extracted ${extracted.length} characters from ${pendingPasswordFile.fileName}.`);
+      onAnnounce(`Extracted text from ${pendingPasswordFile.fileName}. Review and edit below.`);
+      setPendingPasswordFile(null);
+      setPdfPasswordInput('');
+      setPdfPasswordError(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Decryption error';
+      setFileProgress(`Notice: ${msg}`);
+      setPdfPasswordError(msg);
+      onAnnounce(`Notice: ${msg}`);
     } finally {
       setIsExtracting(false);
     }
@@ -451,6 +503,16 @@ export const PracticeWorkspace: React.FC<PracticeWorkspaceProps> = ({
             </h2>
             <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
               Paste class notes, upload documents, capture photos with your camera, or speak your thoughts.
+            </p>
+            <p className="studio-nav-guide-entry" style={{ margin: '0.5rem 0 0' }}>
+              <button
+                type="button"
+                className="tag-btn"
+                onClick={() => window.dispatchEvent(new CustomEvent('conceptlens:open-guide', { detail: { mode: 'navigate' } }))}
+              >
+                Open navigation guide
+              </button>
+              <span> Keyboard: Shift+G.</span>
             </p>
           </div>
 
@@ -604,6 +666,61 @@ export const PracticeWorkspace: React.FC<PracticeWorkspaceProps> = ({
               <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--accent-cyan)' }}>
                 {fileProgress}
               </p>
+            )}
+
+            {pendingPasswordFile && (
+              <div style={{ marginTop: '1rem', padding: '1rem', border: '1.5px solid var(--accent-amber)', borderRadius: 'var(--radius-md)', background: 'rgba(245, 158, 11, 0.08)', textAlign: 'left' }}>
+                <label htmlFor="practice-pdf-pwd" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-amber)', fontWeight: 700, fontSize: '0.9rem' }}>
+                  <Lock size={16} /> Password Protected PDF: {pendingPasswordFile.fileName}
+                </label>
+                <p style={{ margin: '0.25rem 0 0.5rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                  {pdfPasswordError || 'Enter the password to decrypt and extract the study text.'}
+                </p>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    id="practice-pdf-pwd"
+                    type="password"
+                    value={pdfPasswordInput}
+                    onChange={(e) => setPdfPasswordInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && pdfPasswordInput.trim()) {
+                        void handleUnlockPasswordPdf(pdfPasswordInput);
+                      }
+                    }}
+                    placeholder="Enter password..."
+                    style={{
+                      flex: '1 1 180px',
+                      padding: '0.45rem 0.75rem',
+                      fontSize: '0.88rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-medium)',
+                      background: 'var(--surface-elevated)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={isExtracting || !pdfPasswordInput.trim()}
+                    onClick={() => void handleUnlockPasswordPdf(pdfPasswordInput)}
+                    style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
+                  >
+                    Unlock & Extract
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setPendingPasswordFile(null);
+                      setPdfPasswordInput('');
+                      setPdfPasswordError(null);
+                    }}
+                    style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -1224,6 +1341,7 @@ export const PracticeWorkspace: React.FC<PracticeWorkspaceProps> = ({
                                     : `Incorrect. Correct option was ${q.correctOptionIndex + 1}. ${q.explanation}`
                                 );
                               }}
+                              aria-label={preferences.colorFriendly ? `Option ${optIdx + 1}, ${marker.label}: ${opt}` : `Option ${optIdx + 1}: ${opt}`}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1237,9 +1355,12 @@ export const PracticeWorkspace: React.FC<PracticeWorkspaceProps> = ({
                               }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }} title={marker.label} aria-hidden="true">
-                                  {marker.symbol}
-                                </span>
+                                {preferences.colorFriendly && (
+                                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }} title={marker.label}>
+                                    <span aria-hidden="true">{marker.symbol}</span>
+                                    <span className="sr-only">{marker.label}</span>
+                                  </span>
+                                )}
                                 <span style={{ fontSize: '0.9rem' }}>{opt}</span>
                               </div>
 

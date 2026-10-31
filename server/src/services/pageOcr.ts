@@ -67,12 +67,57 @@ async function getWorker(): Promise<OcrWorker> {
   return workerPromise;
 }
 
-function runPrepare(kind: 'image' | 'pdf', source: string, dest: string): boolean {
+export function readPdfTextLayer(
+  bytes: Uint8Array,
+  password?: string
+): { ok: true; text: string; truncated: boolean } | { ok: false; status: string; error?: string } {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'conceptlens-pdf-'));
+  const source = path.join(dir, 'source.pdf');
+  try {
+    fs.writeFileSync(source, bytes);
+    const script = path.resolve(__dirname, '../../../python/page_prepare.py');
+    const commands = process.platform === 'win32' ? [['python'], ['py', '-3']] : [['python3'], ['python']];
+    for (const command of commands) {
+      const payload: Record<string, unknown> = { kind: 'text', source, dest: source };
+      if (password) {
+        payload.password = password;
+      }
+      const result = spawnSync(command[0], [...command.slice(1), script], {
+        input: JSON.stringify(payload),
+        encoding: 'utf-8',
+        timeout: 30000,
+        windowsHide: true,
+        maxBuffer: 8 * 1024 * 1024
+      });
+      if ((result.error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT') continue;
+      if (!result.stdout?.trim()) return { ok: false, status: 'failed' };
+      try {
+        const data = JSON.parse(result.stdout) as { ok?: boolean; status?: string; text?: string; truncated?: boolean; error?: string };
+        const text = typeof data.text === 'string'
+          ? data.text.replace(/\u0002/g, '-').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim()
+          : '';
+        if (data.ok === true && text) return { text, truncated: data.truncated === true, ok: true };
+        return { ok: false, status: data.status || 'failed', error: data.error };
+      } catch {
+        return { ok: false, status: 'failed' };
+      }
+    }
+    return { ok: false, status: 'failed' };
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function runPrepare(kind: 'image' | 'pdf', source: string, dest: string, password?: string): boolean {
   const script = path.resolve(__dirname, '../../../python/page_prepare.py');
   const commands = process.platform === 'win32' ? [['python'], ['py', '-3']] : [['python3'], ['python']];
   for (const command of commands) {
+    const payload: Record<string, unknown> = { kind, source, dest };
+    if (password) {
+      payload.password = password;
+    }
     const result = spawnSync(command[0], [...command.slice(1), script], {
-      input: JSON.stringify({ kind, source, dest }),
+      input: JSON.stringify(payload),
       encoding: 'utf-8',
       timeout: 20000,
       windowsHide: true
@@ -96,7 +141,11 @@ async function recognizeFile(imagePath: string): Promise<{ text: string; confide
   return { text, confidence: unitConfidence(result.data.confidence) };
 }
 
-export async function readPage(bytes: Uint8Array, format: 'jpeg' | 'png' | 'webp' | 'pdf'): Promise<PageReading> {
+export async function readPage(
+  bytes: Uint8Array,
+  format: 'jpeg' | 'png' | 'webp' | 'pdf',
+  password?: string
+): Promise<PageReading> {
   const origin = format === 'pdf' ? 'scanned_pdf' : 'image';
   let configured = true;
   try {
@@ -121,7 +170,7 @@ export async function readPage(bytes: Uint8Array, format: 'jpeg' | 'png' | 'webp
     const prepared = path.join(dir, 'prepared.png');
     fs.writeFileSync(source, bytes);
 
-    if (format === 'pdf' && runPrepare('pdf', source, prepared)) {
+    if (format === 'pdf' && runPrepare('pdf', source, prepared, password)) {
       const rendered = await recognizeFile(prepared);
       if (rendered.text) {
         return { ...rendered, providerConfigured: true, origin, note: '' };

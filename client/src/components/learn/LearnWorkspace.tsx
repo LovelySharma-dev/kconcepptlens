@@ -17,13 +17,14 @@ import {
 import { SpeechControls } from '../SpeechControls';
 import { Cell2DCanvas } from '../biology/2d/Cell2DCanvas';
 import { Heart2DCanvas } from '../biology/2d/Heart2DCanvas';
-import { PlantCell2DCanvas } from '../biology/2d/PlantCell2DCanvas';
 import { Dna2DCanvas } from '../biology/2d/Dna2DCanvas';
 import { Neuron2DCanvas } from '../biology/2d/Neuron2DCanvas';
 import { InteractivePhysicsStudio } from '../InteractivePhysicsStudio';
 import { InteractiveCanvas } from '../InteractiveCanvas';
 import { clientBiologyCatalog } from '../../data/biologyLessons';
 import { ISLVideoPanel } from '../ISLVideoPanel';
+import { CurriculumTranslationBar } from './CurriculumTranslationBar';
+import type { SupportedLanguageCode } from '@conceptlens/shared';
 import {
   BookOpen,
   Sparkles,
@@ -154,8 +155,91 @@ interface LearnWorkspaceProps {
   onAnnounce: (msg: string) => void;
   onLaunchInteractiveBiology?: (topicId: BiologyTopicId) => void;
   onLaunchInteractiveSTEM?: (domain: 'universal' | 'physics' | 'data_structure') => void;
+  onNavigateISL?: () => void;
 }
 
+
+const DEFAULT_CURATED_LESSON: GeneratedLesson = {
+  topic: 'Geometrical Optics: Convex Lens Ray Tracing',
+  summary: 'Interactive ray tracing study module demonstrating real and virtual image formation through a biconvex lens with principal rays, object distance, and focal length.',
+  explanations: {
+    standard:
+      'Geometrical optics models light propagation using straight-line rays through refracting media. For a thin spherical convex lens of focal length f, incident paraxial rays converge at the real principal focus. The fundamental Gaussian conjugate equation states 1/f = 1/v - 1/u (using Cartesian sign conventions), determining image location v relative to object position u.',
+    easyRead:
+      'A convex lens is a curved piece of glass that is thicker in the middle than at the edges. When straight light rays pass through it, the glass bends the rays inward so they cross at one single sharp point called the focal point. Magnifying glasses and eye lenses work this way.',
+    stepByStep: [
+      {
+        stepNumber: 1,
+        title: 'Identify Parameters',
+        explanation: 'Identify the object distance u and focal length f on the principal optical axis with standard Cartesian sign convention.'
+      },
+      {
+        stepNumber: 2,
+        title: 'Trace Parallel Ray',
+        explanation: 'Draw Ray 1 parallel to the principal axis from object tip to lens; it refracts through the principal focal point F2.'
+      },
+      {
+        stepNumber: 3,
+        title: 'Trace Central Ray',
+        explanation: 'Draw Ray 2 passing straight through the optical center O without angular deviation.'
+      },
+      {
+        stepNumber: 4,
+        title: 'Locate Image & Magnification',
+        explanation: 'Locate the image at the intersection of the refracted rays; calculate linear magnification m = v / u.'
+      }
+    ]
+  },
+  flashcards: [
+    {
+      id: 'optics_fc1',
+      front: 'What is the Gaussian thin-lens formula?',
+      back: '1/f = 1/v - 1/u, connecting focal length (f), image distance (v), and object distance (u).'
+    },
+    {
+      id: 'optics_fc2',
+      front: 'When does a convex lens form a real image?',
+      back: 'When the object is placed outside the focal point (u > f). The refracted rays physically converge.'
+    },
+    {
+      id: 'optics_fc3',
+      front: 'What does optical magnification m indicate?',
+      back: 'm = height of image / height of object = v / u. Negative m indicates an inverted real image.'
+    }
+  ],
+  practiceQuestions: [
+    {
+      id: 'optics_q1',
+      prompt: 'An object is placed 30 cm in front of a convex lens with a focal length of 10 cm. Where is the real image formed?',
+      options: [
+        '15 cm behind the lens',
+        '10 cm in front of the lens',
+        '20 cm behind the lens',
+        '30 cm behind the lens'
+      ],
+      correctOptionIndex: 0,
+      explanation: 'Using 1/f = 1/v - 1/u with standard Cartesian coordinates (f = +10, u = -30): 1/v = 1/10 - 1/30 = 2/30 = 1/15, yielding v = +15 cm behind the lens.',
+      sourceReference: 'ISC & CBSE Physics Class 12 Ray Optics'
+    }
+  ],
+  studyNotes: [
+    'Convex lenses converge parallel incident light rays to a real focus.',
+    'Focal length f is positive for convex lenses and negative for concave lenses in Cartesian convention.',
+    'Real images can be projected onto a screen; virtual images can only be viewed through the lens.'
+  ],
+  keyTerms: [
+    { term: 'Principal Focus (F)', definition: 'The point where incident rays parallel to the principal axis converge after refraction.' },
+    { term: 'Focal Length (f)', definition: 'The distance between the optical center of the lens and its principal focus.' },
+    { term: 'Optical Center (O)', definition: 'The central point of the lens through which rays pass undeflected.' }
+  ],
+  uncertaintyNotes: [],
+  generationMetadata: {
+    generationMethod: 'deterministic',
+    model: 'deterministic-physics-engine',
+    fallbackUsed: false,
+    timestamp: new Date().toISOString()
+  }
+};
 const STORAGE_KEY = 'conceptlens-learn-continuity';
 
 export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
@@ -163,15 +247,21 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
   onPreferences,
   onAnnounce,
   onLaunchInteractiveBiology,
-  onLaunchInteractiveSTEM
+  onLaunchInteractiveSTEM,
+  onNavigateISL
 }) => {
   // Discovery & Query States
   const [selectedFamily, setSelectedFamily] = useState<SubjectFamily>('stem');
   const [topicInput, setTopicInput] = useState('');
   const [learningContext, setLearningContext] = useState<LearningContext>('curiosity');
 
+  // Curriculum Translation State
+  const [translatedStandardText, setTranslatedStandardText] = useState<string | null>(null);
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguageCode>('en');
+  const [isRtl, setIsRtl] = useState(false);
+
   // Active Lesson & Generation State
-  const [lesson, setLesson] = useState<GeneratedLesson | null>(() => {
+  const [lesson, setLesson] = useState<GeneratedLesson>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -181,7 +271,7 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
     } catch {
       /* ignore */
     }
-    return null;
+    return DEFAULT_CURATED_LESSON;
   });
 
   const [loading, setLoading] = useState(false);
@@ -267,7 +357,7 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
     } catch {
       /* ignore */
     }
-    return 'human_cell';
+    return 'physics_optics';
   });
   const [selectedOrganelleId, setSelectedOrganelleId] = useState<string | null>('mitochondria');
   const [showLabels, setShowLabels] = useState<boolean>(true);
@@ -275,6 +365,13 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
 
   // Experience Flags
   const exp = resolveLearningExperience(preferences);
+
+  // Reset translation when active lesson changes
+  useEffect(() => {
+    setTranslatedStandardText(null);
+    setCurrentLanguage('en');
+    setIsRtl(false);
+  }, [lesson?.topic]);
 
   // Save continuity state to localStorage
   useEffect(() => {
@@ -777,12 +874,12 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
               className={`tab-btn ${representation === 'isl' ? 'active' : ''}`}
               onClick={() => {
                 setRepresentation('isl');
-                onAnnounce('Authentic Indian Sign Language video lesson.');
+                onAnnounce('Indian Sign Language. A signed explanation appears only when a verified resource exists for this lesson.');
               }}
               style={{ fontSize: '0.82rem', padding: '0.4rem 0.75rem' }}
             >
               <Captions size={15} />
-              <span>ISL Video</span>
+              <span>Learn with ISL</span>
             </button>
           </div>
 
@@ -790,14 +887,66 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
           {representation === 'isl' && (
             <div className="representation-content isl-view" tabIndex={0} aria-label="Indian Sign Language Video">
               <ISLVideoPanel lessonIdOrTopic={lesson.topic} onAnnounce={onAnnounce} />
+
+              <div
+                style={{
+                  marginTop: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.85rem 1rem',
+                  background: 'rgba(56, 189, 248, 0.08)',
+                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  borderRadius: 'var(--radius-md)',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem'
+                }}
+              >
+                <div>
+                  <strong style={{ fontSize: '0.85rem', color: '#f8fafc' }}>
+                    Authentic ISL Curriculum Catalog
+                  </strong>
+                  <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    The curriculum catalog has six entries. Most open the ISLRTC directory. Two do not have a video yet.
+                  </p>
+                </div>
+                {onNavigateISL && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={onNavigateISL}
+                    style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', whiteSpace: 'nowrap' }}
+                  >
+                    Open ISL Catalog →
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
           {/* TAB 1: READ (STANDARD) */}
           {representation === 'read' && (
             <div className="representation-content" tabIndex={0} aria-label="Standard Explanation">
-              <div style={{ lineHeight: preferences.lineSpacing === 'relaxed' ? 1.95 : 1.7, fontSize: '0.98rem' }}>
-                {lesson.explanations.standard.split('\n\n').map((para, i) => (
+              <CurriculumTranslationBar
+                originalText={lesson.explanations.standard}
+                currentLanguage={currentLanguage}
+                onLanguageChange={setCurrentLanguage}
+                onTranslatedChange={(translated, lang, rtl) => {
+                  setTranslatedStandardText(lang === 'en' ? null : translated);
+                  setIsRtl(rtl);
+                }}
+                onAnnounce={onAnnounce}
+              />
+
+              <div
+                style={{
+                  lineHeight: preferences.lineSpacing === 'relaxed' ? 1.95 : 1.7,
+                  fontSize: '0.98rem',
+                  textAlign: isRtl ? 'right' : 'left'
+                }}
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                {(translatedStandardText || lesson.explanations.standard).split('\n\n').map((para, i) => (
                   <p key={i} style={{ marginBottom: '1rem' }}>{para}</p>
                 ))}
               </div>
@@ -1091,16 +1240,6 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
                   />
                 )}
 
-                {activeVisualModelId === 'plant_cell' && (
-                  <PlantCell2DCanvas
-                    selectedComponentId={selectedOrganelleId}
-                    onSelectComponent={(id) => {
-                      setSelectedOrganelleId(id);
-                      onAnnounce(`Selected plant organelle: ${id}`);
-                    }}
-                    showLabels={showLabels}
-                  />
-                )}
 
                 {activeVisualModelId === 'dna_helix' && (
                   <Dna2DCanvas
@@ -1412,13 +1551,15 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
                                 textAlign: 'left',
                                 cursor: hasSubmitted ? 'default' : 'pointer'
                               }}
-                              aria-label={`Option ${optIndex + 1}: ${opt}`}
+                              aria-label={preferences.colorFriendly ? `Option ${optIndex + 1}, ${marker.label}: ${opt}` : `Option ${optIndex + 1}: ${opt}`}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                {/* Color-Blind Friendly Shape Marker */}
-                                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }} title={marker.label} aria-hidden="true">
-                                  {marker.symbol}
-                                </span>
+                                {preferences.colorFriendly && (
+                                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }} title={marker.label}>
+                                    <span aria-hidden="true">{marker.symbol}</span>
+                                    <span className="sr-only">{marker.label}</span>
+                                  </span>
+                                )}
                                 <span style={{ fontSize: '0.9rem' }}>{opt}</span>
                               </div>
 

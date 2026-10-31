@@ -488,7 +488,7 @@ export const CloudinaryMediaStudio: React.FC<CloudinaryMediaStudioProps> = ({
               }}
             >
               {status.accountReachable
-                ? `Signed uploads ready (${status.cloudName})`
+                ? 'Signed uploads ready'
                 : status.configured
                   ? `Signed uploads blocked — account check failed (${status.accountError || 'cloud_name mismatch'})`
                   : 'Signed uploads off — public demo delivery is live'}
@@ -1539,7 +1539,7 @@ export const CloudinaryMediaStudio: React.FC<CloudinaryMediaStudioProps> = ({
             <div style={{ marginTop: '0.75rem', background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.35rem' }}>
                 <span style={{ fontSize: '0.74rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  Cloudinary Video Delivery URL ({effectiveVideoCloud === DEMO_CLOUD ? 'Demo Fallback' : `Account: ${effectiveVideoCloud}`}):
+                  Cloudinary Video Delivery URL ({effectiveVideoCloud === DEMO_CLOUD ? 'Demo Fallback' : 'Project account'}):
                 </span>
                 <button
                   type="button"

@@ -136,7 +136,8 @@ export const MaterialIngestRequestSchema = z
     fileBase64: z.string().max(18_000_000).optional(),
     fileName: z.string().max(180).optional(),
     declaredMime: z.string().max(120).optional(),
-    sampleId: z.string().max(80).optional()
+    sampleId: z.string().max(80).optional(),
+    password: z.string().max(256).optional()
   })
   .strict();
 

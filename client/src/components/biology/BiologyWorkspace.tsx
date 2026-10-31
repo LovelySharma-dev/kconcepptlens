@@ -53,7 +53,6 @@ import { Cell2DCanvas } from './2d/Cell2DCanvas';
 import { Heart2DCanvas } from './2d/Heart2DCanvas';
 import { Dna2DCanvas } from './2d/Dna2DCanvas';
 import { Neuron2DCanvas } from './2d/Neuron2DCanvas';
-import { PlantCell2DCanvas } from './2d/PlantCell2DCanvas';
 import {
   RotateCcw,
   ChevronLeft,
@@ -170,7 +169,7 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
     });
   }, []);
 
-  const selectedComponentId = continuity.selectedComponentId || lesson.components[0]?.id || '';
+    const selectedComponentId = continuity.selectedComponentId || lesson.components[0]?.id || '';
   const currentStepIndex = continuity.stepIndex;
 
   useEffect(() => {
@@ -763,10 +762,7 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
             {showDiagram && lesson.id === 'neuron' && (
               <Neuron2DCanvas selectedComponentId={selectedComponentId} onSelectComponent={handleSelectComponent} showLabels={showLabels} />
             )}
-            {showDiagram && lesson.id === 'plant_cell' && (
-              <PlantCell2DCanvas selectedComponentId={selectedComponentId} onSelectComponent={handleSelectComponent} showLabels={showLabels} />
-            )}
-            {showDiagram && (
+                        {showDiagram && (
               <p className="path-option-note model-caption">Simplified illustration. The structure list names the same parts.</p>
             )}
           </div>

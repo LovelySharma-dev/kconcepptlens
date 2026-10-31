@@ -27,6 +27,7 @@ export const Dna2DCanvas: React.FC<Dna2DCanvasProps> = ({
         borderRadius: '12px',
         overflow: 'hidden'
       }}
+      className="diagram-stage"
     >
       <svg
         viewBox="0 0 800 500"

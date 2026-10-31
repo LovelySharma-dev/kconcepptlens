@@ -134,7 +134,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               <h3 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>3. Interactive Learning Atlas</h3>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Mathematical and physiological simulations: Singly & Doubly Linked Lists with Floyd cycle detection, Geometrical Convex Lens Ray Optics, Simple Pendulum SHM, and 5 interactive anatomical systems (Human Cell, Heart, DNA, Neuron, Plant Cell).
+              Mathematical and physiological simulations: Singly & Doubly Linked Lists with Floyd cycle detection, Geometrical Convex Lens Ray Optics, Simple Pendulum SHM, and interactive anatomical systems (Human Cell, Heart, DNA, Neuron).
             </p>
           </div>
 
@@ -275,3 +275,5 @@ export const AboutPage: React.FC<AboutPageProps> = ({
     </article>
   );
 };
+
+export default AboutPage;

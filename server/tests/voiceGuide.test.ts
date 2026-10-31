@@ -35,10 +35,11 @@ async function runVoiceGuideTestSuite() {
   });
 
   // 2. ENTRY OPTIONS
-  await test('VoiceGuide offers all 3 required entry modes: Page Tour, Task Guide, Read Aloud', () => {
+  await test('VoiceGuide offers Page Tour, Task Guide, Read Aloud, and Navigate', () => {
     assert(voiceGuideCode.includes('Guide Me Through Page'), 'Must offer "Guide me through this page"');
     assert(voiceGuideCode.includes('Help Complete a Task'), 'Must offer "Help me complete a task"');
     assert(voiceGuideCode.includes('Read Aloud'), 'Must offer "Read this page aloud"');
+    assert(voiceGuideCode.includes('Navigate'), 'Must offer nonvisual Navigate mode');
   });
 
   // 3. REQUIRED PAGE TOURS ACCURACY & COVERAGE
@@ -91,7 +92,7 @@ async function runVoiceGuideTestSuite() {
   });
 
   await test('Accessibility Settings tour explains 18 themes, focus/vision/sensory modes, and preserving settings', () => {
-    assert(voiceGuideCode.includes('18 Typed Presentation Themes'), 'A11y tour must explain themes');
+    assert(voiceGuideCode.includes('18 interface themes'), 'A11y tour must explain themes');
     assert(voiceGuideCode.includes('Focus & Reading Modes'), 'A11y tour must explain focus modes');
     assert(voiceGuideCode.includes('Preserving Preferences'), 'A11y tour must explain preserving preferences on close');
   });
@@ -104,7 +105,10 @@ async function runVoiceGuideTestSuite() {
 
   // 4. SPEECH SYNTHESIS & FALLBACK BEHAVIOUR
   await test('Speech cancellation is enforced on stop, step change, exit, and route unmount', () => {
-    assert(voiceGuideCode.includes('window.speechSynthesis.cancel()'), 'Must call speechSynthesis.cancel()');
+    assert(
+      voiceGuideCode.includes('stopConceptLensSpeech') || voiceGuideCode.includes('window.speechSynthesis.cancel()'),
+      'Must cancel ConceptLens speech through the shared bus or speechSynthesis.cancel()'
+    );
     assert(voiceGuideCode.includes('stopSpeech()'), 'Must call stopSpeech cleanup');
   });
 

@@ -311,14 +311,13 @@ async function runTestSuite() {
 
   // Biology Curriculum Invariant Tests
   const bioTopics = Object.keys(biologyLessonsCatalog);
-  assert(bioTopics.length === 5, 'Biology catalog indexes all 5 core syllabus topics');
+  assert(bioTopics.length === 4, 'Biology catalog indexes all 4 core syllabus topics');
   assert(
     bioTopics.includes('human_cell') &&
       bioTopics.includes('human_heart') &&
       bioTopics.includes('dna_helix') &&
-      bioTopics.includes('neuron') &&
-      bioTopics.includes('plant_cell'),
-    'Biology catalog covers Human Cell, Heart, DNA, Neuron, and Plant Cell'
+      bioTopics.includes('neuron'),
+    'Biology catalog covers Human Cell, Heart, DNA, and Neuron'
   );
 
   const cell = biologyLessonsCatalog.human_cell;
@@ -441,7 +440,6 @@ async function runTestSuite() {
   const kept = switchLearningMode(answered.state, cellUnit, 'accessible');
   assert(kept.state.answers.q1?.selectedIndex === 0, 'Quiz progress survives a mode change');
   assert(sdgForConcept('human_heart')?.sdg === 3, 'The heart lesson maps to SDG 3');
-  assert(sdgForConcept('plant_cell')?.sdg === 15, 'The plant-cell lesson maps to SDG 15');
   assert(sdgForConcept('dna_helix') === null, 'DNA has no curated SDG connection');
   const small = lowDataDeliveryUrl('https://res.cloudinary.com/demo/image/upload/c_limit,w_900/f_auto,q_auto/sample.jpg');
   assert(Boolean(small && small.includes('w_320') && !small.includes('w_900')), 'Low-data delivery shrinks a Cloudinary URL');
@@ -786,6 +784,13 @@ async function runTestSuite() {
   const pdf = new TextEncoder().encode('%PDF-1.4\n1 0 obj\n<< /Length 40 >>\nstream\nBT (Solve 2x + 3 = 11.) Tj ET\nendstream\nendobj\n%%EOF');
   const pdfResult = ingestPrepared({ kind: 'file', bytes: pdf, declaredMime: 'application/pdf' });
   assert(pdfResult.processed && pdfResult.text.includes('2x + 3 = 11'), 'A PDF text layer is extracted from literal strings');
+  const noisy = new Uint8Array([
+    ...new TextEncoder().encode('%PDF-1.4\nendobj\n%%EOF\n('),
+    ...Array.from({ length: 400 }, () => 0xf8),
+    ...new TextEncoder().encode(')')
+  ]);
+  const noisyResult = ingestPrepared({ kind: 'file', bytes: noisy, declaredMime: 'application/pdf' });
+  assert(noisyResult.processed === false && noisyResult.text === '', 'Compressed or binary parentheses are not shown as extracted paper text');
   const scanned = ingestPrepared({
     kind: 'file',
     bytes: new TextEncoder().encode('%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF'),

@@ -50,6 +50,8 @@ export const ISLLessonResourceSchema = z.object({
       'Video URL must use secure https or valid video data URI'
     ),
   posterUrl: z.string().url('Poster URL must be a valid URL').optional(),
+  youtubeVideoId: z.string().optional(),
+  embedUrl: z.string().optional(),
   language: z.literal('ISL'),
   description: z.string().min(1, 'Educational description is required'),
   transcript: z.string().optional(),
@@ -64,3 +66,49 @@ export const ISLLessonResourceSchema = z.object({
 });
 export type ISLLessonResource = z.infer<typeof ISLLessonResourceSchema>;
 
+/**
+ * Availability state for ISL educational catalog.
+ */
+export const ISLAvailabilityStateSchema = z.enum([
+  'verified_in_app',
+  'official_external',
+  'pending_review',
+  'unavailable'
+]);
+export type ISLAvailabilityState = z.infer<typeof ISLAvailabilityStateSchema>;
+
+/**
+ * Educational curriculum category for ISL learning resources.
+ */
+export const ISLCategorySchema = z.enum([
+  'biology',
+  'computer_science',
+  'physics',
+  'mathematics',
+  'general_science'
+]);
+export type ISLCategory = z.infer<typeof ISLCategorySchema>;
+
+/**
+ * Schema for maintainable, authentic ISL catalog entries.
+ */
+export const ISLCatalogEntrySchema = z.object({
+  lessonId: z.string().min(1, 'Lesson ID is required'),
+  concept: z.string().min(1, 'Concept name is required'),
+  title: z.string().min(1, 'Title is required'),
+  category: ISLCategorySchema,
+  sourceOrganization: z.string().min(1, 'Source organization is required'),
+  attribution: z.string().min(1, 'Attribution statement is required'),
+  license: z.string().min(1, 'License statement is required'),
+  externalUrl: z.string().url('External URL must be valid').optional(),
+  mediaUrl: z.string().optional(),
+  youtubeVideoId: z.string().optional(),
+  embedUrl: z.string().optional(),
+  captionExplanation: z.string().min(1, 'Caption explanation is required'),
+  learningObjectives: z.array(z.string()).min(1, 'At least one learning objective is required'),
+  reviewStatus: ISLReviewStatusSchema,
+  availabilityState: ISLAvailabilityStateSchema,
+  limitationsNote: z.string().min(1, 'Content limitations note is required'),
+  reviewerMetadata: ISLReviewerMetadataSchema.optional()
+});
+export type ISLCatalogEntry = z.infer<typeof ISLCatalogEntrySchema>;

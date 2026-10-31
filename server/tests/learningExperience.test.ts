@@ -118,7 +118,6 @@ async function runLearningExperienceSuite() {
     function detectModel(topicStr: string) {
       const t = topicStr.toLowerCase();
       if (t.includes('heart') || t.includes('circulation')) return 'human_heart';
-      if (t.includes('plant') || t.includes('chloroplast')) return 'plant_cell';
       if (t.includes('cell') || t.includes('mitochondria')) return 'human_cell';
       if (t.includes('dna') || t.includes('helix')) return 'dna_helix';
       if (t.includes('neuron') || t.includes('action potential')) return 'neuron';
@@ -129,7 +128,6 @@ async function runLearningExperienceSuite() {
     }
 
     assert.strictEqual(detectModel('Cardiac Blood Circulation in the Human Heart'), 'human_heart');
-    assert.strictEqual(detectModel('Plant Cell Wall and Chloroplasts'), 'plant_cell');
     assert.strictEqual(detectModel('Human Cell Organelles and ATP'), 'human_cell');
     assert.strictEqual(detectModel('DNA Double Helix Base Pairing'), 'dna_helix');
     assert.strictEqual(detectModel('Neuron Synaptic Action Potential'), 'neuron');

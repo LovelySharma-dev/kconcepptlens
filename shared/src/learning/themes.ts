@@ -152,7 +152,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'color-blind-friendly',
     groupId: 'vision',
     title: 'Color-Blind-Friendly',
-    description: 'Adds labels, shapes, and line styles so a choice or a diagram is not explained by color alone.',
+    description: 'Changes diagram colors to a palette that is not red versus green, and adds a shape beside each quiz choice. The words stay either way.',
     iconLabel: 'Shape',
     flags: ['colorFriendly']
   },
@@ -177,7 +177,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'visual-learning',
     groupId: 'vision',
     title: 'Visual Learning',
-    description: 'Opens the labeled diagram when this lesson has one. Switching to text keeps the same structure.',
+    description: 'Records a preference for diagrams. Diagrams are already in the lesson unless Text first is on. This theme does not add a new picture.',
     iconLabel: 'Diagram',
     flags: ['visualLearning']
   },
@@ -185,7 +185,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'deaf-friendly',
     groupId: 'hearing',
     title: 'Deaf & Hard-of-Hearing-Friendly',
-    description: 'Keeps essential information in text. These lessons have no video; nothing important is delivered only as a sound.',
+    description: 'Keeps the lesson in text and opens the Indian Sign Language panel beside it. A video plays only when the host allows it. Nothing important is delivered only as a sound.',
     iconLabel: 'Captions',
     flags: ['deafFriendly']
   },
@@ -201,7 +201,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'keyboard-friendly',
     groupId: 'hearing',
     title: 'Keyboard-Friendly',
-    description: 'Puts actions in the tab order with a visible focus outline. Diagrams, quizzes, and dialogs work without a mouse.',
+    description: 'Strengthens the focus outline. The same buttons, diagrams, and quizzes already work from the keyboard without this theme.',
     iconLabel: 'Keyboard',
     flags: ['keyboardFirst']
   },
@@ -225,7 +225,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'self-paced',
     groupId: 'pace',
     title: 'Self-Paced Learning',
-    description: 'No countdown. You can reread, practice, and change how the concept is shown without losing your place.',
+    description: 'Turns break reminders off. There is no countdown. You can already reread and switch explanations without this theme.',
     iconLabel: 'Pace',
     flags: ['selfPaced'],
     forceBreakOff: true
@@ -242,7 +242,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'multiple-ways',
     groupId: 'pace',
     title: 'Multiple Ways to Learn',
-    description: 'Keeps the other representations of this same concept within reach.',
+    description: 'Records that you want more than one explanation. Read, steps, a diagram, practice, and ISL are already in the same lesson. This theme does not add another one.',
     iconLabel: 'Ways',
     flags: ['multipleWays']
   }

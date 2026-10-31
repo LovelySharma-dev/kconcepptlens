@@ -32,6 +32,7 @@ const shortcuts: ShortcutItem[] = [
   { keyLabel: 'H', description: 'Toggle high contrast', category: 'Accessibility' },
   { keyLabel: 'T', description: 'Toggle light and dark theme', category: 'Accessibility' },
   { keyLabel: 'G', description: 'Open interactive voice & task guide', category: 'Accessibility' },
+  { keyLabel: 'Shift+G', description: 'Open the navigation guide (sections, describe focus, stop speech)', category: 'Accessibility' },
   { keyLabel: '?', description: 'Toggle this keyboard shortcut list', category: 'Accessibility' },
   { keyLabel: 'Esc', description: 'Close any active modal or dialog', category: 'Accessibility' }
 ];

@@ -7,6 +7,7 @@ import {
   StudyNotesRequestSchema,
   ADHDStudyPlanRequestSchema,
   generateDeterministicStudyPlan,
+  CurriculumTranslateRequestSchema,
   redactSecrets
 } from '@conceptlens/shared';
 import { defaultAIProvider } from '../services/aiProviderService';
@@ -273,6 +274,44 @@ router.post('/plan-tasks', async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: redactSecrets(raw, getSecrets())
+    });
+  }
+});
+
+/**
+ * POST /api/ai/translate
+ * General curriculum translation preserving scientific terminology
+ */
+router.post('/translate', async (req: Request, res: Response) => {
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({
+      success: false,
+      error: 'Rate limit exceeded. Please wait a moment before requesting another translation.'
+    });
+  }
+
+  const parsed = CurriculumTranslateRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid curriculum translation request.',
+      issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`)
+    });
+  }
+
+  try {
+    const translation = await defaultAIProvider.translateCurriculum(parsed.data);
+    return res.json({
+      success: true,
+      data: translation
+    });
+  } catch (err: unknown) {
+    const raw = err instanceof Error ? err.message : 'Failed to translate curriculum';
+    const sanitized = redactSecrets(raw, getSecrets());
+    return res.status(500).json({
+      success: false,
+      error: sanitized
     });
   }
 });

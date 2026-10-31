@@ -17,7 +17,7 @@ export interface EducationalAsset {
 
 /**
  * Sources checked against the Wikimedia Commons API on 25 Oct 2026.
- * Cloudinary fetch delivery was verified for the animal cell, heart, and plant cell.
+ * Cloudinary fetch delivery was verified for the animal cell and heart.
  * Neuron and DNA URLs match Commons thumbnails; a failed fetch still leaves the written lesson.
  */
 export const EDUCATIONAL_ASSETS: Record<BiologyTopicId, EducationalAsset> = {
@@ -72,19 +72,6 @@ export const EDUCATIONAL_ASSETS: Record<BiologyTopicId, EducationalAsset> = {
     creator: 'LadyofHats',
     width: 960,
     height: 720
-  },
-  plant_cell: {
-    conceptId: 'plant_cell',
-    remoteUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Plant_cell_structure-en.svg/960px-Plant_cell_structure-en.svg.png',
-    alt: 'Labeled diagram of a plant cell showing the cell wall, chloroplasts, vacuole, and nucleus.',
-    caption: 'Plant-cell diagram. The wall, chloroplasts, and vacuole are explained in the lesson text.',
-    sourceTitle: 'Plant cell structure-en.svg',
-    sourceUrl: 'https://commons.wikimedia.org/wiki/File:Plant_cell_structure-en.svg',
-    license: 'Public domain',
-    creator: 'LadyofHats',
-    width: 960,
-    height: 704
   }
 };
 

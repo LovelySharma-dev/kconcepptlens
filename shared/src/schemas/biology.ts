@@ -4,8 +4,7 @@ export const BiologyTopicIdSchema = z.enum([
   'human_cell',
   'human_heart',
   'dna_helix',
-  'neuron',
-  'plant_cell'
+  'neuron'
 ]);
 
 export type BiologyTopicId = z.infer<typeof BiologyTopicIdSchema>;

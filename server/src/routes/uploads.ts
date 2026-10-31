@@ -66,6 +66,7 @@ router.get('/status', async (req: Request, res: Response) => {
   });
 });
 
+
 /**
  * POST /api/uploads/signature
  * Generates restricted signed authorization for client-side direct Cloudinary uploads

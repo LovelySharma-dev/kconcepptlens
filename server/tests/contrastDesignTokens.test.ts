@@ -191,6 +191,27 @@ async function runContrastTokensSuite() {
   });
 
   // 4. LOW STIMULATION MODE
+  await test('Diagram tokens keep labels and strokes distinguishable on light, dark, and high-contrast plates', () => {
+    function token(block: string, name: string): string {
+      const match = block.match(new RegExp(`${name}:\\s*(#[0-9A-Fa-f]{6})`));
+      assert(match, `Missing ${name}`);
+      return match[1];
+    }
+    const root = cssContent.slice(0, cssContent.indexOf('[data-theme="dark"]'));
+    const dark = cssContent.slice(cssContent.indexOf('[data-theme="dark"]'), cssContent.indexOf('body.high-contrast'));
+    const hc = cssContent.slice(cssContent.indexOf('body.high-contrast'), cssContent.indexOf('body.high-contrast button'));
+    for (const [name, block] of [['light', root], ['dark', dark], ['high-contrast', hc]] as const) {
+      const label = contrastRatio(token(block, '--diagram-label'), token(block, '--diagram-node-fill'));
+      const stroke = contrastRatio(token(block, '--diagram-pointer'), token(block, '--diagram-bg'));
+      const cycle = contrastRatio(token(block, '--diagram-cycle'), token(block, '--diagram-bg'));
+      assert(label >= 4.5, `${name} diagram label contrast ${label.toFixed(2)} is below 4.5`);
+      assert(stroke >= 3, `${name} diagram pointer contrast ${stroke.toFixed(2)} is below 3`);
+      assert(cycle >= 3, `${name} diagram cycle contrast ${cycle.toFixed(2)} is below 3`);
+    }
+    const canvas = fs.readFileSync(path.resolve(__dirname, '../../client/src/components/InteractiveCanvas.tsx'), 'utf-8');
+    assert(canvas.includes('var(--diagram-pointer)'), 'Linked-list canvas must use diagram pointer tokens');
+  });
+
   await test('Low stimulation mode enforces calm properties without saturated glow or flashing', () => {
     assert(cssContent.includes('body.low-stimulation'), 'Low stimulation body rule must exist');
     assert(cssContent.includes('--glow-cyan: none !important'), 'Low stimulation must remove cyan glows');

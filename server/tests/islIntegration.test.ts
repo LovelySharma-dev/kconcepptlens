@@ -43,7 +43,7 @@ async function runISLIntegrationTestSuite() {
       lessonId: 'human_cell',
       topic: 'Human Cell: The Fundamental Unit of Life',
       title: 'Cell Structure & Organelles in ISL',
-      videoUrl: 'https://res.cloudinary.com/conceptlens-edu/video/upload/v1/isl/isl_human_cell.mp4',
+      videoUrl: 'https://example.com/isl/human-cell.mp4',
       language: 'ISL',
       description: 'Authentic Indian Sign Language explanation of human cell anatomy.',
       source: 'ISLRTC & NCERT Class 9 Science',
@@ -121,31 +121,22 @@ async function runISLIntegrationTestSuite() {
   // 2. AUTHENTIC RESOURCE CATALOG MAPPING
   // ==========================================
 
-  await test('AUTHENTIC_ISL_CATALOG contains verified resources for core science syllabus topics', () => {
-    const topics = ['human_cell', 'human_heart', 'dna_helix', 'plant_cell'];
-    for (const topic of topics) {
-      const res = AUTHENTIC_ISL_CATALOG[topic];
-      assert(res, `Expected catalog to contain ${topic}`);
-      assert.strictEqual(res.language, 'ISL');
-      assert.strictEqual(res.reviewStatus, 'verified');
-      assert(res.source.includes('ISLRTC'), `Source for ${topic} must reference ISLRTC`);
-      assert(res.videoUrl.startsWith('https://'), `Video URL for ${topic} must be secure https`);
-      assert(res.cues && res.cues.length > 0, `Expected cues for ${topic}`);
+  await test('AUTHENTIC_ISL_CATALOG does not claim verified videos that this project does not host', () => {
+    const hosted = Object.values(AUTHENTIC_ISL_CATALOG);
+    assert.strictEqual(hosted.length, 0, 'No in-app ISL file is verified for playback yet');
+    for (const res of hosted) {
+      assert.notStrictEqual(res.reviewStatus, 'verified');
+      assert(!res.videoUrl.includes('conceptlens-edu'), 'Do not point the player at an unverified project video');
     }
+    const lessons = fs.readFileSync(path.resolve(__dirname, '../../client/src/data/islLessons.ts'), 'utf-8');
+    assert(lessons.includes('https://islrtc.nic.in/science-concept-video/'), 'Official ISLRTC directory must stay linked');
+    assert(!lessons.includes('res.cloudinary.com/conceptlens-edu'), 'Do not advertise a Cloudinary cloud that does not hold these lessons');
   });
 
-  await test('getAuthenticISLResource returns verified lesson for valid topics and null for unverified topics', () => {
-    const cellResource = getAuthenticISLResource('human_cell');
-    assert(cellResource, 'Should resolve human_cell');
-    assert.strictEqual(cellResource.lessonId, 'human_cell');
-
-    const heartResource = getAuthenticISLResource('Double Circulation: Human Heart');
-    assert(heartResource, 'Should resolve heart by topic string');
-    assert.strictEqual(heartResource.lessonId, 'human_heart');
-
-    // Unknown/unreviewed topic should return null rather than faking an avatar or arbitrary sign
-    const unknownResource = getAuthenticISLResource('quantum_chromodynamics_subatomic_quarks');
-    assert.strictEqual(unknownResource, null, 'Unreviewed/unrecorded topic must return null to trigger honest fallback');
+  await test('getAuthenticISLResource returns null until a lesson has a checked ISL video', () => {
+    assert.strictEqual(getAuthenticISLResource('human_cell'), null);
+    assert.strictEqual(getAuthenticISLResource('Double Circulation: Human Heart'), null);
+    assert.strictEqual(getAuthenticISLResource('quantum_chromodynamics_subatomic_quarks'), null);
   });
 
   // ==========================================
@@ -166,7 +157,9 @@ async function runISLIntegrationTestSuite() {
   });
 
   await test('ISLVideoPanel handles unavailable state honestly without faking signing avatars', () => {
-    assert(islPanelCode.includes('Authentic ISL Video in Development'), 'Must display in development headline');
+    assert(islPanelCode.includes('A signed explanation of this lesson is not yet available'), 'Must say when signing is missing');
+    assert(islPanelCode.includes('ISL_OFFICIAL_DIRECTORY.href'), 'Must link the official directory');
+    assert(islPanelCode.includes('Captions and this text are not Indian Sign Language'), 'Must not treat text as signing');
     assert(islPanelCode.includes('We do not substitute fake 3D avatars'), 'Must explain absence of fake avatars');
     assert(islPanelCode.includes('VideoOff'), 'Must render video off icon');
   });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Focus, Eye, EyeOff, X, ArrowUp, ArrowDown, Maximize2, Minimize2 } from 'lucide-react';
-import { LearningPreferences } from '@conceptlens/shared';
+import { LearningPreferences, removeLearningTheme } from '@conceptlens/shared';
 
 interface FocusRulerProps {
   isActive: boolean;
@@ -71,12 +71,10 @@ export const FocusRuler: React.FC<FocusRulerProps> = ({
   }, [isActive, isRulerVisible, onAnnounce]);
 
   const handleExitFocusMode = useCallback(() => {
-    onPreferences({
-      ...preferences,
-      focusMode: false,
-      adhdFriendly: false,
-      activeThemes: preferences.activeThemes.filter((t) => t !== 'adhd-friendly')
-    });
+    const withTheme: LearningPreferences = preferences.activeThemes.includes('adhd-friendly')
+      ? preferences
+      : { ...preferences, activeThemes: ['adhd-friendly', ...preferences.activeThemes] };
+    onPreferences(removeLearningTheme(withTheme, 'adhd-friendly'));
     onAnnounce?.('ADHD Focus Mode exited. Standard view restored.');
   }, [preferences, onPreferences, onAnnounce]);
 
@@ -197,26 +195,33 @@ export const FocusRuler: React.FC<FocusRulerProps> = ({
         </div>
       </aside>
 
-      {/* 2. Non-blocking Reading Aperture Guide (Single element with viewport shadow, strictly non-intercepting) */}
+      {/* Shades sit beside the aperture. They never use a full-viewport shadow, so the wheel reaches the page. */}
       {isRulerVisible && (
-        <div
-          className="reading-ruler-guide"
-          aria-hidden="true"
-          style={{
-            position: 'fixed',
-            top: `${apertureTop}px`,
-            left: 0,
-            right: 0,
-            height: `${rulerHeight}px`,
-            pointerEvents: 'none',
-            touchAction: 'pan-y',
-            userSelect: 'none',
-            zIndex: 1040
-          }}
-        >
-          <div className="ruler-guide-line ruler-guide-top" />
-          <div className="ruler-guide-line ruler-guide-bottom" />
-        </div>
+        <>
+          <div
+            className="reading-ruler-shade"
+            aria-hidden="true"
+            style={{ top: 0, height: `${apertureTop}px`, pointerEvents: 'none' }}
+          />
+          <div
+            className="reading-ruler-guide"
+            aria-hidden="true"
+            style={{
+              top: `${apertureTop}px`,
+              height: `${rulerHeight}px`,
+              pointerEvents: 'none',
+              touchAction: 'pan-y'
+            }}
+          >
+            <div className="ruler-guide-line ruler-guide-top" />
+            <div className="ruler-guide-line ruler-guide-bottom" />
+          </div>
+          <div
+            className="reading-ruler-shade"
+            aria-hidden="true"
+            style={{ top: `${apertureTop + rulerHeight}px`, bottom: 0, pointerEvents: 'none' }}
+          />
+        </>
       )}
     </>
   );

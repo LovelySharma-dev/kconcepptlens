@@ -6,6 +6,7 @@ interface InteractiveCanvasProps {
   activePointers: Record<string, string | null>;
   highlightedNodeIds: string[];
   mutatedNodeId?: string;
+  blockedEdge?: { fromId: string; toId: string } | null;
   onSelectNode?: (node: LinkedListNode) => void;
   highContrast?: boolean;
   colorFriendly?: boolean;
@@ -17,6 +18,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
   activePointers,
   highlightedNodeIds,
   mutatedNodeId,
+  blockedEdge = null,
   onSelectNode,
   highContrast = false,
   colorFriendly = false,
@@ -86,14 +88,18 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
   );
 
   // Palette & Pattern tokens (respecting high-contrast & color-friendly modes)
-  const isColorIndependent = highContrast || colorFriendly;
-  const strokeNormal = highContrast ? '#ffffff' : '#38bdf8';
-  const strokeMutated = highContrast ? '#ffff00' : isColorIndependent ? '#fb7185' : '#f43f5e';
-  const strokePrev = highContrast ? '#00ffff' : isColorIndependent ? '#fcd34d' : '#f59e0b';
-  const strokeCircular = highContrast ? '#ffffff' : '#c084fc';
-  const strokeBorderDefault = highContrast ? '#ffffff' : '#334155';
-  const fillSurface = highContrast ? '#000000' : '#0f172a';
-  const fillSubBox = highContrast ? '#111111' : '#1e293b';
+  const strokeNormal = 'var(--diagram-pointer)';
+  const strokeMutated = 'var(--diagram-pointer-active)';
+  const strokePrev = 'var(--diagram-pointer-prev)';
+  const strokeCircular = 'var(--diagram-cycle)';
+  const strokeBorderDefault = 'var(--diagram-node-border)';
+  const fillSurface = 'var(--diagram-node-fill)';
+  const fillSubBox = 'var(--diagram-node-sub)';
+  const labelFill = 'var(--diagram-label)';
+  const mutedFill = 'var(--diagram-label-muted)';
+  const chipFill = 'var(--diagram-chip-bg)';
+  const chipText = 'var(--diagram-chip-text)';
+  const emptyPort = 'var(--diagram-empty-port)';
 
   return (
     <div
@@ -105,14 +111,15 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
       <div className="sr-only" aria-live="polite">
         {`Linked list diagram: ${graph.nodes.length} nodes. Head is ${graph.headId || 'NULL'}. ${
           isDoubly ? 'Doubly linked list.' : graph.isCircular ? 'Circular linked list.' : 'Singly linked list.'
-        }`}
+        }${blockedEdge ? ` Cycle: ${blockedEdge.fromId} points to ${blockedEdge.toId}. The lesson is stopped.` : ''}`}
       </div>
 
       <svg
         viewBox="0 0 960 410"
         className="w-full h-full"
-        style={{ minHeight: '360px' }}
-        role="group"
+        style={{ width: '100%', height: 'auto', display: 'block' }}
+        data-high-contrast={highContrast ? 'true' : 'false'}
+        data-color-friendly={colorFriendly ? 'true' : 'false'}
         aria-label="Linked List Graphical Model"
       >
         <defs>
@@ -216,7 +223,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
             x="480"
             y="200"
             textAnchor="middle"
-            fill={highContrast ? '#ffffff' : '#64748b'}
+            fill={mutedFill}
             fontSize="18"
             fontFamily="var(--font-heading)"
           >
@@ -231,7 +238,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           if (!targetNode) return null;
 
           const isMutating = mutatedNodeId === node.id;
-          const isCircularLoop = graph.isCircular && node.next === graph.headId && node.x > targetNode.x;
+          const isBlocked = blockedEdge?.fromId === node.id && blockedEdge.toId === node.next;
+          const isCircularLoop = graph.isCircular && node.next === graph.headId && node.x > targetNode.x && !isBlocked;
 
           // Compute start and end coordinates
           const startX = node.x + 110;
@@ -261,7 +269,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   width="200"
                   height="22"
                   rx="4"
-                  fill="#020617"
+                  fill={chipFill}
                   stroke={strokeCircular}
                   strokeWidth="1"
                 />
@@ -296,33 +304,35 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
               <path
                 d={pathD}
                 fill="none"
-                stroke={isMutating ? strokeMutated : strokeNormal}
-                strokeWidth={isMutating ? '3.5' : '2.5'}
-                strokeDasharray={isMutating ? '6,4' : 'none'}
-                markerEnd={isMutating ? 'url(#arrowhead-active)' : 'url(#arrowhead-next)'}
-              />
-              {/* Redundant text badge along edge for non-color identification */}
+                stroke={isBlocked ? strokeCircular : isMutating ? strokeMutated : strokeNormal}
+                strokeWidth={isBlocked || isMutating ? '3.5' : '2.5'}
+                strokeDasharray={isBlocked ? '2 6' : isMutating ? '6,4' : 'none'}
+                markerEnd={isBlocked ? 'url(#arrowhead-active)' : isMutating ? 'url(#arrowhead-active)' : 'url(#arrowhead-next)'}
+              >
+                {isBlocked && <title>{`Cycle: ${node.id} points to ${node.next}. This lesson stops here.`}</title>}
+              </path>
+              {/* Text label so a broken edge is not identified by color alone */}
               <g transform={`translate(${midX - 22}, ${midY - 8})`}>
                 <rect
                   x="0"
                   y="0"
-                  width={isMutating ? '54' : '44'}
+                  width={isBlocked ? '58' : isMutating ? '54' : '44'}
                   height="16"
                   rx="3"
-                  fill="#020617"
-                  stroke={isMutating ? strokeMutated : strokeNormal}
+                  fill={chipFill}
+                  stroke={isBlocked ? strokeCircular : isMutating ? strokeMutated : strokeNormal}
                   strokeWidth="1"
                 />
                 <text
-                  x={isMutating ? 27 : 22}
+                  x={isBlocked ? 29 : isMutating ? 27 : 22}
                   y="12"
                   textAnchor="middle"
-                  fill={isMutating ? strokeMutated : strokeNormal}
+                  fill={isBlocked ? chipText : isMutating ? strokeMutated : strokeNormal}
                   fontSize="9"
                   fontFamily="var(--font-mono)"
                   fontWeight="700"
                 >
-                  {isMutating ? 'rewiring ⚡' : 'next →'}
+                  {isBlocked ? 'CYCLE' : isMutating ? 'rewiring' : 'next →'}
                 </text>
               </g>
             </g>
@@ -364,7 +374,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                     width="40"
                     height="16"
                     rx="3"
-                    fill="#020617"
+                    fill={chipFill}
                     stroke={strokePrev}
                     strokeWidth="1"
                   />
@@ -398,7 +408,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   y1={startY}
                   x2={startX + 32}
                   y2={startY}
-                  stroke={highContrast ? '#ffffff' : '#64748b'}
+                  stroke={strokeBorderDefault}
                   strokeWidth="2"
                   markerEnd="url(#arrowhead-next)"
                 />
@@ -408,15 +418,15 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   width="44"
                   height="28"
                   rx="4"
-                  fill="#1e293b"
-                  stroke={highContrast ? '#ffffff' : '#475569'}
+                  fill={chipFill}
+                  stroke={strokeBorderDefault}
                   strokeWidth="2"
                 />
                 <text
                   x={startX + 54}
                   y={startY + 4}
                   textAnchor="middle"
-                  fill={highContrast ? '#ffffff' : '#94a3b8'}
+                  fill={mutedFill}
                   fontSize="11"
                   fontWeight="bold"
                   fontFamily="var(--font-mono)"
@@ -429,7 +439,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   y1={startY + 18}
                   x2={startX + 62}
                   y2={startY + 18}
-                  stroke="#94a3b8"
+                  stroke={mutedFill}
                   strokeWidth="2"
                 />
                 <line
@@ -437,7 +447,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   y1={startY + 21}
                   x2={startX + 58}
                   y2={startY + 21}
-                  stroke="#94a3b8"
+                  stroke={mutedFill}
                   strokeWidth="1.5"
                 />
               </g>
@@ -469,7 +479,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   width="44"
                   height="28"
                   rx="4"
-                  fill="#1e293b"
+                  fill={chipFill}
                   stroke={strokePrev}
                   strokeWidth="2"
                 />
@@ -541,7 +551,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   height="84"
                   rx="14"
                   fill="none"
-                  stroke={highContrast ? '#ffff00' : 'var(--focus-ring, #65e5f2)'}
+                  stroke="var(--diagram-focus)"
                   strokeWidth="3.5"
                   strokeDasharray="none"
                 />
@@ -611,13 +621,13 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                     width="10"
                     height="10"
                     rx="2"
-                    fill={node.prev ? strokePrev : '#64748b'}
+                    fill={node.prev ? strokePrev : emptyPort}
                   />
                   <text
                     x={node.x + 13}
                     y={node.y + 20}
                     textAnchor="middle"
-                    fill="#94a3b8"
+                    fill={mutedFill}
                     fontSize="8"
                     fontFamily="var(--font-mono)"
                     fontWeight="700"
@@ -630,7 +640,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                     x={node.x + 55}
                     y={node.y + 42}
                     textAnchor="middle"
-                    fill="#f8fafc"
+                    fill={labelFill}
                     fontSize="18"
                     fontWeight="700"
                     fontFamily="var(--font-heading)"
@@ -651,13 +661,13 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                     cx={node.x + 97}
                     cy={node.y + 24}
                     r="5"
-                    fill={node.next ? strokeNormal : '#64748b'}
+                    fill={node.next ? strokeNormal : emptyPort}
                   />
                   <text
                     x={node.x + 97}
                     y={node.y + 54}
                     textAnchor="middle"
-                    fill="#94a3b8"
+                    fill={mutedFill}
                     fontSize="8"
                     fontFamily="var(--font-mono)"
                     fontWeight="700"
@@ -690,7 +700,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                     x={node.x + 35}
                     y={node.y + 42}
                     textAnchor="middle"
-                    fill="#f8fafc"
+                    fill={labelFill}
                     fontSize="18"
                     fontWeight="700"
                     fontFamily="var(--font-heading)"
@@ -701,13 +711,13 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                     cx={node.x + 90}
                     cy={node.y + 35}
                     r="6"
-                    fill={node.next ? strokeNormal : '#64748b'}
+                    fill={node.next ? strokeNormal : emptyPort}
                   />
                   <text
                     x={node.x + 90}
                     y={node.y + 58}
                     textAnchor="middle"
-                    fill="#94a3b8"
+                    fill={mutedFill}
                     fontSize="9"
                     fontFamily="var(--font-mono)"
                     fontWeight="700"
@@ -721,7 +731,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
               <text
                 x={node.x + 5}
                 y={node.y - 10}
-                fill={highContrast ? '#ffffff' : '#94a3b8'}
+                fill={mutedFill}
                 fontSize="10"
                 fontFamily="var(--font-mono)"
                 fontWeight="600"
@@ -812,8 +822,8 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                   width="66"
                   height="18"
                   rx="4"
-                  fill="#020617"
-                  stroke={highContrast ? '#ffffff' : '#334155'}
+                  fill={chipFill}
+                  stroke={strokeBorderDefault}
                   strokeWidth="1"
                 />
                 <text
@@ -851,7 +861,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
                             ? '#dc2626'
                             : '#6366f1'
                         }
-                        stroke={highContrast ? '#ffffff' : 'none'}
+                        stroke={strokeBorderDefault}
                         strokeWidth="1"
                       />
                       <text

@@ -130,38 +130,6 @@ export const AVAILABLE_VISUAL_MODELS: VisualModelMeta[] = [
     }
   },
   {
-    id: 'plant_cell',
-    domain: 'biology',
-    title: 'Plant Cell: Photosynthesis & Chloroplasts',
-    shortLabel: 'Plant Cell',
-    description: 'Examine the cellulose cell wall, chloroplast thylakoid membranes, and central vacuole turgor pressure.',
-    keywords: ['plant', 'plant cell', 'chloroplast', 'photosynthesis', 'cell wall', 'vacuole', 'chlorophyll', 'botany'],
-    rendererType: 'svg_interactive_2d',
-    supportedInteractions: { zoom: true, pan: true, reset: true, rotate: false, inspect: true },
-    selectableStructures: [
-      { id: 'cell_wall', name: 'Cellulose Cell Wall', role: 'Rigid outer layer offering structural support and turgor resistance.', analogy: 'Rigid fortress wall.' },
-      { id: 'chloroplast', name: 'Chloroplast', role: 'Contains thylakoids and chlorophyll driving light reactions and Calvin cycle.', analogy: 'Solar power plant synthesizing food.' },
-      { id: 'central_vacuole', name: 'Central Vacuole', role: 'Large fluid reservoir regulating osmotic turgor pressure.', analogy: 'High-pressure water tank.' },
-      { id: 'nucleus', name: 'Plant Cell Nucleus', role: 'Directs plant developmental genetics and cell division.' }
-    ],
-    guidedExplorationSteps: [
-      { stepIndex: 0, title: 'Cell Wall Structural Architecture', targetComponentId: 'cell_wall', description: 'Cellulose microfibrils prevent osmotic cell lysis during high water intake.' },
-      { stepIndex: 1, title: 'Chloroplast Thylakoids', targetComponentId: 'chloroplast', description: 'Light harvesting complexes capture photons to split water and generate NADPH/ATP.' },
-      { stepIndex: 2, title: 'Central Vacuole Turgidity', targetComponentId: 'central_vacuole', description: 'Maintains outward hydrostatic pressure keeping the plant stem upright.' }
-    ],
-    accessibility: {
-      textDescription: 'Botanical diagram of a plant cell featuring thick cell wall, green chloroplasts, large central vacuole, and organelles.',
-      screenReaderSummary: 'Plant cell diagram highlighting differences from animal cells including chloroplasts and cell wall.',
-      keyboardShortcuts: ['Tab to select organelle', 'Enter to read details'],
-      reducedMotionSupport: true
-    },
-    attribution: {
-      source: 'ConceptLens Botanical Curriculum',
-      license: 'MIT',
-      isOriginalInteractive: true
-    }
-  },
-  {
     id: 'dna_helix',
     domain: 'biology',
     title: 'DNA Double Helix & Base Pairing',

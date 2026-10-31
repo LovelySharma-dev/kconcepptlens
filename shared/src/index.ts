@@ -16,5 +16,7 @@ export * from './learning/pdfImages';
 export * from './schemas/generatedLesson';
 export * from './schemas/cloudinaryTransformation';
 export * from './learning/visualModels';
+export * from './learning/externalModels';
 export * from './schemas/adhdPlan';
 export * from './schemas/isl';
+export * from './schemas/translation';

@@ -43,7 +43,7 @@ async function runAIValidationSuite() {
     topic: 'Photosynthesis & Light Reactions',
     summary: 'The biological process by which green plants transform light energy into chemical energy.',
     explanations: {
-      standard: 'Photosynthesis occurs within the chloroplasts of plant cells, specifically utilizing chlorophyll pigments inside the thylakoid membranes.',
+      standard: 'Photosynthesis occurs within specialized chloroplasts, specifically utilizing chlorophyll pigments inside the thylakoid membranes.',
       easyRead: 'Plants use sunlight, water, and air to make food. This gives them energy to grow.',
       stepByStep: [
         {

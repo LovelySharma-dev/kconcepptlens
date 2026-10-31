@@ -198,7 +198,7 @@ export const Cell2DCanvas: React.FC<Cell2DCanvasProps> = ({
   return (
     <div
       ref={containerRef}
-      className="cell-canvas-viewport"
+      className="cell-canvas-viewport diagram-stage"
       tabIndex={0}
       role="region"
       aria-label="Interactive Animal Cell 2D Simulation Canvas. Use arrow keys to pan when zoomed, plus/minus to zoom."

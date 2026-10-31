@@ -45,7 +45,7 @@ router.get('/lessons/:topic', (req: Request, res: Response) => {
     if (!parse.success) {
       return res.status(404).json({
         success: false,
-        error: `Unknown biology topic '${req.params.topic}'. Supported topics: human_cell, human_heart, dna_helix, neuron, plant_cell`
+        error: `Unknown biology topic '${req.params.topic}'. Supported topics: human_cell, human_heart, dna_helix, neuron`
       });
     }
 

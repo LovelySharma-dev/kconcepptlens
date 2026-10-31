@@ -64,8 +64,8 @@ async function runScientificVisualizationsSuite() {
     assert(cellCanvasCode.includes('aria-pressed'), 'Organelles must expose aria-pressed selection state');
   });
 
-  await test('All 8 models in registry conform to typed model contract with interactions and accessibility', () => {
-    assert.strictEqual(AVAILABLE_VISUAL_MODELS.length, 8, 'Must have 8 registered models');
+  await test('All 7 models in registry conform to typed model contract with interactions and accessibility', () => {
+    assert.strictEqual(AVAILABLE_VISUAL_MODELS.length, 7, 'Must have 7 registered models');
     for (const model of AVAILABLE_VISUAL_MODELS) {
       assert(['svg_interactive_2d', 'canvas_simulation_2d', 'webgl_3d'].includes(model.rendererType),
         `Model ${model.id} must define rendererType`);
@@ -175,7 +175,7 @@ async function runScientificVisualizationsSuite() {
       const req: any = {
         method: 'POST',
         url: '/plan-tasks',
-        body: { goal: 'Understand Plant Cell Chloroplasts', conceptId: 'plant_cell' },
+        body: { goal: 'Understand Human Cell Mitochondria', conceptId: 'human_cell' },
         ip: '127.0.0.1',
         socket: { remoteAddress: '127.0.0.1' },
         headers: {}

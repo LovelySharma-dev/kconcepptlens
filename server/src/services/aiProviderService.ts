@@ -1,6 +1,9 @@
 import {
   type GeneratedLesson,
   GeneratedLessonSchema,
+  type CurriculumTranslateRequest,
+  type CurriculumTranslateResponse,
+  SUPPORTED_CURRICULUM_LANGUAGES,
   type SimplifyRequest,
   type SimplifyResponse,
   SimplifyResponseSchema,
@@ -313,6 +316,16 @@ export class AIProviderService {
    * 2. Secondary optional free provider (Hugging Face) if primary hits 429 quota, timeout, or temporary outage
    * 3. 100% deterministic local rules engine if all providers fail or are unconfigured
    */
+  /**
+   * Raw provider invocation method (supports testing mocks and override stubs)
+   */
+  public async callRaw(
+    prompt: string,
+    maxTokens: number = 2048
+  ) {
+    return this.callActiveProvider(prompt, maxTokens);
+  }
+
   private async callActiveProvider(
     prompt: string,
     maxTokens: number = 2048
@@ -706,6 +719,118 @@ ${input.text.slice(0, 10000)}
       return buildDeterministicStudyNotes(input, 'Model output schema validation failed.');
     } catch {
       return buildDeterministicStudyNotes(input, 'Model returned malformed JSON.');
+    }
+  }
+
+  /**
+   * Translate educational curriculum content while preserving scientific terminology.
+   */
+  async translateCurriculum(request: CurriculumTranslateRequest): Promise<CurriculumTranslateResponse> {
+    const originalText = request.text;
+    const targetLanguage = request.targetLanguage;
+    const sourceLanguage = request.sourceLanguage || 'en';
+    const timestamp = new Date().toISOString();
+    const isRtl = targetLanguage === 'ur';
+
+    // If target is English or empty text, return original immediately
+    if (targetLanguage === 'en' || !originalText.trim()) {
+      return {
+        originalText,
+        translatedText: originalText,
+        sourceLanguage,
+        targetLanguage,
+        status: 'original',
+        provider: 'none',
+        disclaimer: 'Original curriculum text.',
+        timestamp,
+        rtl: false
+      };
+    }
+
+    const langObj = SUPPORTED_CURRICULUM_LANGUAGES.find((l) => l.code === targetLanguage);
+    const targetLangName = langObj ? `${langObj.label} (${langObj.nativeLabel})` : targetLanguage;
+
+    if (this.config.provider === 'deterministic') {
+      return {
+        originalText,
+        translatedText: originalText,
+        sourceLanguage,
+        targetLanguage,
+        status: 'unavailable',
+        provider: 'deterministic',
+        disclaimer: 'Live AI translation requires an active GEMINI_API_KEY or HF_TOKEN. The authoritative original English text is preserved.',
+        timestamp,
+        rtl: false
+      };
+    }
+
+    const prompt = `You are a professional educational curriculum translator for high school and university Computer Science, Biology, and Physics.
+Translate the following educational text from English into ${targetLangName}.
+CRITICAL RULES FOR EDUCATIONAL INTEGRITY:
+1. Preserve all scientific names, Latin taxonomic designations, and abbreviations (e.g. ATP, DNA, RNA, mRNA, Golgi, tonoplast, plasmodesmata, chloroplast, O(n), f(x), v, u).
+2. Preserve all mathematical formulas, equations, numbers, units (e.g. atmospheres, psi, nm, cm), and chemical symbols.
+3. Preserve code snippets, variable names, URLs, and markdown formatting exactly.
+4. Translate explanatory sentences accurately, naturally, and with high educational clarity into ${targetLangName}.
+5. Do NOT add conversational banter, intro/outro, or hallucinated facts. Return ONLY the translated educational text.
+
+Educational text to translate:
+"""
+${originalText}
+"""`;
+
+    try {
+      const rawRes = await this.callRaw(prompt, 2048);
+      if (!rawRes.ok || !rawRes.generatedText?.trim()) {
+        const safeError = redactSecrets(
+          rawRes.ok ? 'Empty response' : rawRes.error,
+          [...getSecretTokens(), this.config.geminiApiKey || '', this.config.hfToken || ''].filter(Boolean)
+        );
+        return {
+          originalText,
+          translatedText: originalText,
+          sourceLanguage,
+          targetLanguage,
+          status: 'failed',
+          provider: this.config.provider,
+          disclaimer: `Translation failed: ${safeError}. Original English text is preserved.`,
+          timestamp,
+          rtl: false
+        };
+      }
+
+      let cleaned = rawRes.generatedText.trim();
+      if (cleaned.startsWith('"""') && cleaned.endsWith('"""')) {
+        cleaned = cleaned.slice(3, -3).trim();
+      }
+
+      return {
+        originalText,
+        translatedText: cleaned,
+        sourceLanguage,
+        targetLanguage,
+        status: 'machine_translated',
+        provider: rawRes.provider,
+        disclaimer: 'Machine-translated for educational accessibility. Unreviewed by human curriculum specialists. Scientific terminology and original structure preserved.',
+        timestamp,
+        rtl: isRtl
+      };
+    } catch (err: unknown) {
+      const rawMsg = err instanceof Error ? err.message : 'Unknown provider error';
+      const safeMsg = redactSecrets(
+        rawMsg,
+        [...getSecretTokens(), this.config.geminiApiKey || '', this.config.hfToken || ''].filter(Boolean)
+      );
+      return {
+        originalText,
+        translatedText: originalText,
+        sourceLanguage,
+        targetLanguage,
+        status: 'failed',
+        provider: this.config.provider,
+        disclaimer: `Translation failed: ${safeMsg}. Original English text is preserved.`,
+        timestamp,
+        rtl: false
+      };
     }
   }
 }
