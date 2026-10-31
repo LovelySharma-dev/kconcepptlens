@@ -245,7 +245,7 @@ graph TD
         
         RouteDiagrams --> Floyd["Floyd's Cycle Finding Algorithm (O(1) Space)"]
         RouteDiagrams --> ZodShared["@conceptlens/shared (Zod AST Validation)"]
-        RouteDiagrams --> Gemini["Optional Gemini 1.5 Flash (only if GEMINI_API_KEY is set)"]
+        RouteDiagrams --> Gemma["Gemma 4 31B open vision (GEMMA_API_KEY or GEMINI_API_KEY)"]
     end
 
     RouteUploads -->|"Signed REST API Calls"| CloudinaryCDN["Cloudinary CDN Infrastructure"]
@@ -324,7 +324,7 @@ sequenceDiagram
 
 ### Core Stack
 - **Frontend**: React 18.3, TypeScript 5.5, Vite 5.4, Lucide React icons. Display type is Space Grotesk, body type is Inter, and mono type is IBM Plex Mono.
-- **Optional vision**: Google Gemini 1.5 Flash (`generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash`). Used only for uploads that miss the curated catalogs, and only when `GEMINI_API_KEY` is set.
+- **Open vision**: Gemma 4 31B (`gemma-4-31b-it`) reads uploads that miss the curated catalogs when `GEMMA_API_KEY` or `GEMINI_API_KEY` is set. Diagram bytes are sent only for data URIs and `res.cloudinary.com` images.
 - **3D Graphics**: Three.js `^0.186.1` with procedural geometries and `OrbitControls`.
 - **Backend**: Express 4.19, TypeScript, tsx, Helmet, Morgan, CORS.
 - **Data Contracts**: Zod 3.23 shared schemas (`@conceptlens/shared`).
@@ -382,10 +382,12 @@ Environment variable reference:
 PORT=5000
 NODE_ENV=development
 
-# Optional vision interpretation for uploads that do not match a curated catalog.
-# The server calls gemini-1.5-flash when this key is set.
-# Leave it blank to stay on curated presets. GEMINI_VISION_MODEL is not read.
+# Open Gemma 4. The Google AI Studio key calls gemma-4-31b-it and gemma-4-26b-a4b-it.
+# Leave the key blank to stay on curated presets and the local rules engine.
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMMA_MODEL=gemma-4-31b-it
+GEMMA_FAST_MODEL=gemma-4-26b-a4b-it
+AI_PROVIDER=gemma
 
 # Cloudinary Integration (Required for Live Signed CDN Uploads)
 # Get free tier credentials from https://cloudinary.com
@@ -574,7 +576,7 @@ Accessibility was built into ConceptLens from the first line of code:
 3. **Voice Synthesizer Naturalness & Availability**: The speech vocalizer relies on the browser's native `window.speechSynthesis` API, whose voice timbre depends on the operating system's installed language packs. In environments where speech synthesis is disabled or unsupported (such as headless test browsers or privacy-hardened profiles), VoiceGuide falls back gracefully to non-modal, readable textual guidance.
 4. **Authentic ISL vs. AI Avatar Limitations**: Machine-generated 3D sign avatars and automated English-to-gloss translation engines lack valid spatial grammar, grammatical facial expressions, and scientific vocabulary in Indian Sign Language. To prevent harmful educational misconceptions, ConceptLens avoids synthetic signing avatars and relies exclusively on human-recorded, linguistically reviewed ISL curriculum videos (ISLRTC & NCERT). Lessons lacking certified footage display honest "In Development" states.
 5. **Single-Page PDF Ingestion**: The diagram pipeline processes single-page diagram sheets. Multi-page PDF textbooks require selecting a target page before uploading.
-6. **Gemini is optional and catalog-first**: Custom interpretation calls Gemini 1.5 Flash only when `GEMINI_API_KEY` is set and the image is an `http(s)` URL or a data URI. Keyword matches against the curated catalogs return those models first. If the key is missing or the call fails, `interpretDiagram` falls back to a curated linked-list fixture or the heart-circulation diagram and marks the session `completed`. That fallback is a preset, not a live vision result. Setting `GEMINI_VISION_MODEL` does not change the model; the id `gemini-1.5-flash` is hardcoded.
+6. **Gemma is catalog-first**: Curated diagrams still win on keyword match. Custom uploads call open Gemma 4 31B (`gemma-4-31b-it`, thinking on) only when `GEMMA_API_KEY` or `GEMINI_API_KEY` is set and the image is a data URI or a `https://res.cloudinary.com` URL. If the key is missing or the call fails, `interpretDiagram` falls back to a curated linked-list fixture or the heart-circulation diagram and marks the session `completed`. That fallback is a preset, not a live vision result. `AI_PROVIDER=gemini` is the opt-out that uses the closed model instead.
 
 ---
 

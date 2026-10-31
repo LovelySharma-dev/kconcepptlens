@@ -9,6 +9,7 @@ import {
 import { validateLinkedListInvariants } from './validationService';
 import { samplePhysicsModels } from './physicsSimulationService';
 import { universalDiagramCatalog } from './universalDiagramService';
+import { AIProviderService, extractGenerateContentText } from './aiProviderService';
 
 export interface InterpretationRequest {
   imageUrl: string;
@@ -40,16 +41,8 @@ function normalizeNodeAddressesAndLayout(graph: LinkedListGraph): LinkedListGrap
   };
 }
 
-/**
- * Call Gemini 1.5 Flash Vision API to parse ANY diagram into an interactive model
- */
-async function callGeminiUniversalVision(
-  apiKey: string,
-  imageUrl: string
-): Promise<{ domain: 'universal'; model: UniversalInteractiveDiagram } | { domain: 'data_structure'; graph: LinkedListGraph } | null> {
-  try {
-    const prompt = `You are an expert Multi-Disciplinary Diagram Analyzer. Analyze this educational or technical diagram (Physics, Biology, Chemistry, Mathematics, Computer Science, Economics, Engineering, or Flowchart).
-Extract its visual components, interactive controls (sliders that student can mutate), telemetry metrics, and underlying principles.
+const DIAGRAM_VISION_PROMPT = `You are an expert multi-disciplinary diagram analyzer. Analyze this educational or technical diagram (Physics, Biology, Chemistry, Mathematics, Computer Science, Economics, Engineering, or Flowchart).
+Extract its visual components, interactive controls (sliders a student can move), telemetry metrics, and underlying principles.
 Return strictly valid JSON conforming to this schema:
 {
   "domain": "physics" | "biology" | "chemistry" | "mathematics" | "computer_science" | "economics" | "flowchart" | "general",
@@ -100,8 +93,85 @@ Return strictly valid JSON conforming to this schema:
   ]
 }`;
 
+type VisionParse = { domain: 'universal'; model: UniversalInteractiveDiagram } | { domain: 'data_structure'; graph: LinkedListGraph };
+
+function parseVisionJson(candidateText: string): VisionParse | null {
+  const parsedJson = JSON.parse(candidateText);
+  if (parsedJson.nodes && parsedJson.headId !== undefined) {
+    const validatedLL = LinkedListGraphSchema.safeParse(parsedJson);
+    if (validatedLL.success) {
+      return { domain: 'data_structure', graph: normalizeNodeAddressesAndLayout(validatedLL.data) };
+    }
+  }
+  const validatedUniversal = UniversalInteractiveDiagramSchema.safeParse(parsedJson);
+  if (validatedUniversal.success) {
+    return { domain: 'universal', model: validatedUniversal.data };
+  }
+  return null;
+}
+
+/** Inline a data URI, or a Cloudinary delivery URL. Other hosts are not fetched. */
+async function loadInlineImage(imageUrl: string): Promise<{ mimeType: string; data: string } | null> {
+  if (imageUrl.startsWith('data:image/')) {
+    const matches = imageUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!matches) return null;
+    return { mimeType: matches[1], data: matches[2] };
+  }
+
+  let url: URL;
+  try {
+    url = new URL(imageUrl);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || url.hostname !== 'res.cloudinary.com') return null;
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!response.ok) return null;
+  const mimeType = (response.headers.get('content-type') || 'image/jpeg').split(';')[0].trim();
+  if (!mimeType.startsWith('image/')) return null;
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.byteLength === 0 || bytes.byteLength > 4_000_000) return null;
+  return { mimeType, data: bytes.toString('base64') };
+}
+
+/**
+ * Gemma 4 image understanding. gemma-4-31b-it reads the diagram with thinking enabled.
+ */
+async function callGemmaDiagramVision(imageUrl: string): Promise<VisionParse | null> {
+  try {
+    const gemma = new AIProviderService({ provider: 'gemma' });
+    if (!gemma.getStatus().configured) return null;
+    const inlineImage = await loadInlineImage(imageUrl);
+    if (!inlineImage) return null;
+
+    const result = await gemma.callGemmaRaw(
+      'Read the attached educational diagram and return only the JSON object.',
+      8192,
+      {
+        task: 'reason',
+        systemInstruction: DIAGRAM_VISION_PROMPT,
+        inlineImage
+      }
+    );
+    if (!result.ok) return null;
+    return parseVisionJson(result.generatedText);
+  } catch (err) {
+    console.warn('Gemma diagram interpretation fallback:', err);
+    return null;
+  }
+}
+
+/**
+ * Closed-model vision path, used only when AI_PROVIDER=gemini.
+ */
+async function callGeminiUniversalVision(
+  apiKey: string,
+  imageUrl: string
+): Promise<{ domain: 'universal'; model: UniversalInteractiveDiagram } | { domain: 'data_structure'; graph: LinkedListGraph } | null> {
+  try {
     const requestBody: any = {
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts: [{ text: DIAGRAM_VISION_PROMPT }] }],
       generationConfig: { responseMimeType: 'application/json' }
     };
 
@@ -125,27 +195,10 @@ Return strictly valid JSON conforming to this schema:
     );
 
     if (!response.ok) return null;
-    const data = await response.json();
-    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const candidateText = extractGenerateContentText(await response.json());
     if (!candidateText) return null;
 
-    const parsedJson = JSON.parse(candidateText);
-
-    // If it parsed as a linked list specifically
-    if (parsedJson.nodes && parsedJson.headId !== undefined) {
-      const validatedLL = LinkedListGraphSchema.safeParse(parsedJson);
-      if (validatedLL.success) {
-        return { domain: 'data_structure', graph: normalizeNodeAddressesAndLayout(validatedLL.data) };
-      }
-    }
-
-    // Universal diagram validation
-    const validatedUniversal = UniversalInteractiveDiagramSchema.safeParse(parsedJson);
-    if (validatedUniversal.success) {
-      return { domain: 'universal', model: validatedUniversal.data };
-    }
-
-    return null;
+    return parseVisionJson(candidateText);
   } catch (err) {
     console.warn('Gemini universal interpretation fallback:', err);
     return null;
@@ -224,9 +277,12 @@ export async function interpretDiagram(
     }
   }
 
-  // 3. Attempt Gemini Universal Vision on Custom Uploads
-  if (apiKey && req.imageUrl && (req.imageUrl.startsWith('http') || req.imageUrl.startsWith('data:image/'))) {
-    const aiResult = await callGeminiUniversalVision(apiKey, req.imageUrl);
+  // 3. Open Gemma 4 reads uploads that miss the catalog. Gemini vision runs only when AI_PROVIDER=gemini.
+  if (req.imageUrl && (req.imageUrl.startsWith('http') || req.imageUrl.startsWith('data:image/'))) {
+    const requestedProvider = (process.env.AI_PROVIDER || 'gemma').trim().toLowerCase();
+    const aiResult = requestedProvider === 'gemini' && apiKey
+      ? await callGeminiUniversalVision(apiKey, req.imageUrl)
+      : await callGemmaDiagramVision(req.imageUrl);
     if (aiResult) {
       if (aiResult.domain === 'universal') {
         return {

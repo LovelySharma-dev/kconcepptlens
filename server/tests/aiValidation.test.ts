@@ -678,6 +678,113 @@ async function runAIValidationSuite() {
     }
   });
 
+  // --- 7b. OPEN GEMMA 4 ROUTING ---
+
+  await test('Gemma 4 31B thinks through lesson generation and drops thinking traces', async () => {
+    const originalFetch = global.fetch;
+    try {
+      let requestedUrl = '';
+      let requestedBody: any = null;
+      global.fetch = async (url: string | URL | Request, init?: RequestInit) => {
+        requestedUrl = url.toString();
+        requestedBody = JSON.parse(String(init?.body || '{}'));
+        return new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    { text: 'internal reasoning that must not be parsed', thought: true },
+                    { text: JSON.stringify(validSampleLesson) }
+                  ]
+                }
+              }
+            ]
+          }),
+          { status: 200 }
+        );
+      };
+
+      const provider = new AIProviderService({
+        provider: 'gemma',
+        gemmaApiKey: 'mock-gemma-key-12345',
+        gemmaModel: 'gemma-4-31b-it',
+        gemmaFastModel: 'gemma-4-26b-a4b-it'
+      });
+      const lesson = await provider.generateLesson({ text: 'Photosynthesis converts light into chemical energy inside chloroplasts.' });
+      assert(requestedUrl.includes('/models/gemma-4-31b-it:generateContent'), requestedUrl);
+      assert(requestedUrl.includes('mock-gemma-key-12345'));
+      assert.strictEqual(requestedBody.generationConfig.thinkingConfig.thinkingLevel, 'high');
+      assert.strictEqual(typeof requestedBody.systemInstruction.parts[0].text, 'string');
+      assert(!requestedBody.systemInstruction.parts[0].text.includes('Photosynthesis converts light'));
+      assert(requestedBody.contents[0].parts[0].text.includes('Photosynthesis converts light'));
+      assert.strictEqual(lesson.generationMetadata.generationMethod, 'gemma');
+      assert.strictEqual(lesson.generationMetadata.model, 'gemma-4-31b-it');
+      assert.strictEqual(lesson.generationMetadata.fallbackUsed, false);
+      assert.strictEqual(lesson.topic, 'Photosynthesis & Light Reactions');
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  await test('Gemma 4 26B A4B handles short rewrites with thinking turned down', async () => {
+    const originalFetch = global.fetch;
+    try {
+      let requestedUrl = '';
+      let requestedBody: any = null;
+      global.fetch = async (url: string | URL | Request, init?: RequestInit) => {
+        requestedUrl = url.toString();
+        requestedBody = JSON.parse(String(init?.body || '{}'));
+        return new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [{
+                    text: JSON.stringify({
+                      simplifiedText: 'Plants use sunlight, water, and air to make food.',
+                      keyTerms: [{ term: 'Chloroplast', definition: 'The plant part that catches sunlight.' }],
+                      uncertaintyNotes: []
+                    })
+                  }]
+                }
+              }
+            ]
+          }),
+          { status: 200 }
+        );
+      };
+
+      const provider = new AIProviderService({
+        provider: 'gemma',
+        gemmaApiKey: 'mock-gemma-key-12345'
+      });
+      const simplified = await provider.simplifyText({
+        text: 'Photosynthesis occurs within specialized chloroplasts that capture photon energy.'
+      });
+      assert(requestedUrl.includes('/models/gemma-4-26b-a4b-it:generateContent'), requestedUrl);
+      assert.strictEqual(requestedBody.generationConfig.thinkingConfig.thinkingLevel, 'minimal');
+      assert.strictEqual(simplified.metadata.generationMethod, 'gemma');
+      assert.strictEqual(simplified.metadata.model, 'gemma-4-26b-a4b-it');
+      assert(simplified.simplifiedText.includes('sunlight'));
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  await test('AIProviderService status names both open Gemma models', () => {
+    const provider = new AIProviderService({
+      provider: 'gemma',
+      gemmaApiKey: 'mock-gemma-key-12345'
+    });
+    const status = provider.getStatus();
+    assert.strictEqual(status.configured, true);
+    assert.strictEqual(status.provider, 'gemma');
+    assert.strictEqual(status.openWeights, true);
+    assert.strictEqual(status.model, 'gemma-4-31b-it');
+    assert.strictEqual(status.fastModel, 'gemma-4-26b-a4b-it');
+  });
+
   // --- 8. SECURITY & SECRET REDACTION ---
 
   await test('Secret tokens are completely redacted from error messages', () => {

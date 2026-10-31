@@ -57,7 +57,12 @@ export const AILessonStudio: React.FC<AILessonStudioProps> = ({
       setIsFlipped(false);
       setUserAnswers({});
       setSubmittedAnswers({});
-      const method = json.data.generationMetadata.generationMethod === 'huggingface' ? 'AI model' : 'rule-based engine';
+      const methodName = json.data.generationMetadata.generationMethod;
+      const method = methodName === 'gemma'
+        ? `Gemma 4 open model ${json.data.generationMetadata.model || ''}`.trim()
+        : methodName === 'gemini' || methodName === 'huggingface'
+        ? 'AI model'
+        : 'rule-based engine';
       onAnnounce?.(`Lesson ready, generated via ${method}.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Lesson generation failed.';
@@ -127,11 +132,14 @@ export const AILessonStudio: React.FC<AILessonStudioProps> = ({
 
   if (!lesson) return null;
 
-  const isAI = lesson.generationMetadata.generationMethod === 'gemini' || lesson.generationMetadata.generationMethod === 'huggingface';
-  const providerLabel = lesson.generationMetadata.generationMethod === 'gemini' 
-    ? `Gemini ${lesson.generationMetadata.model || 'Flash'} (Free Tier)` 
-    : isAI 
-      ? `AI: ${lesson.generationMetadata.model || 'Hugging Face'}` 
+  const methodName = lesson.generationMetadata.generationMethod;
+  const isAI = methodName === 'gemma' || methodName === 'gemini' || methodName === 'huggingface';
+  const providerLabel = methodName === 'gemma'
+    ? `Gemma 4 open (${lesson.generationMetadata.model || 'gemma-4-31b-it'})`
+    : methodName === 'gemini'
+    ? `Gemini ${lesson.generationMetadata.model || 'Flash'} (Free Tier)`
+    : isAI
+      ? `AI: ${lesson.generationMetadata.model || 'Hugging Face'}`
       : 'Deterministic Rules Engine';
   const currentCard = lesson.flashcards[flashcardIdx];
 

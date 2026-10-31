@@ -48,7 +48,7 @@ export type GeneratedPracticeQuestion = z.infer<typeof GeneratedPracticeQuestion
 
 export const GenerationMetadataSchema = z
   .object({
-    generationMethod: z.enum(['gemini', 'huggingface', 'deterministic', 'mock']),
+    generationMethod: z.enum(['gemma', 'gemini', 'huggingface', 'deterministic', 'mock']),
     model: z.string().trim().max(120).optional(),
     fallbackUsed: z.boolean(),
     fallbackReason: z.string().trim().max(300).optional(),

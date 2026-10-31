@@ -121,7 +121,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               <h3 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>2. Adaptive Learning Engine</h3>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Multi-tier AI orchestration: Google Gemini 3.1 Flash Lite on free tier, failover to Hugging Face serverless inference, and 100% deterministic local rule-based generation when offline. Strict Zod schemas guard every generated step and quiz question.
+              Open model first: Gemma 4 31B thinks through lessons, translation, and diagram reading. Gemma 4 26B A4B rewrites text into simpler language, summaries, and study notes. Hugging Face and a local rules engine take over if the open model is unavailable. Strict Zod schemas guard every generated step and quiz question.
             </p>
           </div>
 
@@ -229,7 +229,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
           <div style={{ padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
             <h4 style={{ margin: '0 0 0.4rem', color: 'var(--accent-cyan)' }}>AI Generation & Fallbacks</h4>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-              Uses Google Gemini 3.1 Flash Lite on the free tier (15 RPM sliding window). If quota or network limits are reached, the system fails over to Hugging Face or deterministic rule-based lesson synthesis. No paid API keys are required.
+              Uses open Gemma 4 on a free Google AI Studio key. gemma-4-31b-it runs with thinking for lessons and diagrams. gemma-4-26b-a4b-it handles short rewrites. If quota or network limits are reached, the system fails over to Hugging Face or deterministic rule-based lesson synthesis. No paid API keys are required.
             </p>
           </div>
 

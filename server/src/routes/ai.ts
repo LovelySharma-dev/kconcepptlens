@@ -18,6 +18,7 @@ function getSecrets(): string[] {
   return [
     process.env.HF_TOKEN,
     process.env.HUGGINGFACE_API_KEY,
+    process.env.GEMMA_API_KEY,
     process.env.GEMINI_API_KEY,
     process.env.CLOUDINARY_API_SECRET
   ]

@@ -454,7 +454,9 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
       }
 
       const providerBadge =
-        validated.generationMetadata.generationMethod === 'gemini'
+        validated.generationMetadata.generationMethod === 'gemma'
+          ? 'Gemma 4 open model'
+          : validated.generationMetadata.generationMethod === 'gemini'
           ? 'Google Gemini Free Tier'
           : validated.generationMetadata.generationMethod === 'huggingface'
           ? 'Hugging Face'
@@ -667,14 +669,20 @@ export const LearnWorkspace: React.FC<LearnWorkspaceProps> = ({
                   className="status-pill"
                   style={{
                     fontSize: '0.75rem',
-                    background: lesson.generationMetadata.generationMethod === 'gemini' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                    color: lesson.generationMetadata.generationMethod === 'gemini' ? 'var(--accent-cyan)' : 'var(--accent-emerald)',
+                    background: lesson.generationMetadata.generationMethod === 'deterministic'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(56, 189, 248, 0.15)',
+                    color: lesson.generationMetadata.generationMethod === 'deterministic'
+                      ? 'var(--accent-emerald)'
+                      : 'var(--accent-cyan)',
                     padding: '0.2rem 0.55rem',
                     borderRadius: 'var(--radius-full)',
                     fontWeight: 600
                   }}
                 >
-                  {lesson.generationMetadata.generationMethod === 'gemini'
+                  {lesson.generationMetadata.generationMethod === 'gemma'
+                    ? `Gemma 4 open (${lesson.generationMetadata.model || 'gemma-4-31b-it'})`
+                    : lesson.generationMetadata.generationMethod === 'gemini'
                     ? 'Google Gemini Flash (Free Tier)'
                     : lesson.generationMetadata.generationMethod === 'huggingface'
                     ? 'Hugging Face'
