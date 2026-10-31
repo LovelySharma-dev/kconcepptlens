@@ -371,31 +371,31 @@ export const Dna2DCanvas: React.FC<Dna2DCanvasProps> = ({
           position: 'absolute',
           bottom: '10px',
           left: '12px',
-          background: 'rgba(7, 11, 20, 0.85)',
+          background: 'var(--surface-card)',
           backdropFilter: 'blur(8px)',
           padding: '0.4rem 0.75rem',
           borderRadius: '8px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid var(--border-medium)',
           display: 'flex',
           gap: '0.75rem',
           fontSize: '0.72rem',
           pointerEvents: 'none'
         }}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#34d399' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-mint)', fontWeight: 600 }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-mint)' }} />
           Adenine (A)
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#fbbf24' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-amber)', fontWeight: 600 }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-amber)' }} />
           Thymine (T)
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#c084fc' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6' }} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-violet)', fontWeight: 600 }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-violet)' }} />
           Guanine (G)
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#38bdf8' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8' }} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-cyan)' }} />
           Cytosine (C)
         </span>
       </div>

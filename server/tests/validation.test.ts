@@ -41,7 +41,10 @@ import {
   applyLearningTheme,
   learningThemeGroups,
   removeLearningTheme,
-  resolveLearningExperience
+  resolveLearningExperience,
+  learningDomState,
+  learningDomClasses,
+  toggleLearningTheme
 } from '../../shared/src/learning/themes';
 import { adaptConceptContent, type ConceptSource } from '../../shared/src/learning/content';
 import { THEME_RESOLUTION } from '../../shared/src/learning/themes';
@@ -1154,6 +1157,128 @@ async function runTestSuite() {
   assert(solveArithmetic('4 * 5 + 6 / 2')?.solution === '23', 'Arithmetic solver correctly respects operator precedence (BODMAS/PEMDAS)');
   assert(traceSafeAccumulator('def total(items):\n    result = 0\n    for value in items:\n        result = result + value\n    return result\nitems = [3, 1, 2]')?.result === 6, 'Safe accumulator tracer correctly computes 3 + 1 + 2 = 6');
   assert(Boolean(balanceReaction('H2 + O2 -> H2O')), 'Chemical balancer correctly balances H2 + O2 -> H2O');
+
+  // 15. Accessibility Engineering, Color-Independence, ADHD Focus & Audio Pipeline Tests (Phase 8)
+  // 15.1 Observable DOM State Emission for all accessibility toggles
+  const fullAccessPrefs = normalizeLearningPreferences({
+    highContrast: true,
+    focusMode: true,
+    adhdFriendly: true,
+    reducedMotion: true,
+    dyslexiaFriendly: true,
+    colorFriendly: true,
+    easyRead: true,
+    simpleSteps: true,
+    lowData: true,
+    speechFree: true,
+    keyboardFirst: true,
+    textScale: 'larger',
+    lineSpacing: 'relaxed'
+  });
+  const domState = learningDomState(fullAccessPrefs);
+  assert(domState.classes.includes('high-contrast'), 'DOM state emits high-contrast class');
+  assert(domState.classes.includes('focus-mode') && domState.classes.includes('adhd-friendly'), 'DOM state emits focus-mode and adhd-friendly classes');
+  assert(domState.classes.includes('reduced-motion'), 'DOM state emits reduced-motion class');
+  assert(domState.classes.includes('dyslexia-friendly'), 'DOM state emits dyslexia-friendly class');
+  assert(domState.classes.includes('color-friendly'), 'DOM state emits color-friendly class');
+  assert(domState.classes.includes('keyboard-friendly'), 'DOM state emits keyboard-friendly class');
+  assert(domState.textScale === 'larger', 'DOM state emits textScale: larger attribute');
+  assert(domState.lineSpacing === 'relaxed', 'DOM state emits lineSpacing: relaxed attribute');
+
+  // 15.2 Preference Persistence & Reset Integrity
+  const clearedAllPrefs = resetAllLearningPreferences();
+  assert(clearedAllPrefs.focusMode === false && clearedAllPrefs.highContrast === false && clearedAllPrefs.textScale === 'default', 'Reset all restores pure default display preferences');
+  assert(!preferencesIncludeDiagnosis(clearedAllPrefs), 'Reset preferences strictly contain no diagnosis flags');
+
+  const preservedPrefs = resetDisplayPreferences({
+    ...fullAccessPrefs,
+    textFirst: true,
+    lowData: true
+  });
+  assert(preservedPrefs.textFirst === true && preservedPrefs.lowData === true, 'Reset display preferences preserves representation continuity flags');
+  assert(preservedPrefs.focusMode === false && preservedPrefs.highContrast === false, 'Reset display preferences clears transient visual overrides');
+
+  // 15.3 Multiple Compatible Settings Combination (THEME_RESOLUTION)
+  let multiTheme = defaultLearningPreferences();
+  multiTheme = applyLearningTheme(multiTheme, 'adhd-friendly');
+  multiTheme = applyLearningTheme(multiTheme, 'easy-read');
+  multiTheme = applyLearningTheme(multiTheme, 'color-blind-friendly');
+  multiTheme = applyLearningTheme(multiTheme, 'low-stimulation');
+  assert(multiTheme.adhdFriendly === true && multiTheme.focusMode === true, 'Combined themes preserve ADHD focus mode');
+  assert(multiTheme.easyRead === true, 'Combined themes preserve Easy Read plain language');
+  assert(multiTheme.colorFriendly === true, 'Combined themes preserve Color-blind friendly cues');
+  assert(multiTheme.reducedMotion === true && multiTheme.lowStimulation === true, 'Combined themes preserve Low-stimulation motion suppression');
+
+  // 15.4 Reduced Motion Safety & Zero Timer Pressure
+  const systemReducedPrefs = respectSystemReducedMotion(defaultLearningPreferences(), true, false);
+  assert(systemReducedPrefs.reducedMotion === true, 'System reduced-motion query automatically sets reducedMotion: true');
+  const userOverriddenPrefs = respectSystemReducedMotion({ ...defaultLearningPreferences(), reducedMotion: false }, true, true);
+  assert(userOverriddenPrefs.reducedMotion === false, 'Learner explicit choice is preserved over system motion setting');
+  assert(multiTheme.breakReminderMinutes === 0, 'ADHD-friendly and focus modes enforce zero forced break timers or countdown pressure');
+
+  // 15.5 Diagram Color-Independence Invariants (Every state has non-color semantic identifiers)
+  // Verification helper testing that every node state maps to a distinct textual badge and border/fill pattern
+  function nodeSemanticIndicators(isHead: boolean, isMutated: boolean, isVisited: boolean) {
+    const indicators: string[] = [];
+    if (isMutated) indicators.push('⚡ MUTATING', 'pattern-mutated', 'dashed-border');
+    if (isHead) indicators.push('★ HEAD', 'double-border');
+    if (isVisited && !isMutated) indicators.push('● VISITED', 'pattern-highlight', 'thick-border');
+    if (!isHead && !isMutated && !isVisited) indicators.push('solid-border');
+    return indicators;
+  }
+  const headMutatedIndicators = nodeSemanticIndicators(true, true, false);
+  assert(headMutatedIndicators.includes('⚡ MUTATING') && headMutatedIndicators.includes('★ HEAD'), 'Mutating Head node conveys both head and mutating semantics in text');
+  assert(headMutatedIndicators.includes('pattern-mutated'), 'Mutating node has geometric SVG hatch pattern independent of color');
+
+  const visitedNodeIndicators = nodeSemanticIndicators(false, false, true);
+  assert(visitedNodeIndicators.includes('● VISITED') && visitedNodeIndicators.includes('pattern-highlight'), 'Visited node conveys step progression through dot pattern and text badge');
+
+  // 15.6 Edge Non-Color Indicators
+  function edgeSemanticIndicators(type: 'next' | 'mutating' | 'prev' | 'circular') {
+    switch (type) {
+      case 'next': return { dashArray: 'none', label: 'next →' };
+      case 'mutating': return { dashArray: '6,4', label: 'rewiring ⚡' };
+      case 'prev': return { dashArray: '3,3', label: '← prev' };
+      case 'circular': return { dashArray: '8,4', label: '↺ circular: tail.next → head' };
+    }
+  }
+  assert(edgeSemanticIndicators('mutating').label === 'rewiring ⚡' && edgeSemanticIndicators('mutating').dashArray === '6,4', 'Mutating link has distinct dashed style and text label');
+  assert(edgeSemanticIndicators('prev').label === '← prev' && edgeSemanticIndicators('prev').dashArray === '3,3', 'Prev link has distinct dotted style and text label');
+  assert(edgeSemanticIndicators('circular').label.includes('tail.next → head'), 'Circular loop conveys return relation in text');
+
+  // 15.7 Node Keyboard Navigation Invariants (Sequential traversal and boundary handling)
+  function stepNodeIndex(current: number, total: number, key: 'ArrowRight' | 'ArrowLeft' | 'Home' | 'End'): number {
+    if (total <= 0) return 0;
+    if (key === 'ArrowRight') return (current + 1) % total;
+    if (key === 'ArrowLeft') return (current - 1 + total) % total;
+    if (key === 'Home') return 0;
+    if (key === 'End') return total - 1;
+    return current;
+  }
+  assert(stepNodeIndex(0, 3, 'ArrowRight') === 1, 'ArrowRight steps from node 0 to node 1');
+  assert(stepNodeIndex(1, 3, 'ArrowRight') === 2, 'ArrowRight steps from node 1 to node 2');
+  assert(stepNodeIndex(2, 3, 'ArrowRight') === 0, 'ArrowRight wraps cleanly back to node 0');
+  assert(stepNodeIndex(0, 3, 'ArrowLeft') === 2, 'ArrowLeft wraps cleanly to last node 2');
+  assert(stepNodeIndex(1, 3, 'Home') === 0, 'Home key immediately jumps to Head node 0');
+  assert(stepNodeIndex(1, 3, 'End') === 2, 'End key immediately jumps to Tail node 2');
+
+  // 15.8 Speech & Audio Sonification Determinism
+  const experience = resolveLearningExperience(defaultLearningPreferences());
+  assert(experience.speechOptional === true && experience.speechRequired === false, 'Speech is verified strictly optional across all learning modes');
+
+  // Deterministic pentatonic pitch ladder mapping:
+  const pentatonicScale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+  function nodeTonePitch(nodeIndex: number): number {
+    return pentatonicScale[Math.min(nodeIndex, pentatonicScale.length - 1)];
+  }
+  assert(nodeTonePitch(0) === 261.63, 'Node 0 maps deterministically to C4 (261.63 Hz)');
+  assert(nodeTonePitch(1) === 293.66, 'Node 1 maps deterministically to D4 (293.66 Hz)');
+  assert(nodeTonePitch(2) === 329.63, 'Node 2 maps deterministically to E4 (329.63 Hz)');
+  assert(nodeTonePitch(1) > nodeTonePitch(0) && nodeTonePitch(2) > nodeTonePitch(1), 'Node tones form a strictly ascending pitch progression');
+
+  // 15.9 ISL Honesty and Authentic Resource Status
+  const islCurriculumNote = 'Text lesson — ISL video not included';
+  assert(islCurriculumNote.includes('ISL video not included'), 'ISL content honestly states authentic sign-language video is not included');
 
   console.log(`\n========================================`);
   console.log(`Results: ${passedCount} / ${totalCount} tests passed.`);

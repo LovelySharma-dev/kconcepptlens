@@ -220,7 +220,7 @@ export const PlantCell2DCanvas: React.FC<PlantCell2DCanvasProps> = ({
       ) : (
         /* COMPARISON MATRIX VIEW: PLANT VS ANIMAL CELL */
         <div style={{ padding: '2rem 1.5rem', maxHeight: '100%', overflowY: 'auto' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#10b981', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-mint)', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Sparkles size={18} />
             Diagnostic Comparison: Plant Cell vs. Animal Cell
           </h3>
@@ -231,36 +231,36 @@ export const PlantCell2DCanvas: React.FC<PlantCell2DCanvasProps> = ({
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
               <thead>
-                <tr style={{ background: 'rgba(255, 255, 255, 0.05)', textAlign: 'left', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                <tr style={{ background: 'var(--bg-elevated)', textAlign: 'left', borderBottom: '1px solid var(--border-medium)' }}>
                   <th style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)' }}>Feature / Organelle</th>
-                  <th style={{ padding: '0.75rem 1rem', color: '#10b981' }}>Plant Cell</th>
-                  <th style={{ padding: '0.75rem 1rem', color: '#00f2fe' }}>Animal Cell</th>
-                  <th style={{ padding: '0.75rem 1rem', color: '#f59e0b' }}>Exam Significance</th>
+                  <th style={{ padding: '0.75rem 1rem', color: 'var(--accent-mint)' }}>Plant Cell</th>
+                  <th style={{ padding: '0.75rem 1rem', color: 'var(--accent-cyan)' }}>Animal Cell</th>
+                  <th style={{ padding: '0.75rem 1rem', color: 'var(--accent-amber)' }}>Exam Significance</th>
                 </tr>
               </thead>
               <tbody>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>Cell Wall</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#34d399' }}><Check size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Present (Cellulose & Pectin)</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#f87171' }}><X size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Absent (Plasma membrane only)</td>
+                  <td style={{ padding: '0.75rem 1rem', color: 'var(--accent-mint)' }}><Check size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Present (Cellulose & Pectin)</td>
+                  <td style={{ padding: '0.75rem 1rem', color: 'var(--accent-coral)' }}><X size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Absent (Plasma membrane only)</td>
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>Prevents osmotic bursting in hypotonic water</td>
                 </tr>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>Chloroplasts & Plastids</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#34d399' }}><Check size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Present (Photosynthesis)</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#f87171' }}><X size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Absent (Heterotrophic)</td>
+                  <td style={{ padding: '0.75rem 1rem', color: 'var(--accent-mint)' }}><Check size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Present (Photosynthesis)</td>
+                  <td style={{ padding: '0.75rem 1rem', color: 'var(--accent-coral)' }}><X size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Absent (Heterotrophic)</td>
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>Light & dark reactions produce sugar</td>
                 </tr>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>Vacuoles</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#34d399' }}>One Giant Central Vacuole (Tonoplast, 80% vol)</td>
+                  <td style={{ padding: '0.75rem 1rem', color: 'var(--accent-mint)' }}>One Giant Central Vacuole (Tonoplast, 80% vol)</td>
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>Small, numerous, temporary vesicles</td>
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>Maintains hydrostatic turgor pressure</td>
                 </tr>
-                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>Centrioles / Centrosomes</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#f87171' }}><X size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Absent in higher plants</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#00f2fe' }}><Check size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Present (Organizes mitotic aster)</td>
+                  <td style={{ padding: '0.75rem 1rem', color: 'var(--accent-coral)' }}><X size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Absent in higher plants</td>
+                  <td style={{ padding: '0.75rem 1rem', color: 'var(--accent-cyan)' }}><Check size={16} style={{ display: 'inline', verticalAlign: 'middle' }} /> Present (Organizes mitotic aster)</td>
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>Plants form anastral mitotic spindle</td>
                 </tr>
                 <tr>
