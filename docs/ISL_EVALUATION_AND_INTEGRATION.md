@@ -21,7 +21,7 @@ ConceptLens establishes an authentic, responsible Indian Sign Language (ISL) vid
 
 Until a validated, community-endorsed AI translation model exists, ConceptLens exclusively integrates authentic, reviewed human-signed ISL educational video modules.
 
----
+The in-app player does not currently include one of those videos. Earlier catalog entries pointed at files this project does not host. Those entries were removed. Lessons without a checked file say that a signed explanation is not yet available and link to the official ISLRTC science concept pages. That link is not an embed, and it is not delivered through Cloudinary.
 
 ## 2. Resource Inspection & Provenance
 
