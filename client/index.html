@@ -2,14 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%2365E5F2' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%238CE7BD'/%3E%3Cpath d='M32 6v8M32 50v8M6 32h8M50 32h8' stroke='%23A78BFA' stroke-width='2'/%3E%3C/svg%3E" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ConceptLens 2.0 - Accessible, AI-assisted learning platform that transforms study materials into interactive lessons, connects them to PYQs, and supports Indian Sign Language (ISL)." />
-    <title>ConceptLens 2.0 — Reliable, Accessible CS Learning Platform</title>
-    <!-- Google Fonts -->
+    <meta name="description" content="ConceptLens. One concept. Different ways to understand it. Explore science through interactive models, clear explanations, and learning that adapts to your answers." />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function() {
+        var saved = null;
+        try { saved = localStorage.getItem('conceptlens-theme'); } catch (e) { saved = null; }
+        var choice = saved === 'dark' || saved === 'light' || saved === 'system' ? saved : 'light';
+        var theme = choice === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : choice;
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-theme-choice', choice);
+        document.documentElement.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
+      })();
+    </script>
+    <title>ConceptLens — One concept. Different ways to understand it.</title>
+    <!-- Google Fonts: Space Grotesk, Inter, IBM Plex Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

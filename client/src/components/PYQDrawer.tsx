@@ -51,7 +51,7 @@ const defaultFallbackPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'insertHead',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_anna_univ_2019_q13',
@@ -87,7 +87,7 @@ const defaultFallbackPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'deleteNode',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   }
 ];
 
@@ -178,14 +178,14 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <BookOpen size={20} color="var(--accent-cyan)" />
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                Board & University PYQ Question Bank
+                Linked-list practice prompts
               </h2>
               <span className="brand-badge" style={{ background: 'rgba(56, 189, 248, 0.15)', color: 'var(--accent-cyan)' }}>
-                {pyqs.length} Curated Questions
+                {pyqs.length} prompts
               </span>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-              Real examination papers from ISC Class XII, CBSE, Anna University, and GATE linked to interactive pointer sandboxes.
+              These prompts cite board-style topics. They are not marked as verified past papers in this build. Use them to practice pointer steps, and open the cited link separately.
             </p>
           </div>
 
@@ -513,7 +513,7 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
                 <h4 style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                  Original Exam Paper Crop (Cloudinary Verified Evidence)
+                  Cited source — not re-checked against a paper in this build
                 </h4>
                 <button
                   type="button"
@@ -529,7 +529,7 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
                     gap: '0.25rem'
                   }}
                 >
-                  <Maximize2 size={13} /> Fullscreen Scan
+                  <Maximize2 size={13} /> Open citation
                 </button>
               </div>
 
@@ -543,41 +543,13 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
                   background: '#020617'
                 }}
               >
-                <img
-                  src={selectedPYQ.exam.sourcePaperUrl}
-                  alt={`Question paper scan for ${selectedPYQ.title}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '8px',
-                    left: '8px',
-                    background: 'rgba(2, 6, 23, 0.85)',
-                    border: '1px solid var(--border-subtle)',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '4px',
-                    fontSize: '0.7rem',
-                    fontFamily: 'var(--font-mono)',
-                    color: 'var(--accent-cyan)'
-                  }}
-                >
-                  Crop Box: [x:{selectedPYQ.exam.cropBoundingBox.x}, y:{selectedPYQ.exam.cropBoundingBox.y}, w:{selectedPYQ.exam.cropBoundingBox.width}, h:{selectedPYQ.exam.cropBoundingBox.height}]
-                </div>
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    right: '8px',
-                    background: 'rgba(2, 6, 23, 0.85)',
-                    border: '1px solid var(--border-subtle)',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '4px',
-                    fontSize: '0.7rem',
-                    color: '#e2e8f0'
-                  }}
-                >
-                  {selectedPYQ.exam.subjectName} ({selectedPYQ.exam.year})
+                <div style={{ padding: '0.85rem 0.9rem', fontSize: '0.8rem', lineHeight: 1.45, color: 'var(--text-secondary)' }}>
+                  {selectedPYQ.verifiedAccuracy
+                    ? 'Marked verified in the catalog.'
+                    : 'This item is a practice prompt. The link below is a citation, not confirmed paper evidence, and it is not a Cloudinary asset unless the URL is on res.cloudinary.com.'}
+                  <div style={{ marginTop: '0.45rem' }}>
+                    <a href={selectedPYQ.exam.sourcePaperUrl} target="_blank" rel="noreferrer">Open cited link</a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -587,7 +559,7 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
                 <Award size={15} color="var(--accent-emerald)" />
                 <h4 style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                  Official Board Marking Scheme Breakdown ({selectedPYQ.exam.marks} Marks Total)
+                  Practice notes ({selectedPYQ.exam.marks} marks) — not an official mark scheme
                 </h4>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -618,7 +590,7 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Video size={18} color="#c084fc" />
                   <span style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>
-                    Need a sign language explanation for <strong>{selectedPYQ.conceptTag}</strong>?
+                    Open the written explanation for <strong>{selectedPYQ.conceptTag}</strong>. Sign-language video is not included.
                   </span>
                 </div>
                 <button
@@ -632,7 +604,7 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
                     borderColor: 'rgba(192, 132, 252, 0.4)'
                   }}
                 >
-                  Watch ISL Clip
+                  Open the text lesson
                 </button>
               </div>
             )}
@@ -678,7 +650,7 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
                   {selectedPYQ.title} — Original Source Paper
                 </h3>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Cloudinary Asset • Bounding Box [x:{selectedPYQ.exam.cropBoundingBox.x}, y:{selectedPYQ.exam.cropBoundingBox.y}, w:{selectedPYQ.exam.cropBoundingBox.width}, h:{selectedPYQ.exam.cropBoundingBox.height}]
+                  Cited link • stored crop box [x:{selectedPYQ.exam.cropBoundingBox.x}, y:{selectedPYQ.exam.cropBoundingBox.y}, w:{selectedPYQ.exam.cropBoundingBox.width}, h:{selectedPYQ.exam.cropBoundingBox.height}]
                 </span>
               </div>
               <button
@@ -691,11 +663,9 @@ export const PYQDrawer: React.FC<PYQDrawerProps> = ({ onLoadPYQ, onNavigateToISL
               </button>
             </div>
 
-            <img
-              src={selectedPYQ.exam.sourcePaperUrl}
-              alt="High resolution question scan"
-              style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 'var(--radius-md)' }}
-            />
+            <p style={{ margin: 0, lineHeight: 1.5, color: 'var(--text-secondary)' }}>
+              <a href={selectedPYQ.exam.sourcePaperUrl} target="_blank" rel="noreferrer">{selectedPYQ.exam.sourcePaperUrl}</a>
+            </p>
           </div>
         </div>
       )}

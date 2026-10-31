@@ -5,7 +5,7 @@ import { isDbConnected } from '../config/db';
 
 const router = Router();
 
-// Curated 11 Comprehensive Previous-Year Questions (ISC, CBSE, Anna University, GATE)
+// Practice prompts with cited source URLs. verifiedAccuracy is false until a paper is re-checked.
 export const curatedPYQs: PYQ[] = [
   {
     id: 'pyq_isc_2025_q11',
@@ -39,7 +39,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'search',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_isc_2024_q9',
@@ -75,7 +75,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'search',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_cbse_2024_q28',
@@ -111,7 +111,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'insertTail',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_cbse_2023_q31',
@@ -147,7 +147,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'deleteNode',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_isc_2023_specimen_q11',
@@ -183,7 +183,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'insertHead',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_anna_univ_2022_q12',
@@ -221,7 +221,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'reverseList',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_anna_univ_2021_q11',
@@ -258,7 +258,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'insertDoublyHead',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_gate_2023_ds_q14',
@@ -294,7 +294,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'search',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_gate_2022_ds_q22',
@@ -331,7 +331,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'insertHead',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_isc_2023_q12',
@@ -366,7 +366,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'deleteNode',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   },
   {
     id: 'pyq_cbse_2022_q25',
@@ -401,7 +401,7 @@ export const curatedPYQs: PYQ[] = [
       ]
     },
     solutionOperation: 'insertHead',
-    verifiedAccuracy: true
+    verifiedAccuracy: false
   }
 ];
 

@@ -15,8 +15,8 @@ export interface ISLLesson {
   title: string;
   topic: string;
   duration: string;
-  certifiedBy: string;
-  certificationOrg: string;
+  curriculumLead: string;
+  pedagogicalFocus: string;
   videoUrl: string;
   posterUrl: string;
   baseGraph: LinkedListGraph;
@@ -38,9 +38,9 @@ export const islLessons: ISLLesson[] = [
     title: 'Lesson 1: Introduction to Singly Linked Lists & Nodes',
     topic: 'Foundations of Data Structures',
     duration: '0:50',
-    certifiedBy: 'Prof. R. Sundararajan',
-    certificationOrg: 'National Association of the Deaf (NAD) Certified Educator',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    curriculumLead: 'English text only',
+    pedagogicalFocus: 'Text explanation of nodes and pointers',
+    videoUrl: '',
     posterUrl:
       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
     targetOperation: 'search',
@@ -60,7 +60,7 @@ export const islLessons: ISLLesson[] = [
         start: 0,
         end: 6,
         timeLabel: '00:00',
-        text: 'Namaste! Welcome to ConceptLens certified Indian Sign Language (ISL) classroom.',
+        text: 'This is an English text explanation of a singly linked list. It is not an Indian Sign Language translation.',
         diagramNote: 'Overview of Linked List representation'
       },
       {
@@ -115,9 +115,9 @@ export const islLessons: ISLLesson[] = [
     title: 'Lesson 2: Inserting a Node at Head (Pointer Rewiring)',
     topic: 'Pointer Mutations & Complexity',
     duration: '0:45',
-    certifiedBy: 'Dr. Meera Krishnan',
-    certificationOrg: 'All India Institute of Speech and Hearing (AIISH) Certified',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    curriculumLead: 'English text only',
+    pedagogicalFocus: 'Text explanation of inserting at the head',
+    videoUrl: '',
     posterUrl:
       'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80',
     targetOperation: 'insertHead',
@@ -174,9 +174,9 @@ export const islLessons: ISLLesson[] = [
     title: 'Lesson 3: Floyd Cycle Finding Algorithm (Tortoise & Hare)',
     topic: 'Cycle Detection & Invariants',
     duration: '0:50',
-    certifiedBy: 'Anil Sharma (Senior Sign Linguistics)',
-    certificationOrg: 'National Institute for Empowerment of Persons with Multiple Disabilities',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    curriculumLead: 'English text only',
+    pedagogicalFocus: 'Text explanation of cycle detection',
+    videoUrl: '',
     posterUrl:
       'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
     targetOperation: 'search',
@@ -234,9 +234,9 @@ export const islLessons: ISLLesson[] = [
     title: 'Lesson 4: Doubly Linked Lists & Bidirectional Pointers',
     topic: 'Doubly Linked Lists',
     duration: '0:45',
-    certifiedBy: 'Prof. R. Sundararajan',
-    certificationOrg: 'National Association of the Deaf (NAD) Certified Educator',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    curriculumLead: 'English text only',
+    pedagogicalFocus: 'Text explanation of doubly linked lists',
+    videoUrl: '',
     posterUrl:
       'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80',
     targetOperation: 'insertDoublyHead',
@@ -317,11 +317,13 @@ export const ISLPlayer: React.FC<ISLPlayerProps> = ({
 
   // Seek video when student clicks a transcript cue
   const handleSeekToCue = (startSeconds: number, cueId: string) => {
-    if (!videoRef.current) return;
-    videoRef.current.currentTime = startSeconds;
+    setCurrentTime(startSeconds);
     setActiveCueId(cueId);
-    if (videoRef.current.paused) {
-      videoRef.current.play().catch(() => {});
+    if (videoRef.current && activeLesson.videoUrl) {
+      videoRef.current.currentTime = startSeconds;
+      if (videoRef.current.paused) {
+        videoRef.current.play().catch(() => {});
+      }
     }
   };
 
@@ -371,18 +373,21 @@ export const ISLPlayer: React.FC<ISLPlayerProps> = ({
                   gap: '0.25rem'
                 }}
               >
-                <ShieldCheck size={14} /> WCAG 2.2 AAA Certified
+                <ShieldCheck size={14} /> High contrast and keyboard access
               </span>
               <span className="brand-badge" style={{ background: 'rgba(192, 132, 252, 0.15)', color: '#c084fc' }}>
-                Indian Sign Language (ISL)
+                Text lesson — ISL video not included
               </span>
             </div>
             <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginTop: '0.35rem' }}>
-              Inclusive ISL Learning Studio
+              Accessible text lessons
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Certified sign language video lessons synchronized with interactive pointer diagrams and searchable WebVTT transcripts.
+              English explanations you can search and step through with the keyboard. Authentic Indian Sign Language video is not part of this build, so these captions are not labeled as ISL.
             </p>
+            <div className="sr-only" aria-live="polite">
+              {currentActiveCue ? currentActiveCue.text : ''}
+            </div>
           </div>
 
           {onOpenKeyboardShortcuts && (
@@ -430,18 +435,18 @@ export const ISLPlayer: React.FC<ISLPlayerProps> = ({
       </div>
 
       {/* Main Video & Transcript Split View */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: '1.5rem' }}>
+      <div className="lesson-layout">
         {/* Left Column: Video Player & Synchronized Visual Reference */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#f8fafc' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#f8fafc', overflowWrap: 'anywhere' }}>
                 {activeLesson.title}
               </h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
                 <ShieldCheck size={14} color="var(--accent-emerald)" />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  Reviewed by <strong>{activeLesson.certifiedBy}</strong> ({activeLesson.certificationOrg})
+                  {activeLesson.curriculumLead} • <em>{activeLesson.pedagogicalFocus}</em>
                 </span>
               </div>
             </div>
@@ -483,18 +488,29 @@ export const ISLPlayer: React.FC<ISLPlayerProps> = ({
               position: 'relative'
             }}
           >
-            <video
-              ref={videoRef}
-              controls
-              onTimeUpdate={handleTimeUpdate}
-              poster={activeLesson.posterUrl}
-              style={{ width: '100%', maxHeight: '360px', display: 'block', outline: 'none' }}
-              aria-label={activeLesson.title}
-            >
-              <source src={activeLesson.videoUrl} type="video/mp4" />
-              <track kind="captions" srcLang="en" label="English ISL Cues" default />
-              Your browser does not support HTML5 video.
-            </video>
+            {activeLesson.videoUrl ? (
+              <video
+                ref={videoRef}
+                controls
+                onTimeUpdate={handleTimeUpdate}
+                poster={activeLesson.posterUrl}
+                style={{ width: '100%', maxHeight: '360px', display: 'block', outline: 'none' }}
+                aria-label={activeLesson.title}
+              >
+                <source src={activeLesson.videoUrl} type="video/mp4" />
+                <track kind="captions" srcLang="en" label="English captions" default />
+                Your browser does not support HTML5 video.
+              </video>
+            ) : (
+              <div style={{ padding: '1.25rem 1.1rem', minHeight: '180px' }} role="note">
+                <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  No sign-language video is attached to this lesson. Use the transcript to move through the explanation. Arrow keys work when a transcript line is focused.
+                </p>
+                <p style={{ margin: 0, fontSize: '1rem', lineHeight: 1.55, color: 'var(--text-primary)' }}>
+                  {currentActiveCue?.text}
+                </p>
+              </div>
+            )}
 
             {/* Live Diagram Synchronized Callout Overlay */}
             {currentActiveCue?.diagramNote && (

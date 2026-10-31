@@ -17,13 +17,16 @@ const shortcuts: ShortcutItem[] = [
   { keyLabel: '→', description: 'Step forward one execution state', category: 'Visualizer Controls' },
   { keyLabel: '←', description: 'Step backward one execution state', category: 'Visualizer Controls' },
   { keyLabel: 'R', description: 'Reset diagram simulation to starting state', category: 'Visualizer Controls' },
-  { keyLabel: '1', description: 'Switch to Interactive Studio tab', category: 'Navigation' },
-  { keyLabel: '2', description: 'Switch to PYQ Intelligence Drawer tab', category: 'Navigation' },
-  { keyLabel: '3', description: 'Switch to Inclusive ISL Classroom tab', category: 'Navigation' },
-  { keyLabel: '4', description: 'Switch to 8 Validation Gates tab', category: 'Navigation' },
-  { keyLabel: 'H', description: 'Toggle WCAG 2.2 AAA High-Contrast Mode', category: 'Accessibility' },
-  { keyLabel: 'V', description: 'Toggle Live Speech vocalizer', category: 'Accessibility' },
-  { keyLabel: '?', description: 'Toggle this Keyboard Shortcuts cheat-sheet', category: 'Accessibility' },
+  { keyLabel: '0', description: 'Open Explore', category: 'Navigation' },
+  { keyLabel: '1', description: 'Open Learn', category: 'Navigation' },
+  { keyLabel: '2', description: 'Open Practice', category: 'Navigation' },
+  { keyLabel: '3', description: 'Open About', category: 'Navigation' },
+  { keyLabel: '4', description: 'Open the media studio', category: 'Navigation' },
+  { keyLabel: '5', description: 'Open STEM labs', category: 'Navigation' },
+  { keyLabel: '6', description: 'Open the reliability gates', category: 'Navigation' },
+  { keyLabel: 'H', description: 'Toggle high contrast', category: 'Accessibility' },
+  { keyLabel: 'T', description: 'Toggle light and dark theme', category: 'Accessibility' },
+  { keyLabel: '?', description: 'Toggle this keyboard shortcut list', category: 'Accessibility' },
   { keyLabel: 'Esc', description: 'Close any active modal or dialog', category: 'Accessibility' }
 ];
 
@@ -52,10 +55,10 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ 
         style={{
           maxWidth: '620px',
           width: '100%',
-          background: '#090d16',
-          border: '1px solid var(--accent-cyan)',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-active)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.25)',
+          boxShadow: 'var(--shadow-elevated)',
           padding: '1.5rem',
           position: 'relative'
         }}
@@ -63,15 +66,15 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ 
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <div style={{ background: 'rgba(56, 189, 248, 0.15)', padding: '0.4rem', borderRadius: 'var(--radius-sm)' }}>
+            <div style={{ background: 'rgba(2, 132, 199, 0.12)', padding: '0.4rem', borderRadius: 'var(--radius-sm)' }}>
               <Keyboard size={20} color="var(--accent-cyan)" />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f8fafc' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 Keyboard Accessibility Navigation
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Full mouse-free navigation adhering to WCAG 2.2 AAA guidelines
+                Keyboard navigation for the main learning controls. This list is not a compliance certificate.
               </p>
             </div>
           </div>
@@ -103,24 +106,24 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ 
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '0.5rem 0.75rem',
-                        background: 'rgba(255, 255, 255, 0.03)',
+                        background: 'var(--bg-surface)',
                         borderRadius: 'var(--radius-sm)',
                         border: '1px solid var(--border-subtle)'
                       }}
                     >
-                      <span style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
                         {item.description}
                       </span>
                       <kbd
                         style={{
-                          background: '#020617',
-                          border: '1px solid var(--border-subtle)',
+                          background: 'var(--bg-elevated)',
+                          border: '1px solid var(--border-medium)',
                           borderRadius: '4px',
                           padding: '0.2rem 0.6rem',
                           fontFamily: 'var(--font-mono)',
                           fontSize: '0.8rem',
                           color: 'var(--accent-cyan)',
-                          boxShadow: '0 2px 0 rgba(0,0,0,0.5)',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
                           minWidth: '28px',
                           textAlign: 'center'
                         }}
