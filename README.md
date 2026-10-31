@@ -14,7 +14,7 @@
 
 > **From Your Textbook to an Experience You Can Explore.**
 > 
-> Interactive 2D and 3D STEM lessons, with Cloudinary media delivery and practice questions that are labeled as practice. Accessibility includes keyboard access, high contrast, and English text lessons. This repository has not had a formal WCAG audit.
+> Interactive 2D and 3D STEM lessons, with Cloudinary media delivery and practice questions that are labeled as practice. Accessibility includes keyboard access, high contrast, and English text lessons. On 31 October 2026 the automated accessibility suites passed 99/99. That run checks sampled contrast tokens, focus behavior, voice-guide controls, and name/role/value helpers. It is not a WCAG conformance audit.
 
 <div align="center">
 
@@ -23,7 +23,7 @@
 [![Type Safety](https://img.shields.io/badge/Type%20Safety-Zod%20Contracts%20(100%25)-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Cloudinary Media Pipeline](https://img.shields.io/badge/Media-Cloudinary%20Signed%20Pipeline-blue?style=for-the-badge&logo=cloudinary)](https://cloudinary.com)
 [![Tests](https://img.shields.io/badge/Tests-run%20npm%20test-success?style=for-the-badge)](./README.md)
-[![Accessibility](https://img.shields.io/badge/Accessibility-themes%20included%2C%20no%20formal%20WCAG%20audit-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
+[![Accessibility](https://img.shields.io/badge/Accessibility-31%20Oct%202026%20checks%2099%2F99%2C%20not%20certified-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Notion Documentation](https://img.shields.io/badge/Notion%20Docs-Submission%20Ready-000000?style=for-the-badge&logo=notion)](./NOTION_DOCUMENTATION.md)
 
 </div>
@@ -162,7 +162,7 @@ STEM concepts are inherently multi-dimensional, dynamic, and temporal. When seco
 | Traditional Textbook Approach | ConceptLens Interactive Experience |
 | :--- | :--- |
 | **Static Ink on Paper**: Fixed 2D view angles obscure internal anatomy. | **Interactive 3D Three.js Models**: 360° orbit, zoom, and raycasting organelle selection. |
-| **A flat page does not announce changes.** | Keyboard access, a light default theme, high contrast (`[H]`), optional browser speech from Accessibility settings, and polite live regions. No formal WCAG audit. |
+| **A flat page does not announce changes.** | Keyboard access, a light default theme, high contrast (`[H]`), optional browser speech from Accessibility settings, and polite live regions. Automated checks on 31 October 2026 passed 99/99. That run is not a conformance claim. |
 | **Heavy Uncompressed Photos**: Smartphone photos of pages waste 4–8MB of bandwidth. | **Cloudinary Signed Pipeline**: Automatic WebP/AVIF delivery (`f_auto`), perceptual compression (`q_auto`), and edge sharpening (`e_sharpen`). |
 | **Disconnected Quiz Questions**: Answer keys printed at the back of the book without context. | **Active Practice Sandbox**: Real-time evaluation, instant feedback, and marking rubric explanations. |
 | **Fragile Remote 3D Assets**: 50MB remote `.gltf` files fail on low-bandwidth school networks. | **100% Procedural Geometries**: Instant 0ms render with 2D SVG fallbacks for WebGL context loss. |
@@ -211,7 +211,7 @@ ConceptLens is structured around four clear, focused destinations:
 | **8-Stage Reliability Gates** | Implemented for linked lists | Floyd cycle detection, a confidence warning below 0.80, and a review path. This does not mean every screen on the site passed every gate. |
 | **Cloudinary Media Studio & Delivery** | ✅ **Verified in code + tests** | Media Studio: status badge, signed upload (`/signature` + direct CDN or `/direct` proxy), `/transform-spec` NL engine, slash-delimited `f_auto`/`q_auto`, low-data eco, AI ops + educational safeguard, video variants. Demo cloud for presets when account unreachable. See [Complete Cloudinary usage](docs/CLOUDINARY-COMPLETE-USAGE.md). Re-verify Render env before live upload claims. |
 | **ConceptLens Everywhere Extension** | ✅ **Verified** | Manifest V3 Chrome extension with activeTab reading assistance, dyslexia typography, and isolated Shadow DOM. |
-| **Global Readability & Design Tokens** | Token review only | Light, dark, high-contrast, and low-stimulation tokens exist. The ADHD timer has ready, running, paused, and completed labels. This is not a formal WCAG 2.2 audit and not a conformance claim. |
+| **Global Readability & Design Tokens** | Automated check, 31 Oct 2026 | `contrastDesignTokens.test.ts` passed 11/11. Sampled primary text is asserted at 7:1, other sampled body text at 4.5:1, and focus rings plus diagram strokes at 3:1, on light, dark, and high-contrast tokens. The ADHD timer has ready, running, paused, and completed labels. This is not a conformance claim. |
 | **Website-Wide Voice Guide** | Implemented | "Guide Me" and `[G]` use browser speech, with visible text when speech is unavailable. Not re-checked against every page in this pass. |
 | **ISL resources** | Not in the finale demo | The schema and an unavailable state exist so the app does not invent sign language. This demo does not play a verified Indian Sign Language video. |
 | *Augmented Reality (WebXR) Projection* | ⏳ *Planned (v2.1)* | Planned for browser-based desk projection of biological organs. |
@@ -510,7 +510,20 @@ npm run build
 
 ## 12. Accessibility & Fallback Design
 
-Checked on 30 October 2026 while repairing Focus mode and the signature lesson:
+Automated accessibility suites were run on 31 October 2026 from `server/tests`. All 99 checks passed. They read source and design tokens. They do not operate a screen reader, walk every control, or measure a rendered page. No WCAG conformance level is claimed.
+
+| Suite | Result | What the checks cover |
+| --- | ---: | --- |
+| `contrastDesignTokens.test.ts` | 11/11 | WCAG 2.2 relative luminance on sampled tokens. Primary text is asserted at 7:1. Secondary and muted text are asserted at 4.5:1 (criterion 1.4.3). Focus rings and diagram strokes are asserted at 3:1 (criterion 1.4.11). Light, dark, and high-contrast plates are included. The ADHD timer must show ready, running, paused, and completed in text. |
+| `nonvisualNav.test.ts` | 9/9 | Focused controls are described with name, role, and state. Speech does not start on its own. Shortcuts are ignored while typing. |
+| `voiceGuide.test.ts` | 22/22 | Guide Me stays available. Tours exist for Home, Learn, Biology, Practice, ADHD Space, Media Studio, Accessibility, and About. Speech stops on exit. Missing speech leaves the written instructions. |
+| `experienceRepair.test.ts` | 14/14 | Focus mode keeps page scrolling. The reading ruler does not capture pointer events. Eighteen theme records exist. |
+| `learningExperience.test.ts` | 29/29 | Theme flags for spacing, large text, geometric quiz markers, a 48px target flag, optional speech, and reduced motion. The 48px check reads the flag. It does not measure hit targets on screen. |
+| `islIntegration.test.ts` | 14/14 | ISL keyboard controls in source, and an honest empty state when this project does not host a checked video. |
+
+Still outside this run: a screen-reader pass, a full keyboard walk, contrast of every component, and pixel measurement of touch targets.
+
+Checked earlier, on 30 October 2026, while repairing Focus mode and the signature lesson:
 
 | Check | Result |
 | --- | --- |
@@ -518,8 +531,8 @@ Checked on 30 October 2026 while repairing Focus mode and the signature lesson:
 | Keyboard on the signature lesson | Space, arrows, and R apply only while focus is inside the lesson, so they do not block scrolling elsewhere. |
 | Cycle state | The word Stopped, the word CYCLE on the edge, and a polite status region. Color is not the only signal. |
 | Reduced motion | The lesson steps one click at a time when `prefers-reduced-motion` is set. |
-| Contrast | Design tokens target readable text. No formal WCAG audit was run, and no conformance level is claimed. |
-| Speech | Browser speech can be stopped from the Voice Guide. Not re-tested on every route in this pass. |
+| Contrast | The 31 October 2026 token suite passed 11/11 on the sampled pairs above. That is not a conformance claim. |
+| Speech | Browser speech can be stopped from the Voice Guide. The 31 October voice-guide suite passed 22/22 as source checks. It was not re-tested by ear on every route. |
 | ISL | No verified ISL video is part of this demo. |
 
 Accessibility was built into ConceptLens from the first line of code:
@@ -594,6 +607,7 @@ Accessibility was built into ConceptLens from the first line of code:
 - **Milestone 8 (Inclusive settings and Cloudinary React delivery, 25 Oct 2026)**: Light is the unsaved default. Combinable learning modes persist locally. Lesson diagrams use `@cloudinary/react` and `@cloudinary/url-gen` on the public demo cloud.
 - **Milestone 9 (Final Submission & Live Deployment, 25 Oct 2026)**: Integrated verified local OCR equation reader and linear/chemical solvers with **337 / 337 passed tests**. Deployed live on Render at [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/). Finalized 72-second interactive demo runner (`docs/video-demo.html`) and submission documentation.
 - **Milestone 10 (Contrast System, Website-Wide Voice Guide, Authentic ISL Foundation, 29 Oct 2026)**: Established universal semantic design tokens achieving WCAG 2.2 AA contrast compliance across 4 core themes, eliminated the ADHD timer dark-on-dark contrast trap with 4 clear state indicators (ready/running/paused/completed), implemented the website-wide `VoiceGuide` with SpeechSynthesis lifecycle management, and created an authentic ISLRTC & NCERT Indian Sign Language curriculum foundation with strict Zod contracts and honest fallback states. Added 3 automated test suites (46 new tests, 100% passing).
+- **Milestone 11 (Accessibility suite rerun, 31 Oct 2026)**: Re-ran the six accessibility suites: contrast tokens 11/11, nonvisual navigation 9/9, voice guide 22/22, experience repair 14/14, learning experience 29/29, and ISL integration 14/14 (99/99). Recorded in section 12. The run checks source and tokens. It is not a conformance certificate.
 
 ---
 
