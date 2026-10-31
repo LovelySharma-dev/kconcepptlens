@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UploadCloud, Crop, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface MediaUploaderProps {
@@ -6,255 +6,173 @@ interface MediaUploaderProps {
   onLoadBenchmarkFixture: (fixtureName: string) => void;
 }
 
-export const MediaUploader: React.FC<MediaUploaderProps> = ({
-  onDiagramInterpreted,
-  onLoadBenchmarkFixture
-}) => {
+type CropBox = { x: number; y: number; width: number; height: number };
+type UploadSignature = { timestamp: number; signature: string; apiKey: string; cloudName: string; folder: string };
+const MB = 1024 * 1024;
+
+async function qualityWarning(file: File, page = 1): Promise<string | null> {
+  if (file.type === 'application/pdf') return null;
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement('canvas');
+  const scale = Math.min(1, 500 / bitmap.width, 500 / bitmap.height);
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) return null;
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+  let sum = 0;
+  let sumSq = 0;
+  let edge = 0;
+  let previous = 0;
+  let count = 0;
+  for (let i = 0; i < data.length; i += 16) {
+    const gray = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+    sum += gray;
+    sumSq += gray * gray;
+    edge += Math.abs(gray - previous);
+    previous = gray;
+    count++;
+  }
+  const variance = sumSq / count - (sum / count) ** 2;
+  const edgeScore = edge / count;
+  if (variance < 180 || edgeScore < 7) return `Page ${page} looks blurry or low contrast (variance ${Math.round(variance)}, edge score ${edgeScore.toFixed(1)}). Try a sharper scan or crop tighter.`;
+  return null;
+}
+
+export const MediaUploader: React.FC<MediaUploaderProps> = ({ onDiagramInterpreted, onLoadBenchmarkFixture }) => {
+  const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [assetUrl, setAssetUrl] = useState<string | null>(null);
+  const [publicId, setPublicId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [crop, setCrop] = useState<CropBox>({ x: 0.05, y: 0.1, width: 0.9, height: 0.8 });
   const [isUploading, setIsUploading] = useState(false);
-  const [blurWarning, setBlurWarning] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const cropStart = useRef<{ x: number; y: number } | null>(null);
+  const pdf = file?.type === 'application/pdf';
+  const preview = file && pdf && publicId
+    ? `https://res.cloudinary.com/${assetUrl?.match(/res\.cloudinary\.com\/([^/]+)/)?.[1]}/image/upload/pg_${page},f_png,q_auto/${publicId}.png`
+    : previewUrl;
 
-  // Quick preset loader
-  const handleLoadPreset = (preset: 'isc' | 'anna' | 'doubly' | 'circular' | 'ambiguous') => {
-    if (preset === 'isc') {
-      setPreviewUrl(
-        'https://images.openai.com/static-rsc-4/XkO7gSqpO5GsWl0aO5MiA2a68-Km86zCJbP7hacxn3-Do1QE2-J4RFPWiD4Zok-ZLm1nIMK9SHjzJN5m-reEt3NepgQhcNz6LwIOjlOPx1bMFvDtj0NjD7jaa-LMnjFJHJBU7my4ijNaoAQ_LausBSz1KrYgEFjjDhZ1FnR1WuM?purpose=inline'
-      );
-      setBlurWarning(null);
-      onLoadBenchmarkFixture('isc');
-    } else if (preset === 'anna') {
-      setPreviewUrl(
-        'https://images.openai.com/static-rsc-4/NUFO3JUqMASZMvEkj90wZZBIwZZgDux-td4W5U8g84-h9w4dsCB-_1pW0GB1vKg9_oJDTJpyuf2jiPTyKU5XB55khTTfBdg11izPwG9A8rBwUd0EEz5zWlzrmLFx9mhEnDmTIkXHtMAtfg1ZRb44u_CfIxU731I9OnZjFuYlq50?purpose=inline'
-      );
-      setBlurWarning(null);
-      onLoadBenchmarkFixture('anna');
-    } else if (preset === 'doubly') {
-      setPreviewUrl(null);
-      setBlurWarning(null);
-      onLoadBenchmarkFixture('doubly');
-    } else if (preset === 'circular') {
-      setPreviewUrl(null);
-      setBlurWarning(null);
-      onLoadBenchmarkFixture('circular');
-    } else if (preset === 'ambiguous') {
-      setPreviewUrl(null);
-      setBlurWarning('Detected low-contrast scan. OCR confidence on label was 0.48. Triggering Gate 06 Human Correction.');
-      onLoadBenchmarkFixture('ambiguous');
-    }
-  };
+  useEffect(() => () => { if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      alert('Accepted formats: PNG, JPG, WEBP, or PDF (Gate 01 Check)');
+  const selectFile = async (selected?: File) => {
+    if (!selected) return;
+    setError(null); setWarning(null); setAssetUrl(null); setPublicId(null); setPage(1);
+    const allowed = ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'];
+    const maxSize = selected.type === 'application/pdf' ? 30 * MB : 15 * MB;
+    if (!allowed.includes(selected.type) || selected.size > maxSize) {
+      setError(selected.size > maxSize ? `File exceeds the ${selected.type === 'application/pdf' ? '30' : '15'} MB limit.` : 'Choose a PNG, JPG, WEBP, or PDF file.');
       return;
     }
-
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    setBlurWarning(null);
+    setFile(selected);
+    setPreviewUrl(selected.type === 'application/pdf' ? null : URL.createObjectURL(selected));
+    setCrop({ x: 0.05, y: 0.1, width: 0.9, height: 0.8 });
+    setWarning(await qualityWarning(selected));
   };
 
-  const handleProcessMedia = async () => {
-    setIsUploading(true);
-    try {
-      // 1. Ingest into interpretation API
-      const res = await fetch('/api/diagrams/interpret', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageUrl: previewUrl || 'uploaded_sample.png',
-          cropCoordinates: { x: 50, y: 100, width: 600, height: 350 },
-          sourceContext: 'Student custom upload'
-        })
-      });
-      const json = await res.json();
-      if (json.success) {
-        onDiagramInterpreted(json.data);
-      }
-    } catch (err: any) {
-      console.error('Error processing media:', err);
-    } finally {
-      setIsUploading(false);
+  const upload = async (): Promise<{ url: string; id: string; signature: UploadSignature }> => {
+    if (!file) throw new Error('Choose a file first.');
+    const signatureResponse = await fetch('/api/uploads/signature', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder: 'conceptlens/uploads', tags: ['student-upload'] })
+    });
+    const signed = await signatureResponse.json();
+    if (!signatureResponse.ok || !signed.success) throw new Error(signed.error || 'Could not authorize the upload. Configure Cloudinary on the server.');
+    const signature: UploadSignature = signed.data;
+    const form = new FormData();
+    form.append('file', file); form.append('api_key', signature.apiKey); form.append('timestamp', String(signature.timestamp));
+    form.append('signature', signature.signature); form.append('folder', signature.folder); form.append('tags', 'student-upload');
+    form.append('allowed_formats', 'png,jpg,jpeg,webp,pdf');
+    let response: Response | undefined;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        response = await fetch(`https://api.cloudinary.com/v1_1/${signature.cloudName}/auto/upload`, { method: 'POST', body: form });
+        if (response.ok || response.status < 500) break;
+      } catch { if (attempt === 2) throw new Error('Cloudinary upload failed. Check your connection and retry.'); }
+      await new Promise((resolve) => setTimeout(resolve, 400 * 2 ** attempt));
     }
+    if (!response?.ok) throw new Error('Cloudinary rejected this upload. Check server credentials and try again.');
+    const result = await response.json();
+    const record = await fetch('/api/uploads/record', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publicId: result.public_id, originalFileName: file.name, fileType: file.type, bytes: result.bytes, secureUrl: result.secure_url })
+    });
+    if (!record.ok) throw new Error('Upload completed but asset metadata could not be saved.');
+    setAssetUrl(result.secure_url); setPublicId(result.public_id);
+    return { url: result.secure_url, id: result.public_id, signature };
   };
 
-  return (
-    <div className="glass-panel" style={{ marginBottom: '1.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-            Smart Document Ingestion (Cloudinary Pipeline)
-          </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Upload notes, exams, or pick a verified benchmark paper to inspect and validate.
-          </p>
-        </div>
+  const handleProcess = async () => {
+    if (!file) return;
+    setIsUploading(true); setError(null);
+    try {
+      if (pdf && (!assetUrl || !publicId)) {
+        await upload();
+        return;
+      }
+      const uploaded = assetUrl && publicId ? { url: assetUrl, id: publicId, signature: null } : await upload();
+      const width = imageRef.current?.naturalWidth || 1;
+      const height = imageRef.current?.naturalHeight || 1;
+      const cropTransform = `c_crop,x_${Math.round(crop.x * width)},y_${Math.round(crop.y * height)},w_${Math.max(1, Math.round(crop.width * width))},h_${Math.max(1, Math.round(crop.height * height))}`;
+      const cloudName = uploaded.signature?.cloudName || uploaded.url.match(/res\.cloudinary\.com\/([^/]+)/)?.[1];
+      const transformed = `https://res.cloudinary.com/${cloudName}/image/upload/${pdf ? `pg_${page},` : ''}${cropTransform},e_deskew,e_sharpen:80,e_contrast,${pdf ? 'f_png' : 'f_auto'},q_auto/${uploaded.id}${pdf ? '.png' : ''}`;
+      const response = await fetch('/api/diagrams/interpret', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: transformed, cropCoordinates: { x: crop.x, y: crop.y, width: crop.width, height: crop.height }, sourceContext: file.name })
+      });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || 'Diagram interpretation failed.');
+      onDiagramInterpreted(json.data);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Upload failed.'); }
+    finally { setIsUploading(false); }
+  };
 
-        {/* Quick Benchmarks */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
-            onClick={() => handleLoadPreset('isc')}
-          >
-            ISC 2025 (Q11)
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
-            onClick={() => handleLoadPreset('anna')}
-          >
-            Anna Univ (2019)
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', borderColor: 'var(--accent-cyan)' }}
-            onClick={() => handleLoadPreset('doubly')}
-          >
-            Doubly Linked List
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', borderColor: 'var(--accent-purple)' }}
-            onClick={() => handleLoadPreset('circular')}
-          >
-            Circular List ↺
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', borderColor: 'var(--accent-amber)', color: 'var(--accent-amber)' }}
-            onClick={() => handleLoadPreset('ambiguous')}
-          >
-            Test Gate 06 Review
-          </button>
-        </div>
+  const beginCrop = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    cropStart.current = { x, y };
+    setCrop({ x, y, width: 0.01, height: 0.01 });
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const moveCrop = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!cropStart.current || !imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    const start = cropStart.current;
+    setCrop({ x: Math.min(start.x, x), y: Math.min(start.y, y), width: Math.max(0.01, Math.abs(x - start.x)), height: Math.max(0.01, Math.abs(y - start.y)) });
+  };
+
+  return <section className="glass-panel" style={{ marginBottom: '1.5rem' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+      <div><h2 style={{ fontSize: '1.25rem' }}>Smart Document Ingestion</h2><p style={{ color: 'var(--text-secondary)', fontSize: '.85rem' }}>PDF page selection, crop, scan quality check, and signed Cloudinary upload.</p></div>
+      <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+        {(['isc', 'anna', 'doubly', 'circular', 'ambiguous'] as const).map((name) => <button key={name} className="btn-secondary" type="button" onClick={() => onLoadBenchmarkFixture(name)}>{name === 'isc' ? 'ISC example' : name === 'anna' ? 'Delete-node example' : name === 'doubly' ? 'Doubly list' : name === 'circular' ? 'Circular list' : 'Review gate'}</button>)}
       </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: previewUrl ? '1fr 1fr' : '1fr',
-          gap: '1rem'
-        }}
-      >
-        {/* Dropzone Container */}
-        <label
-          style={{
-            border: '2px dashed var(--border-subtle)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '2rem 1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.75rem',
-            cursor: 'pointer',
-            background: 'rgba(2, 6, 23, 0.4)',
-            transition: 'border-color var(--transition-fast)'
-          }}
-        >
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: 'var(--radius-full)',
-              background: 'rgba(56, 189, 248, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--accent-cyan)'
-            }}
-          >
-            <UploadCloud size={24} />
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-              Click to upload scan or paper
-            </span>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              PNG, JPG, or PDF up to 15MB • Cloudinary auto-sharpening active
-            </p>
-          </div>
-        </label>
-
-        {/* Media Preview & Transform Box */}
-        {previewUrl && (
-          <div
-            style={{
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-lg)',
-              background: '#020617',
-              padding: '0.75rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Cloudinary Preview (Sharpened)
-              </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <CheckCircle2 size={12} /> Format Verified
-              </span>
-            </div>
-
-            <div style={{ height: '140px', overflow: 'hidden', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <img
-                src={previewUrl}
-                alt="Uploaded study diagram crop preview"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            </div>
-
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={handleProcessMedia}
-              disabled={isUploading}
-              style={{ width: '100%', justifyContent: 'center' }}
-            >
-              <Crop size={16} />
-              <span>{isUploading ? 'Extracting & Validating...' : 'Interpret Diagram & Run Gates'}</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Blur / Quality Warning */}
-      {blurWarning && (
-        <div
-          style={{
-            marginTop: '1rem',
-            padding: '0.75rem 1rem',
-            background: 'rgba(245, 158, 11, 0.1)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            color: 'var(--accent-amber)',
-            fontSize: '0.85rem'
-          }}
-        >
-          <AlertTriangle size={18} />
-          <span>{blurWarning}</span>
-        </div>
-      )}
     </div>
-  );
+    <div style={{ display: 'grid', gridTemplateColumns: preview ? 'minmax(220px, .7fr) minmax(300px, 1.3fr)' : '1fr', gap: '1rem' }}>
+      <label className="upload-dropzone" style={{ minHeight: 150, border: '2px dashed var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: '1.5rem', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+        <input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={(e) => void selectFile(e.target.files?.[0])} style={{ display: 'none' }} />
+        <span style={{ textAlign: 'center' }}><UploadCloud size={28} /><br /><strong>{file?.name || 'Choose scan or paper'}</strong><br /><small>Images up to 15 MB · PDFs up to 30 MB</small></span>
+      </label>
+      {file && <div style={{ padding: '.75rem', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.5rem' }}><strong>{pdf ? `PDF page ${page}` : 'Drag over the diagram to crop'}</strong>{assetUrl && <CheckCircle2 size={17} color="var(--accent-emerald)" />}</div>
+        {pdf && <label>Page <input type="number" min="1" value={page} onChange={(e) => setPage(Math.max(1, Number(e.target.value)))} style={{ width: 70, margin: '0 .5rem' }} /> Preview uses Cloudinary page slicing (pg_n).</label>}
+        {preview ? <div onPointerDown={beginCrop} onPointerMove={moveCrop} onPointerUp={() => { cropStart.current = null; }} style={{ position: 'relative', marginTop: '.5rem', maxHeight: 280, overflow: 'hidden', touchAction: 'none', cursor: 'crosshair' }}>
+          <img ref={imageRef} src={preview} alt={`Preview of ${file?.name}, page ${page}`} onError={() => pdf && assetUrl && setError('Could not render this PDF page. Check that Cloudinary PDF delivery is enabled.')} style={{ display: 'block', width: '100%', maxHeight: 280, objectFit: 'contain' }} />
+          <div style={{ position: 'absolute', left: `${crop.x * 100}%`, top: `${crop.y * 100}%`, width: `${crop.width * 100}%`, height: `${crop.height * 100}%`, border: '2px solid #38bdf8', background: 'rgba(56,189,248,.12)', pointerEvents: 'none' }} />
+        </div> : <p>Upload the PDF to render and select a page before interpretation.</p>}
+        <button className="btn-primary" type="button" onClick={() => void handleProcess()} disabled={!file || isUploading} style={{ width: '100%', justifyContent: 'center', marginTop: '.75rem' }}><Crop size={16} />{isUploading ? 'Uploading and interpreting…' : pdf && !assetUrl ? 'Upload PDF and choose page' : 'Upload and interpret'}</button>
+      </div>}
+    </div>
+    {warning && <p role="status" style={{ color: 'var(--accent-amber)', marginTop: '.75rem' }}><AlertTriangle size={15} /> {warning}</p>}
+    {error && <p role="alert" style={{ color: '#fb7185', marginTop: '.75rem' }}>{error}</p>}
+  </section>;
 };

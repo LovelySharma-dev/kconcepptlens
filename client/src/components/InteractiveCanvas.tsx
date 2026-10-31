@@ -155,7 +155,9 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
           }
 
           const isForward = endX > startX;
-          const pathD = isForward
+          const pathD = isForward && isDoubly
+            ? `M ${startX} ${startY} Q ${(startX + endX) / 2} ${startY - 20} ${endX} ${endY}`
+            : isForward
             ? `M ${startX} ${startY} L ${endX} ${endY}`
             : `M ${startX} ${startY} C ${startX + 40} ${startY - 60}, ${endX - 40} ${endY - 60}, ${endX} ${endY}`;
 
@@ -186,7 +188,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
             const endX = prevTarget.x + 110;
             const endY = prevTarget.y + 46;
 
-            const pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
+            const pathD = `M ${startX} ${startY} Q ${(startX + endX) / 2} ${startY + 28} ${endX} ${endY}`;
 
             return (
               <g key={`prev-arrow-${node.id}-${prevTarget.id}`}>
@@ -326,7 +328,7 @@ export const InteractiveCanvas: React.FC<InteractiveCanvasProps> = ({
               )}
 
               {/* Memory Address Pill (Top) */}
-              <g transform={`translate(${node.x + 22}, ${node.y - 24})`}>
+              <g transform={`translate(${node.x + 22}, ${node.y + 73})`}>
                 <rect
                   x="0"
                   y="0"

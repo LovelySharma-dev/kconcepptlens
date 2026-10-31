@@ -1,8 +1,4 @@
-import {
-  LinkedListGraph,
-  LinkedListGraphSchema,
-  ValidationResult
-} from '@conceptlens/shared';
+import { LinkedListGraph, LinkedListGraphSchema, ValidationResult } from '@conceptlens/shared';
 import { validateLinkedListInvariants } from './validationService';
 
 export interface InterpretationRequest {
@@ -11,7 +7,6 @@ export interface InterpretationRequest {
   diagramType?: string;
   sourceContext?: string;
 }
-
 export interface InterpretationResponse {
   sessionId: string;
   status: 'completed' | 'needs_review' | 'failed';
@@ -21,222 +16,77 @@ export interface InterpretationResponse {
   message: string;
 }
 
-/**
- * Assign sequential hex memory addresses and layout coordinates to nodes
- */
 function normalizeNodeAddressesAndLayout(graph: LinkedListGraph): LinkedListGraph {
-  let baseAddr = 0x1020;
-  let startX = 80;
-  const startY = 180;
-
-  graph.nodes.forEach((node, idx) => {
-    if (!node.address) {
-      node.address = `0x${(baseAddr + idx * 0x20).toString(16).toUpperCase()}`;
-    }
-    if (!node.x || node.x === 0) {
-      node.x = startX + idx * 180;
-    }
-    if (!node.y || node.y === 0) {
-      node.y = startY;
-    }
-  });
-
-  return graph;
-}
-
-/**
- * Call Gemini 1.5 Flash Vision API with structured JSON output
- */
-async function callGeminiVision(
-  apiKey: string,
-  imageUrl: string
-): Promise<LinkedListGraph | null> {
-  try {
-    const prompt = `You are an expert Computer Science diagram parser. Analyze this image of a linked list data structure (singly linked list, doubly linked list, or circular linked list).
-Identify every node, its data value, its forward pointer (next), backward pointer (prev if doubly linked), and whether it forms a cycle.
-Return a strictly valid JSON object conforming to this schema:
-{
-  "headId": "string (the id of the starting node, or null)",
-  "structureType": "singly" | "doubly" | "circular",
-  "isCircular": boolean,
-  "nodes": [
-    {
-      "id": "node_1",
-      "value": "string or number",
-      "next": "node_2 or null",
-      "prev": "null or previous node id",
-      "confidence": number between 0.0 and 1.0 (OCR confidence for this node label),
-      "address": "simulated hex memory address like 0x1020"
-    }
-  ]
-}`;
-
-    const requestBody: any = {
-      contents: [
-        {
-          parts: [
-            { text: prompt }
-          ]
-        }
-      ],
-      generationConfig: {
-        responseMimeType: 'application/json'
-      }
-    };
-
-    // If data URL with base64 image
-    if (imageUrl.startsWith('data:image/')) {
-      const matches = imageUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
-      if (matches) {
-        requestBody.contents[0].parts.push({
-          inlineData: {
-            mimeType: matches[1],
-            data: matches[2]
-          }
-        });
-      }
-    }
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      }
-    );
-
-    if (!response.ok) {
-      console.warn(`Gemini API returned status ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!candidateText) return null;
-
-    const parsedJson = JSON.parse(candidateText);
-    const validated = LinkedListGraphSchema.safeParse(parsedJson);
-    if (validated.success) {
-      return normalizeNodeAddressesAndLayout(validated.data);
-    }
-    return null;
-  } catch (err) {
-    console.warn('Gemini vision interpretation fallback triggered:', err);
-    return null;
-  }
-}
-
-/**
- * Robust diagram interpretation with validation gate enforcement
- */
-export async function interpretDiagram(
-  req: InterpretationRequest
-): Promise<InterpretationResponse> {
-  const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-
-  let proposedGraph: LinkedListGraph | null = null;
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  // 1. Attempt Real Gemini Multimodal Vision if API Key configured and image provided
-  if (apiKey && req.imageUrl && (req.imageUrl.startsWith('http') || req.imageUrl.startsWith('data:image/'))) {
-    proposedGraph = await callGeminiVision(apiKey, req.imageUrl);
-  }
-
-  // 2. Fallback to Benchmark Fixtures & Presets
-  if (!proposedGraph) {
-    if (req.sourceContext?.includes('ISC') || req.imageUrl?.includes('specimen')) {
-      proposedGraph = {
-        headId: 'node_1',
-        structureType: 'singly',
-        isCircular: false,
-        nodes: [
-          { id: 'node_1', value: 15, next: 'node_2', address: '0x1020', x: 80, y: 180, confidence: 0.98 },
-          { id: 'node_2', value: 28, next: 'node_3', address: '0x1040', x: 260, y: 180, confidence: 0.96 },
-          { id: 'node_3', value: 42, next: null, address: '0x1060', x: 440, y: 180, confidence: 0.97 }
-        ]
-      };
-    } else if (req.sourceContext?.includes('Anna') || req.imageUrl?.includes('anna')) {
-      proposedGraph = {
-        headId: 'n1',
-        structureType: 'singly',
-        isCircular: false,
-        nodes: [
-          { id: 'n1', value: 100, next: 'n2', address: '0x2000', x: 80, y: 180, confidence: 0.95 },
-          { id: 'n2', value: 200, next: 'n3', address: '0x2020', x: 260, y: 180, confidence: 0.94 },
-          { id: 'n3', value: 300, next: 'n4', address: '0x2040', x: 440, y: 180, confidence: 0.93 },
-          { id: 'n4', value: 400, next: null, address: '0x2060', x: 620, y: 180, confidence: 0.97 }
-        ]
-      };
-    } else if (req.sourceContext?.includes('doubly') || req.diagramType === 'doubly') {
-      proposedGraph = {
-        headId: 'node_d1',
-        tailId: 'node_d3',
-        structureType: 'doubly',
-        isCircular: false,
-        nodes: [
-          { id: 'node_d1', value: 12, next: 'node_d2', prev: null, address: '0x1020', x: 80, y: 180, confidence: 0.98 },
-          { id: 'node_d2', value: 24, next: 'node_d3', prev: 'node_d1', address: '0x1040', x: 260, y: 180, confidence: 0.95 },
-          { id: 'node_d3', value: 36, next: null, prev: 'node_d2', address: '0x1060', x: 440, y: 180, confidence: 0.97 }
-        ]
-      };
-    } else if (req.sourceContext?.includes('circular') || req.diagramType === 'circular') {
-      proposedGraph = {
-        headId: 'node_c1',
-        tailId: 'node_c3',
-        structureType: 'circular',
-        isCircular: true,
-        nodes: [
-          { id: 'node_c1', value: 10, next: 'node_c2', address: '0x3010', x: 80, y: 180, confidence: 0.96 },
-          { id: 'node_c2', value: 20, next: 'node_c3', address: '0x3020', x: 260, y: 180, confidence: 0.95 },
-          { id: 'node_c3', value: 30, next: 'node_c1', address: '0x3030', x: 440, y: 180, confidence: 0.97 }
-        ]
-      };
-    } else if (req.sourceContext?.includes('ambiguous')) {
-      proposedGraph = {
-        headId: 'node_1',
-        structureType: 'singly',
-        isCircular: false,
-        nodes: [
-          { id: 'node_1', value: 50, next: 'node_2', address: '0x1020', x: 80, y: 180, confidence: 0.98 },
-          { id: 'node_2', value: '?B7', next: 'node_3', address: '0x1040', x: 260, y: 180, confidence: 0.48 },
-          { id: 'node_3', value: 90, next: null, address: '0x1060', x: 440, y: 180, confidence: 0.96 }
-        ]
-      };
-    } else {
-      proposedGraph = {
-        headId: 'node_1',
-        structureType: 'singly',
-        isCircular: false,
-        nodes: [
-          { id: 'node_1', value: 10, next: 'node_2', address: '0x1020', x: 80, y: 180, confidence: 0.92 },
-          { id: 'node_2', value: 20, next: 'node_3', address: '0x1040', x: 260, y: 180, confidence: 0.91 },
-          { id: 'node_3', value: 30, next: null, address: '0x1060', x: 440, y: 180, confidence: 0.93 }
-        ]
-      };
-    }
-  }
-
-  // 3. Pass through the 8-Stage Validation Gate (Gate 05 & Gate 06)
-  const validation = validateLinkedListInvariants(proposedGraph);
-
-  let status: 'completed' | 'needs_review' | 'failed' = 'completed';
-  let message = 'Diagram structure successfully interpreted and validated.';
-
-  if (!validation.isValid) {
-    status = 'needs_review';
-    message = 'Validation issues detected. Please review and correct the proposed structure.';
-  } else if (validation.needsHumanReview) {
-    status = 'needs_review';
-    message = 'Some labels or connections have low confidence. Please verify before continuing.';
-  }
-
   return {
-    sessionId,
-    status,
-    diagramType: proposedGraph.structureType || 'singly_linked_list',
-    graph: proposedGraph,
-    validation,
-    message
+    ...graph,
+    nodes: graph.nodes.map((node, index) => ({
+      ...node,
+      address: node.address || `0x${(0x1020 + index * 0x20).toString(16).toUpperCase()}`,
+      x: Number.isFinite(node.x) && node.x !== 0 ? (node.x <= 1000 ? 60 + node.x * 0.72 : node.x) : 80 + index * 180,
+      y: Number.isFinite(node.y) && node.y !== 0 ? (node.y <= 1000 ? 100 + node.y * 0.16 : node.y) : 180
+    }))
   };
+}
+
+async function getImagePart(imageUrl: string): Promise<{ mimeType: string; data: string }> {
+  if (imageUrl.startsWith('data:')) {
+    const match = imageUrl.match(/^data:(image\/(?:png|jpeg|webp)|application\/pdf);base64,([\s\S]+)$/);
+    if (!match) throw new Error('Only PNG, JPEG, WEBP, or PDF data URLs are supported.');
+    return { mimeType: match[1], data: match[2] };
+  }
+  const parsed = new URL(imageUrl);
+  if (parsed.protocol !== 'https:' || parsed.hostname !== 'res.cloudinary.com') {
+    throw new Error('Interpretation accepts only HTTPS Cloudinary assets.');
+  }
+  const response = await fetch(parsed, { signal: AbortSignal.timeout(20_000) });
+  if (!response.ok) throw new Error(`Could not fetch uploaded image (${response.status}).`);
+  const mimeType = (response.headers.get('content-type') || '').split(';')[0];
+  if (!['image/png', 'image/jpeg', 'image/webp', 'application/pdf'].includes(mimeType)) throw new Error('Unsupported image asset type.');
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.byteLength > 20 * 1024 * 1024) throw new Error('The transformed image exceeds the 20 MB vision limit.');
+  return { mimeType, data: bytes.toString('base64') };
+}
+
+async function callGeminiVision(apiKey: string, imageUrl: string, context = ''): Promise<LinkedListGraph> {
+  const image = await getImagePart(imageUrl);
+  const prompt = `Parse the linked-list diagram in this media. Include every visible node and pointer, and provide normalized node positions in the range 0..1000 using x/y. Give each node an OCR confidence from 0 to 1 and a sourceLabelCoordinates box in normalized [0..1000] units when possible. Use a unique id per node. Infer singly, doubly, or circular structure only when supported by the diagram. If uncertain, lower confidence. Return only JSON matching: {"headId":string|null,"tailId"?:string|null,"structureType":"singly"|"doubly"|"circular","isCircular":boolean,"nodes":[{"id":string,"value":string|number,"next":string|null,"prev"?:string|null,"x":number,"y":number,"confidence":number,"sourceLabelCoordinates"?:{"x":number,"y":number,"width":number,"height":number}}]}. Context: ${context.slice(0, 1000)}`;
+  const model = process.env.GEMINI_VISION_MODEL || 'gemini-2.5-flash';
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inlineData: image }] }], generationConfig: { responseMimeType: 'application/json', responseSchema: {
+      type: 'OBJECT', required: ['headId', 'structureType', 'isCircular', 'nodes'], properties: {
+        headId: { type: 'STRING', nullable: true }, tailId: { type: 'STRING', nullable: true }, structureType: { type: 'STRING', enum: ['singly', 'doubly', 'circular'] }, isCircular: { type: 'BOOLEAN' },
+        nodes: { type: 'ARRAY', items: { type: 'OBJECT', required: ['id', 'value', 'next', 'confidence'], properties: {
+          id: { type: 'STRING' }, value: { type: 'STRING' }, next: { type: 'STRING', nullable: true }, prev: { type: 'STRING', nullable: true },
+          confidence: { type: 'NUMBER' }, x: { type: 'NUMBER' }, y: { type: 'NUMBER' },
+          sourceLabelCoordinates: { type: 'OBJECT', properties: { x: { type: 'NUMBER' }, y: { type: 'NUMBER' }, width: { type: 'NUMBER' }, height: { type: 'NUMBER' } } }
+        } } }
+      }
+    } } })
+  });
+  const body = await response.json();
+  if (!response.ok) throw new Error(body?.error?.message || `Gemini Vision request failed (${response.status}).`);
+  const text = body?.candidates?.[0]?.content?.parts?.find((part: any) => part.text)?.text;
+  if (!text) throw new Error('Gemini returned no diagram interpretation.');
+  let output: unknown;
+  try { output = JSON.parse(text); } catch { throw new Error('Gemini returned malformed JSON.'); }
+  const parsed = LinkedListGraphSchema.safeParse(output);
+  if (!parsed.success) throw new Error(`Gemini graph did not match the graph contract: ${parsed.error.issues.map((issue) => issue.message).join('; ')}`);
+  return normalizeNodeAddressesAndLayout(parsed.data);
+}
+
+export async function interpretDiagram(req: InterpretationRequest): Promise<InterpretationResponse> {
+  const sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const emptyGraph: LinkedListGraph = { headId: null, structureType: 'singly', isCircular: false, nodes: [] };
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return { sessionId, status: 'failed', diagramType: req.diagramType || 'singly', graph: emptyGraph, validation: validateLinkedListInvariants(emptyGraph), message: 'Vision interpretation is unavailable. Set GEMINI_API_KEY on the server.' };
+  try {
+    if (!req.imageUrl) throw new Error('No uploaded image was provided.');
+    const graph = await callGeminiVision(apiKey, req.imageUrl, req.sourceContext);
+    const validation = validateLinkedListInvariants(graph);
+    const status = validation.isValid && !validation.needsHumanReview ? 'completed' : 'needs_review';
+    return { sessionId, status, diagramType: graph.structureType || 'singly', graph, validation, message: status === 'completed' ? 'Diagram interpreted by Gemini Vision and passed structural validation.' : 'Diagram interpreted, but structural validation or low-confidence labels need your review.' };
+  } catch (error) {
+    return { sessionId, status: 'failed', diagramType: req.diagramType || 'singly', graph: emptyGraph, validation: validateLinkedListInvariants(emptyGraph), message: error instanceof Error ? error.message : 'Diagram interpretation failed.' };
+  }
 }

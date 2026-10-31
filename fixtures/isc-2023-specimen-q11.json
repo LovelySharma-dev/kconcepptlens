@@ -1,13 +1,13 @@
 {
-  "id": "fixture_isc_2025_q11",
-  "title": "ISC Class XII Computer Science 2025 Specimen - Question 11",
+  "id": "fixture_isc_2023_specimen_q11",
+  "title": "ISC Class XII Computer Science 2023 Specimen - Question 11(a)",
   "source": {
     "exam": "ISC Board",
-    "year": 2025,
+    "year": 2023,
     "subject": "Computer Science (868)",
     "questionNumber": "11(a)",
-    "marks": 3,
-    "originalPaperUrl": "https://images.openai.com/static-rsc-4/XkO7gSqpO5GsWl0aO5MiA2a68-Km86zCJbP7hacxn3-Do1QE2-J4RFPWiD4Zok-ZLm1nIMK9SHjzJN5m-reEt3NepgQhcNz6LwIOjlOPx1bMFvDtj0NjD7jaa-LMnjFJHJBU7my4ijNaoAQ_LausBSz1KrYgEFjjDhZ1FnR1WuM?purpose=inline",
+    "marks": 2,
+    "originalPaperUrl": "https://cisce.org/wp-content/uploads/2022/10/868-COMPUTER-SCIENCE-PAPER-1-1.pdf",
     "cropBoundingBox": {
       "x": 45,
       "y": 120,

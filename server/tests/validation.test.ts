@@ -21,30 +21,30 @@ function runTestSuite() {
     }
   }
 
-  // Test 1: ISC 2025 Specimen Question 11
+  // Test 1: ISC 2023 Specimen Question 11
   const iscFixture = JSON.parse(
-    fs.readFileSync(path.join(fixturesDir, 'isc-2025-q11.json'), 'utf-8')
+    fs.readFileSync(path.join(fixturesDir, 'isc-2023-specimen-q11.json'), 'utf-8')
   );
   const iscValidation = validateLinkedListInvariants(iscFixture.graph);
-  assert(iscValidation.isValid === true, 'ISC 2025 Specimen Q11 graph satisfies all invariants');
-  assert(iscValidation.floydCycleDetected === false, 'ISC 2025 graph is verified acyclic');
+  assert(iscValidation.isValid === true, 'ISC 2023 Specimen Q11 graph satisfies all invariants');
+  assert(iscValidation.floydCycleDetected === false, 'ISC 2023 graph is verified acyclic');
 
   const iscSteps = generateExecutionSteps(iscFixture.graph, {
     operation: 'insertHead',
     value: 9
   });
-  assert(iscSteps.length === 4, 'ISC 2025 insertHead generates exactly 4 discrete execution steps');
+  assert(iscSteps.length === 4, 'ISC 2023 insertHead generates exactly 4 discrete execution steps');
   assert(
     iscSteps[3].currentGraph.headId === iscSteps[1].mutatedNodeId,
-    'ISC 2025 final step correctly points head to newly allocated node'
+    'ISC 2023 final step correctly points head to newly allocated node'
   );
 
-  // Test 2: Anna University 2019
+  // Test 2: synthetic delete-node fixture
   const annaFixture = JSON.parse(
-    fs.readFileSync(path.join(fixturesDir, 'anna-univ-2019.json'), 'utf-8')
+    fs.readFileSync(path.join(fixturesDir, 'delete-node-synthetic.json'), 'utf-8')
   );
   const annaValidation = validateLinkedListInvariants(annaFixture.graph);
-  assert(annaValidation.isValid === true, 'Anna Univ CP5151 graph satisfies all invariants');
+  assert(annaValidation.isValid === true, 'Synthetic delete-node graph satisfies all invariants');
 
   const annaSteps = generateExecutionSteps(annaFixture.graph, {
     operation: 'deleteNode',
@@ -52,7 +52,7 @@ function runTestSuite() {
   });
   assert(
     annaSteps[2].currentGraph.nodes.length === 3,
-    'Anna Univ deleteNode correctly decreases list size to 3 nodes'
+    'DeleteNode correctly decreases list size to 3 nodes'
   );
 
   // Test 3: Reversal Benchmark
@@ -135,6 +135,34 @@ function runTestSuite() {
     invalidDoublyValidation.isValid === false,
     'Gate 05 correctly rejects dangling backward (prev) pointer'
   );
+
+  // Synthetic edge cases for invariant gate coverage.
+  const selfLoop = { headId: 'only', structureType: 'circular' as const, isCircular: true, nodes: [{ id: 'only', value: 1, next: 'only', x: 80, y: 180, confidence: 1 }] };
+  const selfLoopResult = validateLinkedListInvariants(selfLoop);
+  assert(selfLoopResult.isValid, 'Declared single-node circular self-loop is accepted');
+  assert(!selfLoopResult.orphanNodeIds.length, 'Circular self-loop head remains reachable');
+
+  const disconnected = { headId: 'head', isCircular: false, nodes: [
+    { id: 'head', value: 1, next: null, x: 80, y: 180, confidence: 1 },
+    { id: 'orphan', value: 2, next: null, x: 260, y: 180, confidence: 1 }
+  ] };
+  const disconnectedResult = validateLinkedListInvariants(disconnected);
+  assert(disconnectedResult.isValid && disconnectedResult.needsHumanReview, 'Disconnected nodes are flagged for review without being silently discarded');
+  assert(disconnectedResult.orphanNodeIds.includes('orphan'), 'Orphan node id is reported');
+
+  const longChainNodes = Array.from({ length: 24 }, (_, index) => ({
+    id: `long_${index}`, value: index, next: index === 23 ? null : `long_${index + 1}`, x: 80 + index * 180, y: 180, confidence: 1
+  }));
+  const longChainResult = validateLinkedListInvariants({ headId: 'long_0', isCircular: false, nodes: longChainNodes });
+  assert(longChainResult.isValid && longChainResult.orphanNodeIds.length === 0, 'Twenty-four-node chain validates and remains fully reachable');
+
+  const dangling = validateLinkedListInvariants({ headId: 'head', isCircular: false, nodes: [{ id: 'head', value: 1, next: 'missing', x: 80, y: 180, confidence: 1 }] });
+  assert(!dangling.isValid, 'Dangling next pointer is rejected');
+
+  const nonReciprocal = validateLinkedListInvariants({ headId: 'left', structureType: 'doubly' as const, isCircular: false, nodes: [
+    { id: 'left', value: 1, next: 'right', prev: null, x: 80, y: 180, confidence: 1 }, { id: 'right', value: 2, next: null, prev: null, x: 260, y: 180, confidence: 1 }
+  ] });
+  assert(!nonReciprocal.isValid, 'Doubly linked graph with non-reciprocal next/prev pointers is rejected');
 
   console.log(`\n========================================`);
   console.log(`Results: ${passedCount} / ${totalCount} tests passed.`);

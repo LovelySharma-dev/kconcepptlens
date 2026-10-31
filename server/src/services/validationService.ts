@@ -82,6 +82,17 @@ export function validateLinkedListInvariants(graph: LinkedListGraph): Validation
       });
     }
   }
+  if (graph.structureType === 'doubly') {
+    for (const node of graph.nodes) {
+      const next = node.next ? nodeMap.get(node.next) : undefined;
+      const prev = node.prev ? nodeMap.get(node.prev) : undefined;
+      if (next && next.prev !== node.id) issues.push({ gate: 'GATE_05_INVARIANTS', severity: 'error', nodeId: node.id, message: `Doubly linked next pointer is not reciprocal: ${next.id}.prev must point to ${node.id}.` });
+      if (prev && prev.next !== node.id) issues.push({ gate: 'GATE_05_INVARIANTS', severity: 'error', nodeId: node.id, message: `Doubly linked prev pointer is not reciprocal: ${prev.id}.next must point to ${node.id}.` });
+    }
+  }
+  if (graph.structureType === 'doubly' && !graph.isCircular && graph.headId && nodeMap.get(graph.headId)?.prev != null) {
+    issues.push({ gate: 'GATE_05_INVARIANTS', severity: 'error', nodeId: graph.headId, message: 'The head node of a non-circular doubly linked list must have prev = null.' });
+  }
 
   // If there are blocking fatal errors, return early before graph traversal
   if (issues.some((i) => i.severity === 'error')) {
@@ -122,7 +133,7 @@ export function validateLinkedListInvariants(graph: LinkedListGraph): Validation
 
   // 5. Reachability and Orphan Node Analysis
   const visited = new Set<string>();
-  if (graph.headId && !floydCycleDetected) {
+  if (graph.headId) {
     let curr: string | null = graph.headId;
     while (curr !== null && nodeMap.has(curr) && !visited.has(curr)) {
       visited.add(curr);

@@ -13,6 +13,7 @@ import { ValidationInspector } from './components/ValidationInspector';
 import { PYQDrawer } from './components/PYQDrawer';
 import { ISLPlayer } from './components/ISLPlayer';
 import { LiveAnnouncer } from './components/LiveAnnouncer';
+import { PracticeSandbox } from './components/PracticeSandbox';
 import {
   Eye,
   Volume2,
@@ -50,6 +51,7 @@ export const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [currentOperation, setCurrentOperation] = useState<string>('insertHead');
+  const [activePyqId, setActivePyqId] = useState('practice_reverse');
 
   // Gate & Validation States
   const [validationResult, setValidationResult] = useState<ValidationResult>({
@@ -158,6 +160,13 @@ export const App: React.FC = () => {
     if (steps[0]) setLiveAnnouncement(steps[0].screenReaderAnnouncement);
   };
 
+  const handleSeekStep = (index: number) => {
+    setIsPlaying(false);
+    setCurrentStepIndex(index);
+    const announcement = steps[index]?.screenReaderAnnouncement;
+    if (announcement) setLiveAnnouncement(announcement);
+  };
+
   // Switch Operation
   const handleSelectOperation = (op: string) => {
     setCurrentOperation(op);
@@ -167,6 +176,7 @@ export const App: React.FC = () => {
 
   // Load Curated PYQ
   const handleLoadPYQ = (pyq: PYQ) => {
+    setActivePyqId(pyq.id);
     setGraph(pyq.initialGraph);
     setActiveTab('visualizer');
     setCurrentOperation(pyq.solutionOperation);
@@ -355,8 +365,13 @@ export const App: React.FC = () => {
             {/* Media Ingestion & Cloudinary Section */}
             <MediaUploader
               onDiagramInterpreted={(data) => {
+                if (data.status === 'failed') {
+                  setLiveAnnouncement(data.message || 'Diagram interpretation failed.');
+                  return;
+                }
                 setGraph(data.graph);
                 generateStepsForGraph(data.graph, 'insertHead', 9);
+                setLiveAnnouncement(data.message || 'Diagram interpreted.');
                 if (data.status === 'needs_review') {
                   setValidationResult(data.validation);
                   setIsReviewModalOpen(true);
@@ -433,6 +448,7 @@ export const App: React.FC = () => {
               onTogglePlay={handleTogglePlay}
               onStepForward={handleStepForward}
               onStepBackward={handleStepBackward}
+              onSeekStep={handleSeekStep}
               onReset={handleReset}
               speed={playbackSpeed}
               onChangeSpeed={setPlaybackSpeed}
@@ -440,6 +456,8 @@ export const App: React.FC = () => {
 
             {/* Real-time State & Memory Inspector */}
             <StateInspector currentStep={currentStep} />
+
+            <PracticeSandbox key={activePyqId} graph={graph} pyqId={activePyqId} onAnnouncement={setLiveAnnouncement} />
           </div>
         )}
 
@@ -447,7 +465,7 @@ export const App: React.FC = () => {
         {activeTab === 'pyq' && <PYQDrawer onLoadPYQ={handleLoadPYQ} />}
 
         {/* Inclusive ISL Classroom View */}
-        {activeTab === 'isl' && <ISLPlayer />}
+        {activeTab === 'isl' && <ISLPlayer graph={graph} />}
 
         {/* 8 Validation Gates Architecture View */}
         {activeTab === 'gates' && (
