@@ -17,3 +17,4 @@ export * from './schemas/generatedLesson';
 export * from './schemas/cloudinaryTransformation';
 export * from './learning/visualModels';
 export * from './schemas/adhdPlan';
+export * from './schemas/isl';
