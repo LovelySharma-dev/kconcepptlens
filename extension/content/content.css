@@ -1,0 +1,405 @@
+/* ConceptLens Everywhere — Shadow DOM Toolbar & Overlays */
+
+:host {
+  all: initial;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #0f172a;
+  z-index: 2147483647;
+}
+
+/* Reset inside shadow DOM */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* 1. FLOATING ACCESSIBLE TOOLBAR */
+.cl-toolbar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2147483647;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s;
+}
+
+.cl-toolbar.cl-hidden {
+  display: none !important;
+}
+
+.cl-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 6px;
+  border-right: 1px solid rgba(15, 23, 42, 0.12);
+  cursor: grab;
+}
+
+.cl-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.cl-brand-name {
+  font-weight: 700;
+  font-size: 12px;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+}
+
+/* Selection State Pill */
+.cl-selection-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.cl-selection-chip.has-selection {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+/* Button Groups */
+.cl-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cl-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.cl-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.cl-btn:focus-visible {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
+}
+
+.cl-btn-ai {
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.cl-btn-ai:hover {
+  background: #0369a1;
+  color: #ffffff;
+}
+
+.cl-btn-ai:disabled {
+  background: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.cl-btn-icon {
+  padding: 6px;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.cl-btn-active {
+  background: #e2e8f0;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* 2. READING RULER OVERLAY */
+.cl-ruler-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2147483640;
+}
+
+.cl-ruler-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+  transition: height 0.05s ease-out, top 0.05s ease-out;
+}
+
+.cl-ruler-aperture {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: transparent;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.65), inset 0 0 16px rgba(2, 132, 199, 0.08);
+  pointer-events: none;
+  transition: top 0.05s ease-out, height 0.1s ease;
+}
+
+/* 3. RESULT MODAL / DRAWER */
+.cl-drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.cl-drawer-modal {
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: clFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes clFadeIn {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.cl-drawer-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.cl-drawer-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cl-drawer-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cl-badge-provider {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+.cl-badge-deterministic {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.2);
+}
+
+.cl-drawer-body {
+  padding: 18px;
+  overflow-y: auto;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cl-snippet-quote {
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-left: 3px solid #0284c7;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+  font-style: italic;
+  max-height: 90px;
+  overflow-y: auto;
+}
+
+.cl-result-section {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.cl-result-section h4 {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cl-result-section p {
+  color: #334155;
+  font-size: 13px;
+}
+
+.cl-terms-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cl-terms-list li {
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.cl-terms-list strong {
+  color: #0284c7;
+}
+
+.cl-drawer-footer {
+  padding: 12px 18px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.cl-privacy-pill {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Spinner */
+.cl-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #0284c7;
+  border-radius: 50%;
+  animation: clSpin 0.8s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes clSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dark mode inside shadow DOM */
+@media (prefers-color-scheme: dark) {
+  :host {
+    color: #f8fafc;
+  }
+  .cl-toolbar {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .cl-brand-name {
+    color: #f8fafc;
+  }
+  .cl-selection-chip {
+    background: #334155;
+    color: #cbd5e1;
+  }
+  .cl-selection-chip.has-selection {
+    background: #0369a1;
+    color: #f0f9ff;
+  }
+  .cl-btn {
+    color: #cbd5e1;
+  }
+  .cl-btn:hover {
+    background: #334155;
+    color: #f8fafc;
+  }
+  .cl-drawer-modal {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  .cl-drawer-header, .cl-drawer-footer {
+    background: #0f172a;
+    border-color: #334155;
+  }
+  .cl-drawer-title {
+    color: #f8fafc;
+  }
+  .cl-snippet-quote {
+    background: #0f172a;
+    color: #94a3b8;
+  }
+  .cl-result-section {
+    background: #0f172a;
+    border-color: #334155;
+  }
+  .cl-result-section h4 {
+    color: #f8fafc;
+  }
+  .cl-result-section p {
+    color: #cbd5e1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.001s !important;
+    transition-duration: 0.001s !important;
+  }
+}
+
