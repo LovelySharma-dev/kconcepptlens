@@ -10,11 +10,9 @@ import {
 } from '@conceptlens/shared';
 
 import { clientBiologyCatalog } from './data/biologyLessons';
-import { LandingPage } from './components/LandingPage';
 import { LearningLens } from './components/LearningLens';
-import { LessonPractice } from './components/biology/LessonPractice';
-import { type LearningModeId, type LearningPreferences, type ThemeChoice, applyLearningTheme, learningDomClasses, learningDomState, readThemeChoice, removeLearningTheme, resolveTheme, respectSystemReducedMotion, selectStructure } from '@conceptlens/shared';
-import { readDisplayPreferences, readProgress, unitFromLesson, writeDisplayPreferences, writeProgress } from './components/biology/LearningPaths';
+import { type LearningModeId, type LearningPreferences, type ThemeChoice, applyLearningTheme, learningDomClasses, learningDomState, readThemeChoice, removeLearningTheme, resolveTheme, respectSystemReducedMotion } from '@conceptlens/shared';
+import { readDisplayPreferences, writeDisplayPreferences } from './components/biology/LearningPaths';
 
 // Lazy-loaded heavy visualization workspaces & modules
 const BiologyWorkspace = lazy(() =>
@@ -38,6 +36,21 @@ const UniversalDiagramCanvas = lazy(() =>
 const PracticeSandbox = lazy(() =>
   import('./components/PracticeSandbox').then((m) => ({ default: m.PracticeSandbox }))
 );
+const LearnWorkspace = lazy(() =>
+  import('./components/learn/LearnWorkspace').then((m) => ({ default: m.LearnWorkspace }))
+);
+const PracticeWorkspace = lazy(() =>
+  import('./components/practice/PracticeWorkspace').then((m) => ({ default: m.PracticeWorkspace }))
+);
+const AboutPage = lazy(() =>
+  import('./components/about/AboutPage').then((m) => ({ default: m.AboutPage }))
+);
+const HomeView = lazy(() =>
+  import('./components/home/HomeView').then((m) => ({ default: m.HomeView }))
+);
+const ADHDLearningDashboard = lazy(() =>
+  import('./components/adhd/ADHDLearningDashboard').then((m) => ({ default: m.ADHDLearningDashboard }))
+);
 
 import { InteractiveCanvas } from './components/InteractiveCanvas';
 import { StepControls } from './components/StepControls';
@@ -45,6 +58,8 @@ import { StateInspector } from './components/StateInspector';
 import { ValidationInspector } from './components/ValidationInspector';
 import { LiveAnnouncer } from './components/LiveAnnouncer';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { FocusRuler } from './components/FocusRuler';
+import { VoiceGuide } from './components/VoiceGuide';
 
 const WorkspaceLoadingFallback = () => (
   <div
@@ -88,7 +103,10 @@ import {
   Sun,
   Moon,
   Menu,
-  Accessibility
+  Accessibility,
+  Focus,
+  Layers,
+  Compass
 } from 'lucide-react';
 
 // Default Initial Graph (3-node standard)
@@ -159,9 +177,9 @@ const initialDefaultUniversalModel: UniversalInteractiveDiagram = {
 };
 
 export const App: React.FC = () => {
-  // Navigation & Tabs: Home is the landing page. Biology lessons use labeled diagrams.
+  // Navigation & Tabs: 4 primary destinations (Home, Learn, Practice, About) + specialized labs
   const [activeTab, setActiveTab] = useState<
-    'home' | 'biology' | 'cloudinary' | 'practice' | 'isl' | 'stem' | 'gates' | 'about'
+    'home' | 'learn' | 'biology' | 'cloudinary' | 'practice' | 'isl' | 'stem' | 'gates' | 'about' | 'adhd'
   >('home');
 
   // Biology Core State
@@ -363,7 +381,7 @@ export const App: React.FC = () => {
       } else if (e.key === '0') {
         setActiveTab('home');
       } else if (e.key === '1') {
-        setActiveTab('biology');
+        setActiveTab('learn');
       } else if (e.key === '2') {
         setActiveTab('practice');
       } else if (e.key === '3') {
@@ -378,6 +396,9 @@ export const App: React.FC = () => {
         setPreferences((current) => ({ ...current, highContrast: !current.highContrast }));
       } else if (e.key === 't' || e.key === 'T') {
         toggleTheme();
+      } else if (e.key === 'g' || e.key === 'G') {
+        const launcher = document.querySelector<HTMLButtonElement>('.voice-guide-launcher');
+        if (launcher) launcher.click();
       }
     };
 
@@ -446,9 +467,9 @@ export const App: React.FC = () => {
           </button>
           <button
             type="button"
-            className={`tab-btn ${activeTab === 'biology' ? 'active' : ''}`}
-            aria-current={activeTab === 'biology' ? 'page' : undefined}
-            onClick={() => { setActiveTab('biology'); setMenuOpen(false); }}
+            className={`tab-btn ${activeTab === 'learn' || activeTab === 'biology' ? 'active' : ''}`}
+            aria-current={activeTab === 'learn' || activeTab === 'biology' ? 'page' : undefined}
+            onClick={() => { setActiveTab('learn'); setMenuOpen(false); }}
           >
             <Box size={15} />
             <span>Learn</span>
@@ -461,6 +482,26 @@ export const App: React.FC = () => {
           >
             <Award size={15} />
             <span>Practice</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'adhd' ? 'active' : ''}`}
+            aria-current={activeTab === 'adhd' ? 'page' : undefined}
+            onClick={() => { setActiveTab('adhd'); setMenuOpen(false); }}
+            title="ADHD-Friendly Learning Space"
+          >
+            <Sparkles size={15} color="var(--accent-cyan)" />
+            <span>ADHD Space</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'cloudinary' ? 'active' : ''}`}
+            aria-current={activeTab === 'cloudinary' ? 'page' : undefined}
+            onClick={() => { setActiveTab('cloudinary'); setMenuOpen(false); }}
+            title="Cloudinary Media Intelligence Studio"
+          >
+            <Layers size={15} />
+            <span>Media Studio</span>
           </button>
           <button
             type="button"
@@ -519,6 +560,43 @@ export const App: React.FC = () => {
 
           <button
             type="button"
+            className={`toolbar-text-btn ${preferences.focusMode || preferences.adhdFriendly ? 'active' : ''}`}
+            onClick={() => {
+              const active = preferences.focusMode || preferences.adhdFriendly;
+              setPreferences((cur) => {
+                if (active) {
+                  return {
+                    ...removeLearningTheme(cur, 'adhd-friendly'),
+                    focusMode: false,
+                    adhdFriendly: false
+                  };
+                } else {
+                  return {
+                    ...applyLearningTheme(cur, 'adhd-friendly'),
+                    focusMode: true,
+                    adhdFriendly: true
+                  };
+                }
+              });
+              setLiveAnnouncement(
+                preferences.focusMode || preferences.adhdFriendly
+                  ? 'Focus mode off.'
+                  : 'ADHD Focus mode on. Reading ruler and distractions minimized.'
+              );
+            }}
+            aria-pressed={preferences.focusMode || preferences.adhdFriendly}
+            aria-label={preferences.focusMode || preferences.adhdFriendly ? 'Focus mode on' : 'Focus mode off'}
+            title="Toggle ADHD Focus Mode (reading ruler & reduced distractions)"
+          >
+            <Focus size={16} aria-hidden="true" />
+            <span>Focus</span>
+            <span className="theme-card-status">
+              {preferences.focusMode || preferences.adhdFriendly ? 'On' : 'Off'}
+            </span>
+          </button>
+
+          <button
+            type="button"
             className="btn-secondary lens-launch"
             onClick={() => setLensOpen(true)}
             aria-haspopup="dialog"
@@ -530,6 +608,20 @@ export const App: React.FC = () => {
             {preferences.activeThemes.length > 0 && (
               <span className="theme-count">{preferences.activeThemes.length} on</span>
             )}
+          </button>
+
+          <button
+            type="button"
+            className="toolbar-text-btn"
+            onClick={() => {
+              const launcher = document.querySelector<HTMLButtonElement>('.voice-guide-launcher');
+              if (launcher) launcher.click();
+            }}
+            title="Interactive Voice & Task Guide [G]"
+            aria-label="Interactive Voice & Task Guide"
+          >
+            <Compass size={16} aria-hidden="true" />
+            <span>Guide Me</span>
           </button>
 
           <button
@@ -546,179 +638,192 @@ export const App: React.FC = () => {
 
       {/* Main Content View Switcher */}
       <main id="main" className="main-content" tabIndex={-1}>
+        {/* ADHD Focus Mode & Reading Ruler Overlay */}
+        <FocusRuler
+          isActive={preferences.focusMode || preferences.adhdFriendly}
+          preferences={preferences}
+          onPreferences={setPreferences}
+          onAnnounce={setLiveAnnouncement}
+          currentActivity={
+            activeTab === 'home'
+              ? 'Home & Overview'
+              : activeTab === 'learn'
+              ? 'Concept Learning Workspace'
+              : activeTab === 'biology'
+              ? `Biology Lesson: ${currentBioLesson.title}`
+              : activeTab === 'practice'
+              ? 'Practice Workspace'
+              : activeTab === 'adhd'
+              ? 'ADHD-Friendly Study Space'
+              : activeTab === 'stem'
+              ? `STEM Studio: ${activeStemDomain === 'data_structure' ? 'Linked List Engine' : activeStemDomain === 'physics' ? 'Ray Optics' : 'Universal STEM'}`
+              : activeTab === 'about'
+              ? 'Product Architecture & Mission'
+              : 'Learning Workspace'
+          }
+          nextAction={
+            activeTab === 'learn'
+              ? 'Choose a representation (Read, Steps, Practice, Flashcards) to explore this concept'
+              : activeTab === 'adhd'
+              ? 'Choose a micro-task or start a 5-minute focus session'
+              : activeTab === 'biology'
+              ? 'Explore labeled diagram structures or step through the lesson'
+              : activeTab === 'practice'
+              ? 'Paste notes, upload files, capture photos, or dictate notes to generate practice questions'
+              : activeTab === 'stem'
+              ? 'Step forward (Right Arrow) or select a node to inspect'
+              : 'Select a section to learn at your pace'
+          }
+        />
+
         <Suspense fallback={<WorkspaceLoadingFallback />}>
-          {/* TAB 1: LANDING PAGE */}
+          {/* TAB 1: HOME */}
           {activeTab === 'home' && (
-            <LandingPage
+            <HomeView
               preferences={preferences}
-              onPreferences={setPreferences}
+              onNavigateLearn={() => setActiveTab('learn')}
+              onNavigatePractice={() => setActiveTab('practice')}
+              onNavigateADHD={() => setActiveTab('adhd')}
               onOpenAccessibility={() => setLensOpen(true)}
-              onExploreTopic={handleLaunchTopic}
+              onLaunchTopic={handleLaunchTopic}
               onAnnounce={setLiveAnnouncement}
-              onSpeechRate={(rate) => setPreferences((current) => ({ ...current, speechRate: rate }))}
             />
           )}
 
-        {/* TAB 2: BIOLOGY LESSONS */}
-        {activeTab === 'biology' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Topic Switcher Pills */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '0.6rem',
-                background: 'var(--bg-surface)',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '10px',
-                border: '1px solid var(--border-subtle)'
-              }}
-            >
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                {[
-                  { id: 'human_cell', label: 'Human Cell' },
-                  { id: 'human_heart', label: 'Human Heart' },
-                  { id: 'dna_helix', label: 'DNA Double Helix' },
-                  { id: 'neuron', label: 'Neuron' },
-                  { id: 'plant_cell', label: 'Plant Cell' }
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={`btn-secondary ${selectedBioTopic === t.id ? 'active' : ''}`}
-                    aria-pressed={selectedBioTopic === t.id}
-                    onClick={() => handleLaunchTopic(t.id as BiologyTopicId)}
-                    style={{
-                      fontSize: '0.8rem',
-                      padding: '0.35rem 0.75rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.45rem',
-                      borderColor: selectedBioTopic === t.id ? 'var(--accent-cyan)' : undefined,
-                      background: selectedBioTopic === t.id ? 'rgba(56, 189, 248, 0.15)' : undefined
-                    }}
-                  >
-                    <span>{t.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Press [1] to return here
-              </span>
-            </div>
-
-            {/* Biology Workspace */}
-            <BiologyWorkspace
-              lesson={currentBioLesson}
+          {/* TAB 2: LEARN */}
+          {activeTab === 'learn' && (
+            <LearnWorkspace
               preferences={preferences}
               onPreferences={setPreferences}
-              onRepresentation={setRepresentation}
               onAnnounce={setLiveAnnouncement}
-              onOpenPractice={() => setIsPracticeModalOpen(true)}
-              onRestartLesson={() => {
-                setLiveAnnouncement(`Restarted ${currentBioLesson.title} tour.`);
+              onLaunchInteractiveBiology={handleLaunchTopic}
+              onLaunchInteractiveSTEM={(domain) => {
+                setActiveStemDomain(domain);
+                setActiveTab('stem');
               }}
             />
-          </div>
-        )}
+          )}
 
-        {/* TAB 3: CLOUDINARY SIGNED INGESTION & TRANSFORMATION PIPELINE */}
-        {activeTab === 'cloudinary' && (
-          <CloudinaryMediaStudio
-            onSelectTopic={handleLaunchTopic}
-            onAnnounce={setLiveAnnouncement}
-          />
-        )}
+          {/* TAB: DEDICATED BIOLOGY INTERACTIVE ATLAS */}
+          {activeTab === 'biology' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Topic Switcher Pills & Back to Learn button */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '0.6rem',
+                  background: 'var(--bg-surface)',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-subtle)'
+                }}
+              >
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setActiveTab('learn');
+                      setLiveAnnouncement('Returned to lesson workspace.');
+                    }}
+                    style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem', marginRight: '0.5rem' }}
+                  >
+                    ← Back to Lesson
+                  </button>
 
-        {/* TAB 4: EXAM PRACTICE SANDBOX */}
-        {activeTab === 'practice' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="glass-panel" style={{ padding: '1.25rem 1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Award size={22} color="#f59e0b" />
-                    <span>Practice for {currentBioLesson.title}</span>
-                  </h2>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                    Curated questions for this concept. They are not an official exam paper. Answers stay hidden until you choose one.
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {(['human_cell', 'human_heart', 'dna_helix', 'neuron', 'plant_cell'] as BiologyTopicId[]).map((tid) => (
+                  {[
+                    { id: 'human_cell', label: 'Human Cell' },
+                    { id: 'human_heart', label: 'Human Heart' },
+                    { id: 'dna_helix', label: 'DNA Double Helix' },
+                    { id: 'neuron', label: 'Neuron' },
+                    { id: 'plant_cell', label: 'Plant Cell' }
+                  ].map((t) => (
                     <button
-                      key={tid}
+                      key={t.id}
                       type="button"
-                      className={`tag-btn ${selectedBioTopic === tid ? 'active' : ''}`}
-                      onClick={() => setSelectedBioTopic(tid)}
-                      style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }}
+                      className={`btn-secondary ${selectedBioTopic === t.id ? 'active' : ''}`}
+                      aria-pressed={selectedBioTopic === t.id}
+                      onClick={() => handleLaunchTopic(t.id as BiologyTopicId)}
+                      style={{
+                        fontSize: '0.8rem',
+                        padding: '0.35rem 0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                        borderColor: selectedBioTopic === t.id ? 'var(--accent-cyan)' : undefined,
+                        background: selectedBioTopic === t.id ? 'rgba(56, 189, 248, 0.15)' : undefined
+                      }}
                     >
-                      {clientBiologyCatalog[tid]?.title.split(':')[0] || tid}
+                      <span>{t.label}</span>
                     </button>
                   ))}
                 </div>
+
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Interactive Canvas View
+                </span>
               </div>
-            </div>
 
-            <LessonPractice
-              lesson={currentBioLesson}
+              {/* Biology Workspace */}
+              <BiologyWorkspace
+                lesson={currentBioLesson}
+                preferences={preferences}
+                onPreferences={setPreferences}
+                onRepresentation={setRepresentation}
+                onAnnounce={setLiveAnnouncement}
+                onOpenPractice={() => setIsPracticeModalOpen(true)}
+                onRestartLesson={() => {
+                  setLiveAnnouncement(`Restarted ${currentBioLesson.title} tour.`);
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB 3: CLOUDINARY SIGNED INGESTION & TRANSFORMATION PIPELINE */}
+          {activeTab === 'cloudinary' && (
+            <CloudinaryMediaStudio
+              onSelectTopic={handleLaunchTopic}
               onAnnounce={setLiveAnnouncement}
-              onRevisit={(componentId) => {
-                const unit = unitFromLesson(currentBioLesson);
-                const raw = readProgress(currentBioLesson.id);
-                let state = selectStructure(
-                  raw ? { ...JSON.parse(raw), conceptId: currentBioLesson.id } : { conceptId: currentBioLesson.id, stepIndex: 0, selectedComponentId: null, completedStepIndexes: [], answers: {}, mode: 'accessible', lowData: preferences.lowData },
-                  unit,
-                  componentId
-                ).state;
-                state = { ...state, selectedComponentId: componentId };
-                writeProgress(currentBioLesson.id, state);
-                setActiveTab('biology');
-                setLiveAnnouncement(`Back to ${componentId.replaceAll('_', ' ')} in ${currentBioLesson.title}.`);
-              }}
             />
-          </div>
-        )}
+          )}
 
-        {activeTab === 'about' && (
-          <section className="glass-panel path-reading" aria-labelledby="about-title">
-            <p className="path-kicker">The Living Atlas</p>
-            <h2 id="about-title">One concept. Different ways to understand it.</h2>
-            <p>
-              ConceptLens keeps the same curated biology and shows it as a model, a short explanation, one stage at a time, or text.
-              Preferences are display choices. They are not a medical record, and they do not claim that one interface meets every learner.
-            </p>
-            <h3>SDG 4, Quality Education</h3>
-            <p>
-              Offering more than one representation of the same objective is an inclusive-education practice. This product has not been evaluated against SDG 4, and accessibility settings do not by themselves remove educational inequality.
-            </p>
-            <p>
-              <a href="https://sdgs.un.org/goals/goal4" target="_blank" rel="noreferrer">United Nations Sustainable Development Goal 4</a>
-            </p>
-            <h3>What is still limited</h3>
-            <ul>
-              <li>There is no recorded narration, so Listen and follow stays unavailable. Nothing is spoken automatically.</li>
-              <li>There is no reviewed sign-language video. Text on the linked-list page is not sign language.</li>
-              <li>The diagram is a simplified illustration. The structure list and written explanation carry the same science.</li>
-              <li>This build has not had a formal accessibility audit.</li>
-              <li>Signed media upload stays off while the Cloudinary cloud name and API key do not match. Lessons keep working. Unsigned upload is not turned on instead.</li>
-              <li>Pasted text, typed questions, PDF text layers, and four labeled samples can be explained with local rules. Photographs and scanned PDF pages are read with local Tesseract when that engine loads. If it does not load, those uploads stay unread and no text is invented. You confirm the reading before an explanation is built. Handwriting is often weak.</li>
-              <li>Answer suggestions use counted rules in the browser and a local Python file. That is not a trained model.</li>
-              <li>SDG 3 is linked from the cell and heart lessons, and SDG 15 from the plant cell. DNA and the neuron have no curated goal, and none was invented. There is no SDG 7 energy lesson here.</li>
-            </ul>
-            <h3>Other workspaces</h3>
-            <div className="path-options">
-              <button type="button" className="btn-secondary" onClick={() => setActiveTab('cloudinary')}>Media studio</button>
-              <button type="button" className="btn-secondary" onClick={() => setActiveTab('stem')}>STEM labs</button>
-              <button type="button" className="btn-secondary" onClick={() => setActiveTab('gates')}>Reliability gates</button>
-              <button type="button" className="btn-secondary" onClick={() => setActiveTab('isl')}>Linked-list text lesson</button>
+          {/* TAB 4: PRACTICE WORKSPACE */}
+          {activeTab === 'practice' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <PracticeWorkspace
+                preferences={preferences}
+                onPreferences={setPreferences}
+                onAnnounce={setLiveAnnouncement}
+              />
             </div>
-          </section>
-        )}
+          )}
+
+          {/* TAB: ADHD-FRIENDLY LEARNING DASHBOARD */}
+          {activeTab === 'adhd' && (
+            <ADHDLearningDashboard
+              preferences={preferences}
+              onPreferences={setPreferences}
+              onNavigateLearn={() => setActiveTab('learn')}
+              onNavigatePractice={() => setActiveTab('practice')}
+              onLaunchVisualModel={(topicId) => {
+                setSelectedBioTopic(topicId);
+                setActiveTab('biology');
+              }}
+              onAnnounce={setLiveAnnouncement}
+            />
+          )}
+
+          {/* TAB 5: ABOUT PAGE */}
+          {activeTab === 'about' && (
+            <AboutPage
+              onNavigateLearn={() => setActiveTab('learn')}
+              onNavigatePractice={() => setActiveTab('practice')}
+              onOpenAccessibility={() => setLensOpen(true)}
+            />
+          )}
 
         {/* TAB 5: INCLUSIVE ISL CLASSROOM */}
         {activeTab === 'isl' && (
@@ -740,7 +845,19 @@ export const App: React.FC = () => {
           <div>
             {/* Domain Switcher Pill Row */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setActiveTab('learn');
+                    setLiveAnnouncement('Returned to lesson workspace.');
+                  }}
+                  style={{ fontSize: '0.85rem', padding: '0.45rem 0.85rem', marginRight: '0.25rem' }}
+                >
+                  ← Back to Lesson
+                </button>
+
                 <button
                   type="button"
                   className={`btn-secondary ${activeStemDomain === 'universal' ? 'active' : ''}`}
@@ -877,6 +994,9 @@ export const App: React.FC = () => {
                   activePointers={currentStep?.activePointers || { head: graph.headId }}
                   highlightedNodeIds={currentStep?.highlightedNodeIds || []}
                   mutatedNodeId={currentStep?.mutatedNodeId}
+                  highContrast={preferences.highContrast}
+                  colorFriendly={preferences.colorFriendly}
+                  onAnnounce={setLiveAnnouncement}
                 />
 
                 <StepControls
@@ -893,6 +1013,8 @@ export const App: React.FC = () => {
                   onReset={handleReset}
                   speed={playbackSpeed}
                   onChangeSpeed={setPlaybackSpeed}
+                  isMutatingStep={Boolean(currentStep?.mutatedNodeId)}
+                  onAnnouncement={setLiveAnnouncement}
                 />
 
                 <StateInspector currentStep={currentStep} />
@@ -926,8 +1048,8 @@ export const App: React.FC = () => {
                 <div
                   key={g.num}
                   style={{
-                    background: 'rgba(2, 6, 23, 0.6)',
-                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--surface-bg)',
+                    border: '1px solid var(--border-medium)',
                     borderRadius: 'var(--radius-md)',
                     padding: '1.1rem'
                   }}
@@ -991,8 +1113,8 @@ export const App: React.FC = () => {
         onClose={() => setLensOpen(false)}
         onStartLearning={() => {
           setLensOpen(false);
-          setActiveTab('biology');
-          setLiveAnnouncement(`Starting ${currentBioLesson.title}. Your place in this concept stays.`);
+          setActiveTab('learn');
+          setLiveAnnouncement('Starting concept learning workspace. Your place in this concept stays.');
           window.scrollTo({ top: 0, behavior: preferences.reducedMotion || preferences.lowStimulation ? 'auto' : 'smooth' });
         }}
         preferences={preferences}
@@ -1019,6 +1141,19 @@ export const App: React.FC = () => {
             choice === 'system' ? 'Theme will follow this device.' : choice === 'dark' ? 'Dark theme.' : 'Light theme.'
           );
         }}
+      />
+
+      {/* Website-Wide Interactive Voice & Task Guide (Phase 2) */}
+      <VoiceGuide
+        activeTab={activeTab}
+        isLensOpen={lensOpen}
+        preferences={preferences}
+        onAnnounce={setLiveAnnouncement}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          setMenuOpen(false);
+        }}
+        onOpenAccessibility={() => setLensOpen(true)}
       />
     </div>
   );
