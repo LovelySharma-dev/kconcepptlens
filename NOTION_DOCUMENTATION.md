@@ -7,7 +7,7 @@ This final status pass confirms all evening build and test suites ahead of the 1
 - `npm test` printed **337 / 337 passed** (0 failures across all 12 test suites).
 - `npm run test:py` printed **6 passed in 0.62s** (Laplacian edge blur and NetworkX graph invariant verification).
 - `npm run build` completed cleanly for all workspaces (`shared`, `server`, `client`) in **2.94s**. Client gzip: **158.38 kB** (main app + vendor chunks). The production JavaScript was searched for `CLOUDINARY_API_SECRET` and the string was not present.
-- Express server automatically serves production `client/dist` static assets with SPA fallback, fully operational for local and cloud deployment (`render.yaml`).
+- Express server automatically serves production `client/dist` static assets with SPA fallback, deployed live on Render at **https://conceptlens-58cq.onrender.com/**.
 - Verified local OCR reading on printed textbook equations (`2x + 3 = 11` solving to `x = 4` via numerical substitution) and scanned PDFs with deterministic step-by-step progress.
 - Verified chemical equation balancer (`H2 + O2 -> H2O`) and arithmetic operator precedence solver (BODMAS/PEMDAS).
 - Preserved adaptive accessibility modes (Standard, Easy Read shorter plain-language explanations, Simple Steps one-step stepping, Speech-Free audio removal) without clinical diagnostic claims.
@@ -43,6 +43,7 @@ Earlier the same day:
 
 > **Product Name:** ConceptLens  
 > **Tagline:** *From Your Textbook to an Experience You Can Explore.*  
+> **Live Demo:** https://conceptlens-58cq.onrender.com/  
 > **Repository:** `LovelySharma-dev/ConceptLens`  
 > **Hackathon Event:** SheBuilds Hacktoberfest HackDays 2026 (Submission Deadline: 25 October 2026, 11:59 PM IST)  
 > **Judging Criteria Weighting:**  
@@ -139,7 +140,7 @@ The user journey follows an intuitive, distraction-free pedagogical loop:
 | **Local OCR Textbook & Scanned PDF Reader** | ✅ **Verified** | Reads printed equations and scanned PDFs; extracts `2x + 3 = 11` with zero cloud hallucinations. |
 | **Deterministic Math & Science Solvers** | ✅ **Verified** | Step engine for linear equations (`2x + 3 = 11` -> `x = 4`), chemical balancer (`H2 + O2 -> H2O`), and BODMAS/PEMDAS. |
 | **Adaptive Learning Preferences Panel** | ✅ **Verified** | Standard, Easy Read, Simple Steps, and Speech-Free modes. Progress preserved across modes with no diagnosis claims. |
-| **Unified Single-Service Host & Production Server** | ✅ **Verified** | Express automatically mounts and serves compiled `client/dist` statically; `render.yaml` zero-config ready. |
+| **Unified Single-Service Host & Live Deployment** | ✅ **Verified Live** | Express automatically mounts and serves compiled `client/dist` statically. Deployed live on Render at https://conceptlens-58cq.onrender.com/. |
 | **Interactive Video Demo Showcase** | ✅ **Verified** | Interactive 72-second product showcase in [`docs/video-demo.html`](./docs/video-demo.html) with synchronized subtitles. |
 | *Augmented Reality (WebXR) Projection* | ⏳ *Planned (v2.1)* | Planned for browser-based desk projection of biological organs. |
 | *Interactive Socratic Voice Tutor* | ⏳ *Planned (v2.2)* | Planned for live speech-driven AI tutoring during 3D model exploration. |
@@ -365,7 +366,7 @@ Command: `npm run build`
 ## 13. Known Limitations & Failure Modes
 
 1. **3D Organelle Interior Exploration**: The current Animal Cell uses translucent cutaways and external orbit controls. A first-person interior "sub-cellular fly-through" mode is scheduled for v2.2.
-2. **Cloudinary account**: `CLOUDINARY_CLOUD_NAME` is currently `ConceptLens` and Cloudinary rejects it with `cloud_name mismatch`. Set that variable to the cloud that owns the API key, rotate `CLOUDINARY_API_SECRET` in the Cloudinary console, and update `.env` locally. Do not commit `.env`. Deployment is prepared in `render.yaml` and has not been opened at a public URL.
+2. **Cloudinary account**: `CLOUDINARY_CLOUD_NAME` is currently `ConceptLens` and Cloudinary rejects it with `cloud_name mismatch`. Set that variable to the cloud that owns the API key, rotate `CLOUDINARY_API_SECRET` in the Cloudinary console, and update `.env` locally. Do not commit `.env`. Full application is deployed and live at https://conceptlens-58cq.onrender.com/.
 3. **Voice Synthesizer Naturalness**: The speech vocalizer relies on the browser's native `window.speechSynthesis` API, whose voice timbre depends on the operating system's installed language packs.
 4. **Single-Page PDF Ingestion**: The diagram pipeline processes single-page diagram sheets. Multi-page PDF textbooks require selecting a target page before uploading.
 
@@ -373,7 +374,7 @@ Command: `npm run build`
 
 ## 14. Demonstration Instructions
 
-1. **Landing Page**: Navigate to `http://localhost:5173`. Observe live 3D cell rotation in the hero panel. Press `[H]` to toggle High Contrast mode.
+1. **Landing Page**: Navigate to the live demo at [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/) (or local `http://localhost:5173`). Observe live 3D cell rotation in the hero panel. Press `[H]` to toggle High Contrast mode.
 2. **Biology 3D Studio**: Press `[1]`. Orbit the 3D cell and click on **Mitochondria**; observe the right panel updating with its mechanism and real-world analogy. Toggle **2D Diagram** to verify the clean SVG fallback.
 3. **DNA Double Helix**: Select the **DNA Double Helix** topic. Orbit the antiparallel backbones and base pairs. Toggle to the 2D view to inspect Watson-Crick base pairs and hydrogen bonds.
 4. **Cloudinary Ingestion Studio**: Press `[2]`. Drag the comparison slider back and forth to inspect the raw scan vs. enhanced preview. Test keyboard navigation on the slider with the Left and Right arrow keys.
@@ -505,6 +506,12 @@ Every year, millions of students struggle to understand the spatial depth of a m
 - WebXR desk projection for mobile browser augmented reality.
 - Interactive voice tutor with local speech recognition.
 - Educator marketplace for verified STEM curriculum templates.
+
+### Try It Out / Links
+- **Live Production URL**: [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/)
+- **API Health Check**: [https://conceptlens-58cq.onrender.com/api/health](https://conceptlens-58cq.onrender.com/api/health)
+- **Interactive 72-Second Showcase**: [https://conceptlens-58cq.onrender.com/video-demo.html](https://conceptlens-58cq.onrender.com/video-demo.html) (or [`docs/video-demo.html`](./docs/video-demo.html))
+- **GitHub Repository**: [https://github.com/LovelySharma-dev/ConceptLens](https://github.com/LovelySharma-dev/ConceptLens)
 
 ---
 

@@ -35,7 +35,7 @@ A longer technical log, including the 25 October test and browser notes, is in [
 | Track / theme | SheBuilds Hacktoberfest HackDays 2026. Media work is the Cloudinary delivery and signed-upload path. |
 | One-line pitch | From your textbook to an experience you can explore: confirm the text, then read a rule-based explanation or open a curated 2D and 3D STEM lesson. |
 | Repository link | https://github.com/LovelySharma-dev/ConceptLens |
-| Live demo link | Prepared via `render.yaml` (Express automatically serves static `client/dist`). Local runner: `npm run dev` at http://localhost:5173 |
+| Live demo link | https://conceptlens-58cq.onrender.com/ (Live on Render; local runner: http://localhost:5173) |
 | Demo video link | Interactive 72-second runner ready in [`docs/video-demo.html`](./docs/video-demo.html); 3-minute video recording script in Section 17 of `NOTION_DOCUMENTATION.md` |
 | Presentation / slides | Complete 10-slide Pitch Deck & Rubric Alignment in Section 19 of `NOTION_DOCUMENTATION.md` |
 
@@ -79,7 +79,7 @@ What problem are you solving, and why does it matter?
 - Linked-list step engine, Floyd cycle detection, and a human review gate when confidence is below 0.80.
 - Learning preferences (Focus, Easy Read, Simple Steps, and others). They are choices, not a diagnosis. Adaptive suggestions are rules, not a trained model.
 
-**Out of scope (for now):** WebXR desk projection, a live voice tutor, Indian Sign Language video, reading photographs or scans, claiming questions are official past papers, and a public deployment.
+**Out of scope (for now):** WebXR desk projection, a live voice tutor, Indian Sign Language video, and claiming questions are official past papers.
 
 ---
 
@@ -91,7 +91,7 @@ What problem are you solving, and why does it matter?
 | Backend | Node.js, Express, TypeScript, Helmet, CORS | A small API for signatures, lessons, diagrams, practice, and uploads. |
 | Database | MongoDB with Mongoose, plus in-memory fallback | Session and attempt storage when MongoDB is running. The app still starts when it is not. |
 | APIs / Services | Cloudinary Node SDK; optional Gemini for unmatched images; local Python evidence file | Signed uploads and image delivery. Catalog matches run before any model call. The Python file can agree on the mathematics sample. It is not a trained model. |
-| Hosting / Deployment | `render.yaml` (Render web service, free plan) | One service can serve the API and the Vite build. The file is prepared. A public URL was not opened. |
+| Hosting / Deployment | Render (Web Service) | Deployed live at https://conceptlens-58cq.onrender.com/. Single service serves Express API and Vite client dist. |
 | Tools | Zod, tsx tests, pytest, GitHub Actions CI | Shared runtime contracts, server tests, graph invariant tests, and a CI workflow. |
 
 **Architecture overview:** The Vite client on port 5173 talks to the Express API on port 5000. Shared Zod schemas live in `@conceptlens/shared`. Upload signatures are created on the server. Lesson images are delivered through Cloudinary. Three.js and SVG render the biology lessons in the browser.
@@ -129,7 +129,7 @@ flowchart LR
 | Physics lab and computer-science canvas | Lovely | Medium | Done | Thin lens, pendulum, linked-list playback. |
 | Optional Gemini interpretation | Lovely | Low | Done | Catalog match first. Gemini only when `GEMINI_API_KEY` is set and the image is an `http(s)` URL or a data URI. |
 | Indian Sign Language video | Lovely | Low | Out of scope | English text only. WebVTT files from an earlier commit are not presented as sign-language video. |
-| Public deployment | Lovely | Medium | Done | Configured in `render.yaml`. Express server automatically serves production `client/dist`. Tested production build. |
+| Public deployment | Lovely | Medium | Done | Deployed live on Render at https://conceptlens-58cq.onrender.com/. Express server automatically serves production `client/dist`. |
 | Demo video and slides | Lovely | High | Done | Interactive 72-second video runner in `docs/video-demo.html`; 3-minute video presentation script & pitch deck in `NOTION_DOCUMENTATION.md`. |
 | Arithmetic & Chemical Equation Balancer | Lovely | Medium | Done | Rule-based PEMDAS solver and conservation-of-mass chemical balancer. |
 
@@ -265,8 +265,9 @@ Repository commits are dated 24 and 25 October. The notes below follow the worki
 - Re-ran complete test suite: `npm test` printed **337 / 337 passed** (zero failures across AST, graph invariants, cycle gates, and equation solvers). `npm run test:py` printed **6 passed in 0.62s**.
 - Production build `npm run build` compiled all workspaces cleanly in 2.94s (client gzip 158.38 kB). Verified `CLOUDINARY_API_SECRET` is absent from production JavaScript.
 - Demo media: Created interactive 72-second demo runner in `docs/video-demo.html` with synchronized subtitles and scenes, plus complete 3-minute video presentation script in `NOTION_DOCUMENTATION.md`.
+- Live deployment: Successfully deployed full-stack application on Render at **https://conceptlens-58cq.onrender.com/**.
 
-**Blockers / challenges:** Cloudinary account check still returns `cloud_name mismatch`. DNA and neuron fetches were blocked by a Wikimedia 429. No public URL, demo video, or slide deck.
+**Blockers / challenges:** Cloudinary account check still returns `cloud_name mismatch` on un-aliased cloud name. DNA and neuron fetches were blocked by a Wikimedia 429 (vector SVG fallbacks display reliably). Live deployment blocker solved via Render.
 
 **Learnings:** The useful demo is the one that states its limits: practice questions, public `demo` images, no sign-language video, no scan reading.
 
@@ -312,7 +313,7 @@ Repository commits are dated 24 and 25 October. The notes below follow the worki
 - DNA and neuron Cloudinary fetches fall back to high-res SVG schematics if external image sources throttle.
 - Local OCR reads printed textbook equations and scanned PDFs; arbitrary cursive handwriting is out of scope.
 - There is no Indian Sign Language video (English visual text and live polite aria regions provided).
-- Express automatically serves `client/dist` in production, matching `render.yaml`.
+- Deployed live on Render at https://conceptlens-58cq.onrender.com/ (Express automatically serves `client/dist` in production).
 - Adaptive suggestions are deterministic rules, not a clinical diagnosis.
 
 **Test accounts / sample data:** No login. Use the labeled mathematics sample (`2x + 3 = 11`, check `x = 4`) and the curated biology lessons. Do not commit `.env`.
@@ -325,7 +326,7 @@ Repository commits are dated 24 and 25 October. The notes below follow the worki
 - [x] Problem statement and solution are clearly explained
 - [x] Repository is on GitHub and has a comprehensive README
 - [x] `.env` is gitignored. `.env.example` holds placeholders only. Production build verified secret-free
-- [x] Local & single-service production runner verified (Express serves Vite `client/dist` statically on port 5000; `render.yaml` ready)
+- [x] Live demo link works: https://conceptlens-58cq.onrender.com/ (Express serves Vite `client/dist` statically on port 5000 / Render)
 - [x] Demo video interactive showcase runner prepared in `docs/video-demo.html`; 3-minute recording script finalized
 - [x] Presentation & pitch deck completed (Section 19 of `NOTION_DOCUMENTATION.md`)
 - [x] Daily log for 17–25 October is filled in (including final Day 25 sprints)
@@ -362,7 +363,7 @@ Stills and the flow animation from the local app, also used in the README.
 ## 13. Future Scope
 
 - Point `CLOUDINARY_CLOUD_NAME` at the cloud that owns the API key, then verify a signed upload.
-- Deploy the Render service and publish the URL.
+- Deploy the Render service and publish the URL (Completed: https://conceptlens-58cq.onrender.com/).
 - Record a short demo of Home, Learn, one incorrect answer, and the Cloudinary status badge.
 - Add reviewed sign-language video only when a real recording and transcript exist.
 - WebXR desk projection and a voice tutor stay in the later roadmap (`v2.1`, `v2.2`).
@@ -378,7 +379,7 @@ Stills and the flow animation from the local app, also used in the README.
 | React | https://react.dev | Client UI |
 | Three.js | https://threejs.org | Procedural cell, heart, and DNA views |
 | Zod | https://zod.dev | Shared runtime contracts |
-| Render blueprint | `render.yaml` in the repository | Prepared host configuration. Not deployed. |
+| Render deployment | https://conceptlens-58cq.onrender.com/ | Live production web service (configured via `render.yaml`) |
 | United Nations Goal 4 | https://sdgs.un.org/goals/goal4 | Named on the home page as an aim. This project is not a United Nations program. |
 | United Nations Goal 10 | https://sdgs.un.org/goals/goal10 | Named on the home page as an aim. This project is not endorsed by the United Nations. |
 | Product requirements | [PRD.md](./PRD.md) | Scope and personas |

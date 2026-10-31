@@ -4,10 +4,11 @@
 > 
 > Interactive 2D and 3D STEM lessons, with Cloudinary media delivery and practice questions that are labeled as practice. Accessibility includes keyboard access, high contrast, and English text lessons. This repository has not had a formal WCAG audit.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-conceptlens--58cq.onrender.com-success?style=for-the-badge&logo=render)](https://conceptlens-58cq.onrender.com/)
 [![MERN + Three.js](https://img.shields.io/badge/Stack-MERN%20%2B%20Three.js-blueviolet?style=for-the-badge)](https://github.com/LovelySharma-dev/ConceptLens)
 [![TypeScript End-to-End](https://img.shields.io/badge/Type%20Safety-Zod%20Contracts%20(100%25)-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Cloudinary Media Pipeline](https://img.shields.io/badge/Media-Cloudinary%20Signed%20Pipeline-blue?style=for-the-badge&logo=cloudinary)](https://cloudinary.com)
-[![Tests Passing](https://img.shields.io/badge/Tests-see%20Notion%20log-success?style=for-the-badge)](./NOTION_DOCUMENTATION.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-337%2F337%20Passed-success?style=for-the-badge)](./NOTION_DOCUMENTATION.md)
 [![Pytest Passing](https://img.shields.io/badge/Pytest-6%2F6%20Invariants-success?style=for-the-badge&logo=pytest)](https://docs.pytest.org/)
 [![Accessibility Aligned](https://img.shields.io/badge/Accessibility-keyboard%20%2B%20text%20lessons-059669?style=for-the-badge)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![Notion Documentation](https://img.shields.io/badge/Notion%20Docs-Submission%20Ready-000000?style=for-the-badge&logo=notion)](./NOTION_DOCUMENTATION.md)
@@ -102,7 +103,8 @@ Preferences change the presentation. They are choices, not a diagnosis. Nothing 
 
 **ConceptLens** (**The Living Atlas**) is an accessible, multi-disciplinary educational platform designed for **SheBuilds Hacktoberfest HackDays 2026**.
 
-> **Tagline:** *"From Your Textbook to an Experience You Can Explore."*
+> **Tagline:** *"From Your Textbook to an Experience You Can Explore."*  
+> **Live Deployment:** [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/)
 
 Textbook learning forces students to decode multi-dimensional physical, biological, and mathematical structures from ink printed on flat paper. ConceptLens bridges the gap between paper textbooks and cognitive understanding:
 - Accepts a question, pasted notes, a PDF that already has a text layer, or a labeled sample. You confirm that text before it is explained. Photographs and scanned pages are not read, because OCR is not configured.
@@ -361,8 +363,13 @@ The React app calls `/api` on the same origin. It does not read `VITE_API_URL` o
 
 ### Deployment
 
-`render.yaml` describes one Node web service. The production server serves `client/dist` and `/api` when `NODE_ENV=production`. This pass did not open a public URL, so deployment is not verified.
+ConceptLens is deployed live on Render as a unified full-stack service:
+- **Live Production URL:** [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/)
+- **API Health Check:** [https://conceptlens-58cq.onrender.com/api/health](https://conceptlens-58cq.onrender.com/api/health)
 
+Configured via `render.yaml`. The Express production server automatically serves the compiled `client/dist` static assets and `/api` routes from a single service.
+
+To deploy or run production mode locally:
 ```bash
 npm run build
 set NODE_ENV=production
@@ -385,7 +392,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 11. Testing & Verified Build Results
 
-### Automated Test Suite: 194 / 194 on 25 October 2026
+### Automated Test Suite: 337 / 337 on 25 October 2026
 Execute the complete test suite:
 ```bash
 npm test
