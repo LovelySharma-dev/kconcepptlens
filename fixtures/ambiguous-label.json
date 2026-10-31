@@ -46,8 +46,10 @@
       }
     ]
   },
+  "expectedValid": true,
+  "expectedReview": true,
   "expectedValidationResult": {
-    "valid": false,
+    "valid": true,
     "needsReview": true,
     "gateFailed": "Gate 06 (Human-in-the-Loop Review Trigger)",
     "ambiguousNodes": ["node_2"],

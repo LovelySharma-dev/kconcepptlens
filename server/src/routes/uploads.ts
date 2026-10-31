@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { generateUploadSignature } from '../config/cloudinary';
 import { Asset } from '../models/Asset';
-import { isDbConnected } from '../config/db';
+import { inMemoryStore, isDbConnected } from '../config/db';
 
 const router = Router();
 
@@ -11,7 +11,10 @@ const router = Router();
  */
 router.post('/signature', (req: Request, res: Response) => {
   try {
-    const folder = req.body.folder || 'conceptlens/uploads';
+    const folder = 'conceptlens/uploads';
+    if (req.body.folder && req.body.folder !== folder) {
+      return res.status(400).json({ success: false, error: 'Uploads are restricted to the ConceptLens uploads folder.' });
+    }
     const signatureData = generateUploadSignature(folder);
     res.json({
       success: true,
@@ -33,8 +36,11 @@ router.post('/record', async (req: Request, res: Response) => {
   try {
     const { publicId, originalFileName, fileType, bytes, secureUrl, cropCoordinates } = req.body;
 
-    if (!publicId || !secureUrl) {
+    if (!publicId || !secureUrl || typeof secureUrl !== 'string' || !secureUrl.startsWith('https://res.cloudinary.com/')) {
       return res.status(400).json({ success: false, error: 'Missing required asset fields' });
+    }
+    if (typeof bytes !== 'number' || bytes < 0 || bytes > 30 * 1024 * 1024) {
+      return res.status(400).json({ success: false, error: 'Asset size is outside the permitted limit.' });
     }
 
     if (isDbConnected()) {
@@ -47,6 +53,8 @@ router.post('/record', async (req: Request, res: Response) => {
         cropCoordinates
       });
       await asset.save();
+    } else {
+      inMemoryStore.assets.set(publicId, { publicId, originalFileName: originalFileName || 'document.png', fileType: fileType || 'image/png', bytes, secureUrl, cropCoordinates, createdAt: new Date().toISOString() });
     }
 
     res.json({

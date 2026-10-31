@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.000
+A linked list stores values in separate nodes connected by pointers.
+
+00:00:04.000 --> 00:00:08.000
+The head pointer identifies the first node in the list.
+
+00:00:08.000 --> 00:00:12.000
+Each next pointer identifies the following node or NULL.

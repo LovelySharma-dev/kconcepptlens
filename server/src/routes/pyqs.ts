@@ -9,26 +9,25 @@ const router = Router();
 export const curatedPYQs: PYQ[] = [
   {
     id: 'pyq_isc_2025_q11',
-    title: 'ISC Class XII Computer Science 2025 Specimen — Question 11',
+    title: 'ISC Class XII Computer Science 2025 Specimen - Question 11(i)',
     exam: {
       boardOrUniversity: 'ISC',
       year: 2025,
       subjectCode: '868',
       subjectName: 'Computer Science (Paper 1 Theory)',
-      questionNumber: '11(a)',
-      marks: 3,
+      questionNumber: '11(i)',
+      marks: 2,
       sourcePaperUrl:
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
+        'https://cisce.org/wp-content/uploads/2025/04/868-COMPUTER-SCIENCE-PAPER-1-SQP-AK.pdf',
       cropBoundingBox: { x: 45, y: 120, width: 800, height: 450 }
     },
-    conceptTag: 'Singly Linked List - Insertion at Beginning',
+    conceptTag: 'Singly Linked List - Search and Traversal',
     difficulty: 'medium',
     problemStatement:
-      'Given a singly linked list with nodes [15 -> 28 -> 42 -> NULL], write the algorithm to insert a new node with value 9 at the beginning (head) of the list. Trace the pointer updates.',
+      'A linked list is formed from Node objects with fields n and link. Write an algorithm or method FindNode(Node str, int b) to search the linked list for a number.',
     markingSchemeKeyPoints: [
-      'Allocate memory for new node and assign value 9 (1 mark)',
-      'Assign newNode->next = head to link to existing list (1 mark)',
-      'Update head pointer: head = newNode (1 mark)'
+      'Initialize a temporary pointer to the starting node (1 mark)',
+      'Traverse until null, comparing the current node value with b (1 mark)'
     ],
     initialGraph: {
       headId: 'node_1',
@@ -39,7 +38,7 @@ export const curatedPYQs: PYQ[] = [
         { id: 'node_3', value: 42, next: null, address: '0x1060', x: 440, y: 180, confidence: 0.97 }
       ]
     },
-    solutionOperation: 'insertHead',
+    solutionOperation: 'search',
     verifiedAccuracy: true
   },
   {
@@ -151,27 +150,27 @@ export const curatedPYQs: PYQ[] = [
     verifiedAccuracy: true
   },
   {
-    id: 'pyq_anna_univ_2019_q13',
-    title: 'Anna University CP 5151 — Advanced Data Structures & Algorithms Nov/Dec 2019',
+    id: 'pyq_isc_2023_specimen_q11',
+    title: 'ISC Class XII Computer Science 2023 Specimen - Question 11(a)',
     exam: {
-      boardOrUniversity: 'Anna University',
-      year: 2019,
-      subjectCode: 'CP5151',
-      subjectName: 'Advanced Data Structures and Algorithms',
-      questionNumber: 'Part B - Q13(a)',
-      marks: 13,
+      boardOrUniversity: 'ISC',
+      year: 2023,
+      subjectCode: '868',
+      subjectName: 'Computer Science Paper 1 Theory',
+      questionNumber: '11(a)',
+      marks: 2,
       sourcePaperUrl:
-        'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80',
+        'https://cisce.org/wp-content/uploads/2022/10/868-COMPUTER-SCIENCE-PAPER-1-1.pdf',
       cropBoundingBox: { x: 60, y: 210, width: 750, height: 380 }
     },
-    conceptTag: 'Singly Linked List - Deletion of Intermediate Node',
-    difficulty: 'hard',
+    conceptTag: 'Singly Linked List - Insertion at Beginning',
+    difficulty: 'medium',
     problemStatement:
-      'Demonstrate the deletion of an intermediate node containing value 200 from the singly linked list [100 -> 200 -> 300 -> 400 -> NULL]. State intermediate pointer mutations and memory deallocation steps.',
+      'Given a linked list of Node objects with integer num and Node next, write InsertNode(Node starPtr, int n) to insert a new node at the beginning of the list.',
     markingSchemeKeyPoints: [
-      'Traverse with prev and curr pointers until curr->data == 200 (4 marks)',
-      'Rewire prev->next = curr->next to bypass target node (5 marks)',
-      'Free allocated memory for deleted node (4 marks)'
+      'Create a node and store n in its data field (1 mark)',
+      'Set the new node next reference to the old head (1 mark)',
+      'Return or assign the new node as the new head pointer'
     ],
     initialGraph: {
       headId: 'n1',
@@ -183,7 +182,7 @@ export const curatedPYQs: PYQ[] = [
         { id: 'n4', value: 400, next: null, address: '0x5040', x: 620, y: 180, confidence: 0.97 }
       ]
     },
-    solutionOperation: 'deleteNode',
+    solutionOperation: 'insertHead',
     verifiedAccuracy: true
   },
   {
@@ -441,7 +440,8 @@ router.get('/', (req: Request, res: Response) => {
         item.problemStatement.toLowerCase().includes(q) ||
         item.exam.subjectCode.toLowerCase().includes(q) ||
         item.exam.questionNumber.toLowerCase().includes(q) ||
-        item.exam.boardOrUniversity.toLowerCase().includes(q)
+        item.exam.boardOrUniversity.toLowerCase().includes(q) ||
+        item.markingSchemeKeyPoints.some((point) => point.toLowerCase().includes(q))
     );
   }
 

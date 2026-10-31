@@ -8,6 +8,7 @@ interface StepControlsProps {
   onTogglePlay: () => void;
   onStepForward: () => void;
   onStepBackward: () => void;
+  onSeekStep: (stepIndex: number) => void;
   onReset: () => void;
   speed: number;
   onChangeSpeed: (newSpeed: number) => void;
@@ -20,6 +21,7 @@ export const StepControls: React.FC<StepControlsProps> = ({
   onTogglePlay,
   onStepForward,
   onStepBackward,
+  onSeekStep,
   onReset,
   speed,
   onChangeSpeed
@@ -80,6 +82,19 @@ export const StepControls: React.FC<StepControlsProps> = ({
       </div>
 
       {/* Main Playback Buttons */}
+      <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem', minWidth: 150 }}>
+        <span className="sr-only">Jump to step</span>
+        <input
+          type="range"
+          min={0}
+          max={Math.max(totalSteps - 1, 0)}
+          value={Math.min(currentStepIndex, Math.max(totalSteps - 1, 0))}
+          onChange={(event) => onSeekStep(Number(event.currentTarget.value))}
+          disabled={totalSteps <= 1}
+          aria-label="Scrub execution step"
+          style={{ width: '100%', accentColor: '#38bdf8' }}
+        />
+      </label>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <button
           type="button"

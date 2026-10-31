@@ -39,8 +39,8 @@ For deaf and hard-of-hearing students, the challenge is compounded by the lack o
 1. It ingests student notes or exam papers via a **Cloudinary-powered media pipeline**.
 2. It uses vision AI bound by strict **Zod validation gates** to guarantee that diagrams adhere to mathematical graph invariants.
 3. It animates operations through a **deterministic step machine** with live memory/pointer tracking.
-4. It connects lessons to real **Previous-Year Questions (PYQs)** with side-by-side original page references.
-5. It integrates certified **Indian Sign Language (ISL)** clips with synchronized captions.
+4. It connects verified **Previous-Year Questions (PYQs)** to interactive graph examples and official source papers.
+5. It provides searchable WebVTT lesson transcripts and supports reviewed **Indian Sign Language (ISL)** media packs.
 
 ---
 
@@ -120,13 +120,13 @@ Rather than blindly trusting an LLM's vision output, ConceptLens employs validat
 - Human-in-the-Loop review dialog when an ambiguous arrow or label is detected.
 
 ### C. PYQ Intelligence
-- Curated Question Bank with board/university metadata (ISC 2025 Specimen, Anna University 2019).
-- Side-by-side view showing the original exam question paper page crop alongside the interactive sandbox.
-- One-click "Practice this Question" button to initialize the visualizer with the exact nodes from the exam.
+- Searchable and filterable question bank with board, difficulty, year, and source paper metadata.
+- Currently seeded with the official ISC 2025 and 2023 specimen linked-list questions; source links open the original paper.
+- One-click "Send to Sandbox" loads each question's linked-list working graph. Expand the curated bank with educator-verified source and marking-scheme records.
 
 ### D. Inclusive Learning & Indian Sign Language
-- **Reviewed ISL Video Clips**: Authentic sign language explanations synchronized with diagram transitions.
-- **Captions & Transcripts**: Embedded WebVTT tracks with searchable, clickable transcript jumps.
+- **Lesson switcher**: Three lessons for linked-list concepts, head insertion, and cycle detection.
+- **Captions & Transcripts**: Local WebVTT tracks with searchable, clickable transcript jumps and synchronized diagram highlights. Add reviewed MP4 lesson media under `client/public/media/isl/` to enable video playback.
 - **Screen Reader Announcements**: Centralized `aria-live="polite"` region vocalizes every pointer mutation.
 - **High-Contrast & Reduced Motion**: Instant toggle for high-contrast palettes (7:1 contrast) and `@media (prefers-reduced-motion)`.
 
@@ -147,8 +147,9 @@ Rather than blindly trusting an LLM's vision output, ConceptLens employs validat
 | `/api/diagrams/sessions` | `POST` | Persists a validated learning session and its step sequence |
 | `/api/pyqs` | `GET` | Retrieves curated Previous-Year Questions with topic & board filters |
 | `/api/pyqs/:id` | `GET` | Retrieves full PYQ details including source paper page crop coordinates |
-| `/api/lessons/:id` | `GET` | Retrieves lesson data, step explanations, and reviewed ISL resources |
-| `/api/practice/attempts` | `POST` | Records and evaluates a student practice response |
+| `/api/lessons/:id` | `GET` | Retrieves lesson graphs and step explanations |
+| `/api/practice/attempts` | `POST` | Compares pointer rewires to deterministic reference states and saves attempts |
+| `/api/practice/attempts?pyqId=...` | `GET` | Retrieves attempt history for a question |
 
 ---
 
@@ -198,8 +199,8 @@ ConceptLens/
 │   ├── vite.config.ts
 │   └── tsconfig.json
 ├── fixtures/                           # Curated Benchmark Diagrams & Ground Truth
-│   ├── isc-2025-q11.json               # ISC Class XII Specimen Question 11
-│   ├── anna-univ-2019.json             # Anna Univ CP5151 Singly Linked List
+│   ├── isc-2023-specimen-q11.json      # ISC specimen insertion question
+│   ├── delete-node-synthetic.json      # Synthetic delete-node benchmark
 │   ├── reverse-linked-list.json        # 4-node reversal sequence
 │   ├── malformed-cycle.json            # Loop failure fixture (tests Gate 05)
 │   └── ambiguous-label.json            # Uncertain label fixture (tests Gate 06)
@@ -256,6 +257,7 @@ npm run dev
 npm test
 ```
 Executes invariant checks, Floyd's cycle detection, and step generation against the benchmark fixtures.
+`npm run fixtures:generate` creates synthetic edge cases; `npm run benchmark` reports invariant latency, precision, and recovery metrics.
 
 ---
 
@@ -278,12 +280,7 @@ ConceptLens 2.0 is designed from the ground up to be 100% keyboard operable:
 
 ## 📊 Benchmark Dataset
 
-The repository includes 5 verified test fixtures under `fixtures/` used to validate pipeline reliability:
-1. **ISC Class XII 2025 Specimen (Q11)**: Linked list node insertion and pointer modification.
-2. **Anna University 2019 (CP5151)**: Singly linked list traversal and null termination.
-3. **Reversal Sequence**: 4-node singly linked list reversal verifying `prev`, `curr`, and `next` pointer transitions.
-4. **Malformed Cycle**: Contains an unannounced loop; validates that Gate 05 halts execution before rendering.
-5. **Ambiguous Label**: Contains an OCR score `<0.80`; validates that Gate 06 opens the correction UI.
+The repository includes source-linked learning examples and synthetic invariant fixtures. The CI benchmark generates single-node loops, dangling pointers, disconnected subgraphs, and a 24-node chain before reporting results.
 
 ---
 

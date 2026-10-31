@@ -1,13 +1,13 @@
 {
-  "id": "fixture_anna_univ_2019",
-  "title": "Anna University CP 5151 - Advanced Data Structures Nov/Dec 2019",
+  "id": "fixture_delete_node_synthetic",
+  "title": "Synthetic singly linked-list delete-node benchmark",
   "source": {
-    "exam": "Anna University",
-    "year": 2019,
-    "subject": "CP 5151 Advanced Data Structures & Algorithms",
-    "questionNumber": "Part B - Q13(a)",
-    "marks": 13,
-    "originalPaperUrl": "https://images.openai.com/static-rsc-4/NUFO3JUqMASZMvEkj90wZZBIwZZgDux-td4W5U8g84-h9w4dsCB-_1pW0GB1vKg9_oJDTJpyuf2jiPTyKU5XB55khTTfBdg11izPwG9A8rBwUd0EEz5zWlzrmLFx9mhEnDmTIkXHtMAtfg1ZRb44u_CfIxU731I9OnZjFuYlq50?purpose=inline",
+    "exam": "Synthetic Practice Fixture",
+    "year": 2025,
+    "subject": "Data Structures - Linked List",
+    "questionNumber": "Benchmark Delete 01",
+    "marks": 0,
+    "originalPaperUrl": "",
     "cropBoundingBox": {
       "x": 60,
       "y": 210,

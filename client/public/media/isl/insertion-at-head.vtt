@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.000
+Create a new node and store the new value.
+
+00:00:04.000 --> 00:00:08.000
+Set the new node next pointer to the current head.
+
+00:00:08.000 --> 00:00:12.000
+Move head to the new node after its next pointer is set.

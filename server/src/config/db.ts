@@ -31,5 +31,6 @@ export const inMemoryStore = {
   sessions: new Map<string, any>(),
   pyqs: new Map<string, any>(),
   lessons: new Map<string, any>(),
+  assets: new Map<string, any>(),
   attempts: new Array<any>()
 };

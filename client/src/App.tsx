@@ -18,6 +18,7 @@ import { LiveAnnouncer } from './components/LiveAnnouncer';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { InteractivePhysicsStudio } from './components/InteractivePhysicsStudio';
 import { UniversalDiagramCanvas } from './components/UniversalDiagramCanvas';
+import { PracticeSandbox } from './components/PracticeSandbox';
 import {
   Eye,
   Volume2,
@@ -137,6 +138,7 @@ export const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [currentOperation, setCurrentOperation] = useState<string>('insertHead');
+  const [activePyqId, setActivePyqId] = useState('practice_reverse');
 
   // Gate & Validation States
   const [validationResult, setValidationResult] = useState<ValidationResult>({
@@ -295,6 +297,13 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleStepForward, handleStepBackward, handleReset]);
 
+  const handleSeekStep = (index: number) => {
+    setIsPlaying(false);
+    setCurrentStepIndex(index);
+    const announcement = steps[index]?.screenReaderAnnouncement;
+    if (announcement) setLiveAnnouncement(announcement);
+  };
+
   // Switch Operation
   const handleSelectOperation = (op: string) => {
     setCurrentOperation(op);
@@ -305,6 +314,7 @@ export const App: React.FC = () => {
   // Load Curated PYQ
   const handleLoadPYQ = (pyq: PYQ) => {
     setActiveDomain('data_structure');
+    setActivePyqId(pyq.id);
     setGraph(pyq.initialGraph);
     setActiveTab('visualizer');
     setCurrentOperation(pyq.solutionOperation);
@@ -478,6 +488,10 @@ export const App: React.FC = () => {
             {/* Universal Multi-Disciplinary Picture Ingestion Section */}
             <MediaUploader
               onDiagramInterpreted={(data) => {
+                if (data.status === 'failed') {
+                  setLiveAnnouncement(data.message || 'Diagram interpretation failed.');
+                  return;
+                }
                 if (data.domain === 'universal' && data.universalModel) {
                   setUniversalModel(data.universalModel);
                   setActiveDomain('universal');
@@ -494,7 +508,7 @@ export const App: React.FC = () => {
                     setValidationResult(data.validation);
                     setIsReviewModalOpen(true);
                   }
-                  setLiveAnnouncement('Created interactive Linked List diagram.');
+                  setLiveAnnouncement(data.message || 'Created interactive Linked List diagram.');
                 }
               }}
               onLoadBenchmarkFixture={handleLoadBenchmarkFixture}
@@ -685,6 +699,7 @@ export const App: React.FC = () => {
                   onTogglePlay={handleTogglePlay}
                   onStepForward={handleStepForward}
                   onStepBackward={handleStepBackward}
+                  onSeekStep={handleSeekStep}
                   onReset={handleReset}
                   speed={playbackSpeed}
                   onChangeSpeed={setPlaybackSpeed}
@@ -692,6 +707,9 @@ export const App: React.FC = () => {
 
                 {/* Real-time State & Memory Inspector */}
                 <StateInspector currentStep={currentStep} />
+
+                {/* Student Interactive Practice Sandbox */}
+                <PracticeSandbox key={activePyqId} graph={graph} pyqId={activePyqId} onAnnouncement={setLiveAnnouncement} />
               </div>
             )}
           </div>

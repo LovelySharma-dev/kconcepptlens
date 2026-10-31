@@ -18,19 +18,7 @@ const sampleLesson: Lesson = {
       { id: 'node_3', value: 30, next: null, x: 440, y: 180, confidence: 1.0 }
     ]
   },
-  islResource: {
-    id: 'isl_linked_list_intro',
-    title: 'Indian Sign Language (ISL): Introduction to Linked Lists & Pointers',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    thumbnailUrl:
-      'https://images.openai.com/static-rsc-4/oOF1abGF7psRXPa83H4p5CKkqR4Oy5oV7Yet0R8O0n4fmAUz__PAZlwzy6whF7CqoJz7TsXq0iXqyXwPy2YA7lzILOynS-Cp9W11Tlt7gvPfTG4_Fa4kl9mQPVU1KVx5iArse5fuiEEzS9Lxz_BMIyTn1O2LGk3VkNpG7K-TTvM?purpose=inline',
-    vttCaptionsUrl: '/captions/isl_intro.vtt',
-    transcriptText:
-      '[00:00] Hello! Today we learn about Linked Lists in Data Structures.\n[00:05] A node has two parts: data and a pointer.\n[00:10] The pointer points to the address of the next node.\n[00:15] The first node is called the HEAD.\n[00:20] The last node points to NULL, indicating the end of the list.',
-    verifiedByExpert: true,
-    expertName: 'National Association of the Deaf (NAD) Certified Educator'
-  },
-  connectedPYQIds: ['pyq_isc_2025_q11', 'pyq_anna_univ_2019_q13']
+  connectedPYQIds: ['pyq_isc_2025_q11', 'pyq_isc_2023_specimen_q11']
 };
 
 router.get('/:id', (req: Request, res: Response) => {

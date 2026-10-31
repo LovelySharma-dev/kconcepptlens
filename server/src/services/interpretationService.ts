@@ -16,7 +16,6 @@ export interface InterpretationRequest {
   diagramType?: string;
   sourceContext?: string;
 }
-
 export interface InterpretationResponse {
   sessionId: string;
   domain: 'data_structure' | 'physics' | 'universal';
@@ -29,27 +28,16 @@ export interface InterpretationResponse {
   message: string;
 }
 
-/**
- * Assign sequential hex memory addresses and layout coordinates to nodes
- */
 function normalizeNodeAddressesAndLayout(graph: LinkedListGraph): LinkedListGraph {
-  let baseAddr = 0x1020;
-  let startX = 80;
-  const startY = 180;
-
-  graph.nodes.forEach((node, idx) => {
-    if (!node.address) {
-      node.address = `0x${(baseAddr + idx * 0x20).toString(16).toUpperCase()}`;
-    }
-    if (!node.x || node.x === 0) {
-      node.x = startX + idx * 180;
-    }
-    if (!node.y || node.y === 0) {
-      node.y = startY;
-    }
-  });
-
-  return graph;
+  return {
+    ...graph,
+    nodes: graph.nodes.map((node, index) => ({
+      ...node,
+      address: node.address || `0x${(0x1020 + index * 0x20).toString(16).toUpperCase()}`,
+      x: Number.isFinite(node.x) && node.x !== 0 ? (node.x <= 1000 ? 60 + node.x * 0.72 : node.x) : 80 + index * 180,
+      y: Number.isFinite(node.y) && node.y !== 0 ? (node.y <= 1000 ? 100 + node.y * 0.16 : node.y) : 180
+    }))
+  };
 }
 
 /**
@@ -374,3 +362,4 @@ export async function interpretDiagram(
       : 'Diagram successfully parsed and invariants verified.'
   };
 }
+
