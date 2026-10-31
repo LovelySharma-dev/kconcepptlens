@@ -351,10 +351,10 @@ export function lowDataDeliveryUrl(url: string): string | null {
   if (!url.includes('://res.cloudinary.com/')) return null;
   let next = url.replace(/w_\d+/g, 'w_320');
   if (!/w_\d+/.test(next) && next.includes('/upload/')) {
-    next = next.replace('/upload/', '/upload/c_limit,w_320,f_auto,q_auto/');
+    next = next.replace('/upload/', '/upload/c_limit,w_320/f_auto/q_auto/');
   }
   if (!next.includes('f_auto')) {
-    next = next.replace('/upload/', '/upload/f_auto,q_auto/');
+    next = next.replace('/upload/', '/upload/f_auto/q_auto/');
   }
   return next;
 }

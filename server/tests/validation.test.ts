@@ -395,6 +395,10 @@ async function runTestSuite() {
   assert(inspectDirectUpload(pngHeader).ok, 'A PNG data URI passes the pre-upload check');
   const oversized = inspectDirectUpload(`data:image/png;base64,${'A'.repeat(Math.ceil(15 * 1024 * 1024 * 1.4))}`);
   assert(!oversized.ok && oversized.status === 413, 'Oversized uploads are rejected before Cloudinary is called');
+  const mp4Header = 'data:video/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAWlzb21tcDQy';
+  assert(inspectDirectUpload(mp4Header).ok, 'A video/mp4 data URI passes the pre-upload check');
+  const oversizedVideo = inspectDirectUpload(`data:video/mp4;base64,${'A'.repeat(Math.ceil(30 * 1024 * 1024 * 1.4))}`);
+  assert(!oversizedVideo.ok && oversizedVideo.status === 413, 'Oversized videos (>30MB) are rejected before Cloudinary is called');
   const cellUnit: LearningUnitInput = {
     id: 'human_cell',
     title: 'Cell',
