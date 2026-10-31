@@ -14,10 +14,11 @@
     "dev:client": "npm run dev --workspace=client",
     "build": "npm run build --workspace=shared && npm run build --workspace=server && npm run build --workspace=client",
     "start": "npm run start --workspace=server",
-    "test": "npm run test --workspace=server",
+    "test": "npm run test --workspace=server && npm run test:extension && npm run test:py",
+    "test:extension": "tsx extension/tests/extension.test.ts",
     "benchmark": "npm run benchmark --workspace=server",
     "fixtures:generate": "npm run fixtures:generate --workspace=server",
-    "test:py": "python -m pytest python/test_invariants.py",
+    "test:py": "python -m pytest python/test_invariants.py python/test_self_learning.py -q --tb=short",
     "benchmark:py": "python python/benchmark_evaluator.py",
     "dev:py": "python -m uvicorn python.app:app --reload --port 8000",
     "install:all": "npm install"

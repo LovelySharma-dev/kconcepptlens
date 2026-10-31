@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "tsx tests/validation.test.ts",
+    "test": "tsx tests/validation.test.ts && tsx tests/aiValidation.test.ts && tsx tests/learningExperience.test.ts && tsx tests/cloudinaryTransformation.test.ts && tsx tests/experienceRepair.test.ts && tsx tests/scientificVisualizations.test.ts && tsx tests/contrastDesignTokens.test.ts && tsx tests/voiceGuide.test.ts && tsx tests/islIntegration.test.ts",
     "benchmark": "tsx tests/benchmark.ts",
     "fixtures:generate": "tsx tests/generateSyntheticFixtures.ts"
   },
