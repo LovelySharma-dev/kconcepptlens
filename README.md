@@ -53,6 +53,7 @@
 
 [Open Gemma 4](#open-gemma-4) — which open model handles lessons, rewrites, and diagrams.  
 [Best Use of Gemma 4](#best-use-of-gemma-4) — how this learning tool uses that open model.  
+[DigitalOcean open-source AI](#digitalocean-open-source-ai) — where the open model sits in the product.  
 [How it works](#how-it-works) — animated flow and screenshots of the current app.  
 [Complete Cloudinary usage](docs/CLOUDINARY-COMPLETE-USAGE.md) — signed uploads, transforms, Media Studio, env, honesty matrix.  
 [4-minute judging walkthrough](docs/WALKTHROUGH-4MIN.md) — timed say-and-click script for demo day.  
@@ -363,11 +364,20 @@ Gemma 4 is a lightweight open-weights model. ConceptLens reaches it through the 
 
 **A working prototype.** Set `GEMMA_API_KEY`, `GEMMA_MODEL=gemma-4-31b-it`, `GEMMA_FAST_MODEL=gemma-4-26b-a4b-it`, and `AI_PROVIDER=gemma`. If the call is missing, rate-limited, or not valid JSON, the server uses Hugging Face when `HF_TOKEN` is set, then the local rules engine. The class still gets a lesson. `AI_PROVIDER=gemini` is the closed-model opt-out.
 
-### Open-weight AI in the product
+### DigitalOcean open-source AI
 
-The open model is part of how the product works, not a sticker on an unrelated demo. Lesson generation, curriculum translation, and unmatched diagram reading go through Gemma 4 open weights. The local rules engine remains so the same screens still run with no key. The repository is MIT licensed.
+DigitalOcean’s Hacktoberfest brief asks for an original project where open-source or open-weight AI is an important part of how it works. That can be an agent skill, an open-weight model, or an open-source model harness. The listed recognition for that brief is a Hacktoberfest 2026 winner DEV badge and an MLH swag bag. This README records how the project fits the brief. It is not a claim that the badge or the swag has been awarded.
 
-This is the role those two briefs ask for: a multimodal learning tool on Gemma 4, and an original project where open-weight AI does real work. It is not a claim that a prize, a DEV badge, or an MLH swag bag has been awarded.
+ConceptLens uses an open-weight model for the teaching loop:
+
+| Piece | What it does here |
+| :--- | :--- |
+| Open-weight model | Gemma 4. `gemma-4-31b-it` writes lessons, translates curriculum text, and reads unmatched diagrams. `gemma-4-26b-a4b-it` rewrites that material into simpler language, summaries, definitions, and study notes. |
+| How it is called | The Gemini API, with `GEMMA_API_KEY`. The weights are open. The app does not send those tasks to a closed Gemini model unless `AI_PROVIDER=gemini` is set on purpose. |
+| Harness around the model | Zod checks every lesson before it is shown. Thinking traces are dropped. A bad or missing response falls through to Hugging Face when `HF_TOKEN` is set, then to the local rules engine. |
+| License | MIT, in `package.json`. |
+
+The live site today is Render: [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/). The Week 4 partner category **Best Use of DigitalOcean** is a different bar. It asks for the app or the model to run on DigitalOcean: App Platform or a Droplet, an open-weight model on a GPU Droplet, or an agent on the Gradient AI Platform. This repository does not deploy there, so that hosting category is not met. The open-weight model is still what produces the lesson when a key is set.
 
 ### Key Architectural Decisions
 1. **Procedural Three.js Geometries over Fragile Remote GLTF Files**:
