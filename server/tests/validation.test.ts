@@ -2,8 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { validateLinkedListInvariants } from '../src/services/validationService';
 import { generateExecutionSteps } from '../src/services/stepEngine';
+import { curatedPYQs } from '../src/routes/pyqs';
+import { interpretDiagram } from '../src/services/interpretationService';
 
-function runTestSuite() {
+async function runTestSuite() {
   console.log('🧪 Starting ConceptLens 2.0 Invariant & Pipeline Test Suite...\n');
 
   const fixturesDir = path.resolve(__dirname, '../../fixtures');
@@ -135,6 +137,53 @@ function runTestSuite() {
     invalidDoublyValidation.isValid === false,
     'Gate 05 correctly rejects dangling backward (prev) pointer'
   );
+
+  // Test 8: PYQ Intelligence Repository (Feature 4)
+  assert(
+    curatedPYQs.length >= 10,
+    `PYQ Question Bank contains 10+ indexed questions (currently ${curatedPYQs.length})`
+  );
+
+  const boardsPresent = new Set(curatedPYQs.map((q) => q.exam.boardOrUniversity));
+  assert(
+    boardsPresent.has('ISC') && boardsPresent.has('CBSE') && boardsPresent.has('Anna University') && boardsPresent.has('GATE'),
+    'PYQ Question Bank indexes ISC, CBSE, Anna University, and GATE board questions'
+  );
+
+  // Assert every single PYQ initialGraph satisfies structural invariants
+  const allPyqsValid = curatedPYQs.every((q) => {
+    const val = validateLinkedListInvariants(q.initialGraph);
+    return val.isValid;
+  });
+  assert(
+    allPyqsValid,
+    'All 11 curated PYQ initial diagrams strictly satisfy linked-list structural invariants'
+  );
+
+  // Test Search & Filtering Logic
+  const iscQuestions = curatedPYQs.filter((q) => q.exam.boardOrUniversity === 'ISC');
+  assert(iscQuestions.length >= 3, 'Filter by Board: ISC returns at least 3 verified questions');
+
+  const insertQuestions = curatedPYQs.filter((q) => q.conceptTag.toLowerCase().includes('insertion'));
+  assert(insertQuestions.length >= 4, 'Filter by Concept: Insertion returns at least 4 questions');
+
+  // Test 9: Physics Diagram Ingestion & Interactive Simulation Model Generation
+  const opticsRes = await interpretDiagram({
+    imageUrl: 'https://example.com/convex_lens_paper.png',
+    diagramType: 'ray_optics',
+    sourceContext: 'Physics Geometrical Optics'
+  });
+  assert(opticsRes.domain === 'physics', 'AI pipeline classifies optics image as Physics domain');
+  assert(opticsRes.physicsModel?.type === 'ray_optics', 'Generates interactive Convex Lens ray tracing model');
+  assert(opticsRes.physicsModel?.interactiveControls.length! >= 3, 'Optics model exposes interactive controls (u, f, ho)');
+
+  const pendulumRes = await interpretDiagram({
+    imageUrl: 'https://example.com/pendulum_fbd.png',
+    diagramType: 'pendulum',
+    sourceContext: 'Physics Oscillations'
+  });
+  assert(pendulumRes.physicsModel?.type === 'pendulum', 'Generates interactive Simple Pendulum SHM model');
+  assert(pendulumRes.physicsModel?.formulas.length! >= 3, 'Pendulum model includes period and energy conservation formulas');
 
   console.log(`\n========================================`);
   console.log(`Results: ${passedCount} / ${totalCount} tests passed.`);

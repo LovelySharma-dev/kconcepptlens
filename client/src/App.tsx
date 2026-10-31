@@ -3,7 +3,9 @@ import {
   LinkedListGraph,
   ExecutionStep,
   ValidationResult,
-  PYQ
+  PYQ,
+  PhysicsSimulationModel,
+  UniversalInteractiveDiagram
 } from '@conceptlens/shared';
 import { InteractiveCanvas } from './components/InteractiveCanvas';
 import { StepControls } from './components/StepControls';
@@ -13,13 +15,20 @@ import { ValidationInspector } from './components/ValidationInspector';
 import { PYQDrawer } from './components/PYQDrawer';
 import { ISLPlayer } from './components/ISLPlayer';
 import { LiveAnnouncer } from './components/LiveAnnouncer';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { InteractivePhysicsStudio } from './components/InteractivePhysicsStudio';
+import { UniversalDiagramCanvas } from './components/UniversalDiagramCanvas';
 import {
   Eye,
   Volume2,
   BookOpen,
   Video,
   ShieldAlert,
-  PlayCircle
+  PlayCircle,
+  HelpCircle,
+  Atom,
+  Binary,
+  Sparkles
 } from 'lucide-react';
 
 // Default Initial Graph (3-node standard)
@@ -34,14 +43,92 @@ const initialDefaultGraph: LinkedListGraph = {
   ]
 };
 
+// Default Initial Physics Model (Ray Optics)
+const initialDefaultPhysicsModel: PhysicsSimulationModel = {
+  domain: 'physics',
+  type: 'ray_optics',
+  title: 'Geometrical Optics: Convex Lens Ray Diagram',
+  topic: 'Optics & Refraction of Light',
+  description:
+    'Interactive ray tracing demonstrating real & virtual image formation through a biconvex lens with principal rays, object distance (u), and focal length (f).',
+  originalImageUrl:
+    'https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=1200&q=80',
+  parameters: {
+    focalLength: 100,
+    objectDistance: 220,
+    objectHeight: 60
+  },
+  interactiveControls: [
+    { id: 'objectDistance', label: 'Object Distance (u)', min: 40, max: 400, step: 5, unit: 'mm', defaultValue: 220 },
+    { id: 'focalLength', label: 'Focal Length (f)', min: 60, max: 180, step: 5, unit: 'mm', defaultValue: 100 },
+    { id: 'objectHeight', label: 'Object Height (ho)', min: 20, max: 90, step: 2, unit: 'mm', defaultValue: 60 }
+  ],
+  formulas: [
+    {
+      label: 'Gaussian Thin Lens Formula',
+      formula: '1/f = 1/v - 1/u',
+      explanation: 'Relates focal length (f) to object distance (u) and image distance (v) using Cartesian sign convention.'
+    },
+    {
+      label: 'Linear Magnification',
+      formula: 'm = v / u = hi / ho',
+      explanation: 'Ratio of image height to object height. Negative magnification indicates an inverted real image.'
+    },
+    {
+      label: 'Optical Power',
+      formula: 'P = 1 / f (in meters) [Dioptres]',
+      explanation: 'Refractive capability of the lens; positive for converging, negative for diverging.'
+    }
+  ]
+};
+
+// Default Initial Universal Model (Biology - Heart Blood Circulation)
+const initialDefaultUniversalModel: UniversalInteractiveDiagram = {
+  id: 'bio_heart_circulation',
+  domain: 'biology',
+  subject: 'Biology & Physiology',
+  topic: 'Cardiovascular System',
+  title: 'Double Circulation: Human Heart & Pulmonary Circuit',
+  description:
+    'Interactive physiological simulation of cardiac blood flow. Adjust heart rate (BPM) and stroke volume to witness dynamic systolic/diastolic chamber contractions, oxygenated vs deoxygenated blood pathways, and cardiac output.',
+  originalImageUrl:
+    'https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=1200&q=80',
+  controls: [
+    { id: 'heartRate', label: 'Heart Rate (HR)', min: 40, max: 180, step: 2, unit: 'BPM', defaultValue: 72, description: 'Cardiac contractions per minute' },
+    { id: 'strokeVolume', label: 'Stroke Volume (SV)', min: 40, max: 120, step: 2, unit: 'mL', defaultValue: 70, description: 'Blood pumped from left ventricle per beat' },
+    { id: 'oxygenationLevel', label: 'Oxygen Saturation', min: 80, max: 100, step: 1, unit: '%', defaultValue: 98, description: 'Arterial blood oxygen saturation' }
+  ],
+  elements: [
+    { id: 'right_atrium', type: 'organ', label: 'Right Atrium (RA)', detail: 'Receives systemic deoxygenated blood via Vena Cava.', x: 340, y: 150, width: 120, height: 80, color: 'rgba(56, 189, 248, 0.25)', strokeColor: '#38bdf8' },
+    { id: 'right_ventricle', type: 'organ', label: 'Right Ventricle (RV)', detail: 'Pumps blood to pulmonary artery towards lungs.', x: 340, y: 245, width: 120, height: 90, color: 'rgba(56, 189, 248, 0.3)', strokeColor: '#38bdf8' },
+    { id: 'left_atrium', type: 'organ', label: 'Left Atrium (LA)', detail: 'Receives oxygenated blood returning from pulmonary veins.', x: 540, y: 150, width: 120, height: 80, color: 'rgba(244, 63, 94, 0.25)', strokeColor: '#f43f5e' },
+    { id: 'left_ventricle', type: 'organ', label: 'Left Ventricle (LV)', detail: 'Thick muscular wall pumps oxygenated blood into aorta.', x: 540, y: 245, width: 120, height: 90, color: 'rgba(244, 63, 94, 0.35)', strokeColor: '#f43f5e' }
+  ],
+  metrics: [
+    { label: 'Cardiac Output (CO)', value: '5.04', unit: 'L/min', formula: 'CO = HR × SV / 1000' },
+    { label: 'Circulation Cycle Time', value: '0.83', unit: 'sec', formula: 'Cycle = 60 / HR' },
+    { label: 'Blood Flow Dynamic', value: 'Double Circulation (Systemic + Pulmonary)' }
+  ],
+  formulas: [
+    { label: 'Cardiac Output Principle', formula: 'CO = HR × SV', explanation: 'Total volume of blood pumped per minute.' },
+    { label: 'Frank-Starling Law', formula: 'Stroke Volume ∝ End-Diastolic Volume', explanation: 'Stroke volume increases in response to an increase in blood volume in the ventricles before contraction.' }
+  ]
+};
+
 export const App: React.FC = () => {
   // Navigation & Tabs
   const [activeTab, setActiveTab] = useState<'visualizer' | 'pyq' | 'isl' | 'gates'>('visualizer');
+
+  // Domain Switcher: Universal (Any Subject) vs Physics vs Data Structures
+  const [activeDomain, setActiveDomain] = useState<'universal' | 'physics' | 'data_structure'>('universal');
+  const [universalModel, setUniversalModel] = useState<UniversalInteractiveDiagram>(initialDefaultUniversalModel);
+  const [physicsModel, setPhysicsModel] = useState<PhysicsSimulationModel>(initialDefaultPhysicsModel);
 
   // Accessibility States
   const [highContrast, setHighContrast] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const [liveAnnouncement, setLiveAnnouncement] = useState('Welcome to ConceptLens 2.0.');
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   // Core Simulation States
   const [graph, setGraph] = useState<LinkedListGraph>(initialDefaultGraph);
@@ -70,7 +157,7 @@ export const App: React.FC = () => {
     }
   }, [highContrast]);
 
-  // Load and generate initial steps
+  // Load and generate initial steps for CS
   const generateStepsForGraph = useCallback(
     async (targetGraph: LinkedListGraph, op: string = 'insertHead', val: number = 9) => {
       try {
@@ -134,29 +221,79 @@ export const App: React.FC = () => {
   // Step Controls
   const handleTogglePlay = () => setIsPlaying((p) => !p);
 
-  const handleStepForward = () => {
+  const handleStepForward = useCallback(() => {
     if (currentStepIndex < steps.length - 1) {
       const nextIdx = currentStepIndex + 1;
       setCurrentStepIndex(nextIdx);
       const ann = steps[nextIdx]?.screenReaderAnnouncement;
       if (ann) setLiveAnnouncement(ann);
     }
-  };
+  }, [currentStepIndex, steps]);
 
-  const handleStepBackward = () => {
+  const handleStepBackward = useCallback(() => {
     if (currentStepIndex > 0) {
       const prevIdx = currentStepIndex - 1;
       setCurrentStepIndex(prevIdx);
       const ann = steps[prevIdx]?.screenReaderAnnouncement;
       if (ann) setLiveAnnouncement(ann);
     }
-  };
+  }, [currentStepIndex, steps]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setIsPlaying(false);
     setCurrentStepIndex(0);
     if (steps[0]) setLiveAnnouncement(steps[0].screenReaderAnnouncement);
-  };
+  }, [steps]);
+
+  // Global Keyboard Accessibility Shortcuts (WCAG 2.2 AAA)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept typing in inputs/textareas
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      if (e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsOpen((prev) => !prev);
+      } else if (e.key === 'Escape') {
+        setIsShortcutsOpen(false);
+        setIsReviewModalOpen(false);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        handleTogglePlay();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleStepForward();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handleStepBackward();
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleReset();
+      } else if (e.key === '1') {
+        setActiveTab('visualizer');
+      } else if (e.key === '2') {
+        setActiveTab('pyq');
+      } else if (e.key === '3') {
+        setActiveTab('isl');
+      } else if (e.key === '4') {
+        setActiveTab('gates');
+      } else if (e.key === 'u' || e.key === 'U') {
+        setActiveDomain('universal');
+      } else if (e.key === 'p' || e.key === 'P') {
+        setActiveDomain((d) => (d === 'physics' ? 'data_structure' : 'physics'));
+      } else if (e.key === 'h' || e.key === 'H') {
+        setHighContrast((c) => !c);
+      } else if (e.key === 'v' || e.key === 'V') {
+        setSpeechEnabled((s) => !s);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleStepForward, handleStepBackward, handleReset]);
 
   // Switch Operation
   const handleSelectOperation = (op: string) => {
@@ -167,6 +304,7 @@ export const App: React.FC = () => {
 
   // Load Curated PYQ
   const handleLoadPYQ = (pyq: PYQ) => {
+    setActiveDomain('data_structure');
     setGraph(pyq.initialGraph);
     setActiveTab('visualizer');
     setCurrentOperation(pyq.solutionOperation);
@@ -176,6 +314,7 @@ export const App: React.FC = () => {
 
   // Load Benchmark Fixtures
   const handleLoadBenchmarkFixture = (name: string) => {
+    setActiveDomain('data_structure');
     setIsPlaying(false);
     if (name === 'isc') {
       const g: LinkedListGraph = {
@@ -236,32 +375,6 @@ export const App: React.FC = () => {
       setCurrentOperation('search');
       generateStepsForGraph(circularG, 'search', 20);
       setLiveAnnouncement('Loaded Circular Linked List with looping tail pointer.');
-    } else if (name === 'ambiguous') {
-      const ambiguousG: LinkedListGraph = {
-        headId: 'node_1',
-        isCircular: false,
-        nodes: [
-          { id: 'node_1', value: 50, next: 'node_2', x: 80, y: 180, confidence: 0.98 },
-          { id: 'node_2', value: '?B7', next: 'node_3', x: 260, y: 180, confidence: 0.48 },
-          { id: 'node_3', value: 90, next: null, x: 440, y: 180, confidence: 0.96 }
-        ]
-      };
-      setGraph(ambiguousG);
-      setValidationResult({
-        isValid: false,
-        needsHumanReview: true,
-        issues: [
-          {
-            gate: 'GATE_06_HUMAN_REVIEW',
-            severity: 'warning',
-            nodeId: 'node_2',
-            message: 'Node node_2 value "?B7" has low OCR confidence (0.48). Human confirmation required.'
-          }
-        ],
-        floydCycleDetected: false,
-        orphanNodeIds: []
-      });
-      setIsReviewModalOpen(true);
     }
   };
 
@@ -280,10 +393,10 @@ export const App: React.FC = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="brand-title">ConceptLens 2.0</span>
-              <span className="brand-badge">Reliable Pipeline</span>
+              <span className="brand-badge">Universal Engine</span>
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Interactive Visualizer • PYQs • Indian Sign Language
+              Interactive Diagrams for All Subjects • PYQs • Indian Sign Language
             </span>
           </div>
         </div>
@@ -330,7 +443,7 @@ export const App: React.FC = () => {
             type="button"
             className={`icon-btn ${highContrast ? 'active' : ''}`}
             onClick={() => setHighContrast((c) => !c)}
-            title="Toggle High Contrast Mode (WCAG AAA)"
+            title="Toggle High Contrast Mode (WCAG AAA) [H]"
             aria-label="Toggle High Contrast Mode"
           >
             <Eye size={18} />
@@ -340,10 +453,20 @@ export const App: React.FC = () => {
             type="button"
             className={`icon-btn ${speechEnabled ? 'active' : ''}`}
             onClick={() => setSpeechEnabled((s) => !s)}
-            title="Toggle Live Speech Vocalizer"
+            title="Toggle Live Speech Vocalizer [V]"
             aria-label="Toggle Live Speech"
           >
             <Volume2 size={18} />
+          </button>
+
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setIsShortcutsOpen(true)}
+            title="Keyboard Shortcuts Cheat-sheet [?]"
+            aria-label="Keyboard Shortcuts"
+          >
+            <HelpCircle size={18} />
           </button>
         </div>
       </header>
@@ -352,102 +475,253 @@ export const App: React.FC = () => {
       <main className="main-content">
         {activeTab === 'visualizer' && (
           <div>
-            {/* Media Ingestion & Cloudinary Section */}
+            {/* Universal Multi-Disciplinary Picture Ingestion Section */}
             <MediaUploader
               onDiagramInterpreted={(data) => {
-                setGraph(data.graph);
-                generateStepsForGraph(data.graph, 'insertHead', 9);
-                if (data.status === 'needs_review') {
-                  setValidationResult(data.validation);
-                  setIsReviewModalOpen(true);
+                if (data.domain === 'universal' && data.universalModel) {
+                  setUniversalModel(data.universalModel);
+                  setActiveDomain('universal');
+                  setLiveAnnouncement(`Synthesized interactive diagram for ${data.universalModel.title}`);
+                } else if (data.domain === 'physics' && data.physicsModel) {
+                  setPhysicsModel(data.physicsModel);
+                  setActiveDomain('physics');
+                  setLiveAnnouncement(`Created interactive Physics diagram for ${data.physicsModel.title}`);
+                } else if (data.graph) {
+                  setActiveDomain('data_structure');
+                  setGraph(data.graph);
+                  generateStepsForGraph(data.graph, 'insertHead', 9);
+                  if (data.status === 'needs_review') {
+                    setValidationResult(data.validation);
+                    setIsReviewModalOpen(true);
+                  }
+                  setLiveAnnouncement('Created interactive Linked List diagram.');
                 }
               }}
               onLoadBenchmarkFixture={handleLoadBenchmarkFixture}
+              onSelectPhysicsModel={async (modelType) => {
+                try {
+                  const res = await fetch('/api/diagrams/interpret', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ diagramType: modelType })
+                  });
+                  const json = await res.json();
+                  if (json.success && json.data.physicsModel) {
+                    setPhysicsModel(json.data.physicsModel);
+                    setActiveDomain('physics');
+                    setLiveAnnouncement(`Loaded interactive Physics simulation for ${json.data.physicsModel.title}`);
+                  }
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+              onSelectUniversalModel={async (modelId) => {
+                try {
+                  const res = await fetch('/api/diagrams/interpret', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ diagramType: modelId })
+                  });
+                  const json = await res.json();
+                  if (json.success && json.data.universalModel) {
+                    setUniversalModel(json.data.universalModel);
+                    setActiveDomain('universal');
+                    setLiveAnnouncement(`Loaded interactive diagram for ${json.data.universalModel.title}`);
+                  }
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
             />
 
-            {/* Interactive Sandbox Header */}
-            <div className="glass-panel" style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-                <div>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-                    Deterministic Concept Engine (
-                    {graph.structureType === 'doubly'
-                      ? 'Doubly Linked List'
-                      : graph.isCircular
-                      ? 'Circular Linked List ↺'
-                      : 'Singly Linked List'}
-                    )
-                  </h2>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    Stepping through operations with mathematically guaranteed pointer transitions.
-                  </p>
-                </div>
+            {/* Domain Switcher Pill Row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className={`btn-secondary ${activeDomain === 'universal' ? 'active' : ''}`}
+                  onClick={() => setActiveDomain('universal')}
+                  style={{
+                    fontSize: '0.85rem',
+                    padding: '0.45rem 1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    borderColor: activeDomain === 'universal' ? 'var(--accent-emerald)' : undefined,
+                    background: activeDomain === 'universal' ? 'rgba(16, 185, 129, 0.15)' : undefined
+                  }}
+                >
+                  <Sparkles size={16} color={activeDomain === 'universal' ? 'var(--accent-emerald)' : 'var(--text-muted)'} />
+                  <span>Universal Diagrams (Biology, Chem, Math, Econ)</span>
+                </button>
 
-                {/* Operation Selector Buttons */}
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  {(graph.structureType === 'doubly'
-                    ? [
-                        { id: 'insertDoublyHead', label: 'Insert Head (Doubly)' },
-                        { id: 'deleteDoublyNode', label: 'Delete Node (Doubly)' }
-                      ]
-                    : [
-                        { id: 'insertHead', label: 'Insert Head' },
-                        { id: 'insertTail', label: 'Insert Tail' },
-                        { id: 'deleteNode', label: 'Delete Node' },
-                        { id: 'reverseList', label: 'Reverse List' },
-                        { id: 'search', label: 'Linear Search' }
-                      ]
-                  ).map((op) => (
-                    <button
-                      key={op.id}
-                      type="button"
-                      className={`btn-secondary ${currentOperation === op.id ? 'active' : ''}`}
-                      style={{
-                        fontSize: '0.8rem',
-                        padding: '0.4rem 0.8rem',
-                        borderColor: currentOperation === op.id ? 'var(--accent-cyan)' : undefined,
-                        background: currentOperation === op.id ? 'rgba(56, 189, 248, 0.15)' : undefined
-                      }}
-                      onClick={() => handleSelectOperation(op.id)}
-                    >
-                      {op.label}
-                    </button>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  className={`btn-secondary ${activeDomain === 'physics' ? 'active' : ''}`}
+                  onClick={() => setActiveDomain('physics')}
+                  style={{
+                    fontSize: '0.85rem',
+                    padding: '0.45rem 1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    borderColor: activeDomain === 'physics' ? 'var(--accent-cyan)' : undefined,
+                    background: activeDomain === 'physics' ? 'rgba(56, 189, 248, 0.15)' : undefined
+                  }}
+                >
+                  <Atom size={16} color={activeDomain === 'physics' ? 'var(--accent-cyan)' : 'var(--text-muted)'} />
+                  <span>Physics Lab (Optics, Pendulum, Circuits)</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`btn-secondary ${activeDomain === 'data_structure' ? 'active' : ''}`}
+                  onClick={() => setActiveDomain('data_structure')}
+                  style={{
+                    fontSize: '0.85rem',
+                    padding: '0.45rem 1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    borderColor: activeDomain === 'data_structure' ? 'var(--accent-purple)' : undefined,
+                    background: activeDomain === 'data_structure' ? 'rgba(192, 132, 252, 0.15)' : undefined
+                  }}
+                >
+                  <Binary size={16} color={activeDomain === 'data_structure' ? 'var(--accent-purple)' : 'var(--text-muted)'} />
+                  <span>Data Structures Studio</span>
+                </button>
               </div>
+
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                Press [U] or [P] to switch
+              </span>
             </div>
 
-            {/* SVG Visualizer Canvas */}
-            <InteractiveCanvas
-              graph={renderedGraph}
-              activePointers={currentStep?.activePointers || { head: graph.headId }}
-              highlightedNodeIds={currentStep?.highlightedNodeIds || []}
-              mutatedNodeId={currentStep?.mutatedNodeId}
-            />
+            {/* DOMAIN 1: UNIVERSAL INTERACTIVE DIAGRAM (Biology, Chemistry, Math, Econ, BST) */}
+            {activeDomain === 'universal' && (
+              <UniversalDiagramCanvas
+                diagram={universalModel}
+                onAnnounce={setLiveAnnouncement}
+                onSwitchDomain={() => setActiveDomain('physics')}
+              />
+            )}
 
-            {/* Step Controls Bar */}
-            <StepControls
-              currentStepIndex={currentStepIndex}
-              totalSteps={steps.length}
-              isPlaying={isPlaying}
-              onTogglePlay={handleTogglePlay}
-              onStepForward={handleStepForward}
-              onStepBackward={handleStepBackward}
-              onReset={handleReset}
-              speed={playbackSpeed}
-              onChangeSpeed={setPlaybackSpeed}
-            />
+            {/* DOMAIN 2: DEDICATED PHYSICS LAB */}
+            {activeDomain === 'physics' && (
+              <InteractivePhysicsStudio
+                model={physicsModel}
+                onAnnounce={setLiveAnnouncement}
+                onSwitchToDataStructure={() => setActiveDomain('data_structure')}
+              />
+            )}
 
-            {/* Real-time State & Memory Inspector */}
-            <StateInspector currentStep={currentStep} />
+            {/* DOMAIN 3: DATA STRUCTURES CONCEPT ENGINE */}
+            {activeDomain === 'data_structure' && (
+              <div>
+                <div className="glass-panel" style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                        Deterministic Concept Engine (
+                        {graph.structureType === 'doubly'
+                          ? 'Doubly Linked List'
+                          : graph.isCircular
+                          ? 'Circular Linked List ↺'
+                          : 'Singly Linked List'}
+                        )
+                      </h2>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        Stepping through operations with mathematically guaranteed pointer transitions.
+                      </p>
+                    </div>
+
+                    {/* Operation Selector Buttons */}
+                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      {(graph.structureType === 'doubly'
+                        ? [
+                            { id: 'insertDoublyHead', label: 'Insert Head (Doubly)' },
+                            { id: 'deleteDoublyNode', label: 'Delete Node (Doubly)' }
+                          ]
+                        : [
+                            { id: 'insertHead', label: 'Insert Head' },
+                            { id: 'insertTail', label: 'Insert Tail' },
+                            { id: 'deleteNode', label: 'Delete Node' },
+                            { id: 'reverseList', label: 'Reverse List' },
+                            { id: 'search', label: 'Linear Search' }
+                          ]
+                      ).map((op) => (
+                        <button
+                          key={op.id}
+                          type="button"
+                          className={`btn-secondary ${currentOperation === op.id ? 'active' : ''}`}
+                          style={{
+                            fontSize: '0.8rem',
+                            padding: '0.4rem 0.8rem',
+                            borderColor: currentOperation === op.id ? 'var(--accent-cyan)' : undefined,
+                            background: currentOperation === op.id ? 'rgba(56, 189, 248, 0.15)' : undefined
+                          }}
+                          onClick={() => handleSelectOperation(op.id)}
+                        >
+                          {op.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SVG Visualizer Canvas */}
+                <InteractiveCanvas
+                  graph={renderedGraph}
+                  activePointers={currentStep?.activePointers || { head: graph.headId }}
+                  highlightedNodeIds={currentStep?.highlightedNodeIds || []}
+                  mutatedNodeId={currentStep?.mutatedNodeId}
+                />
+
+                {/* Step Controls Bar */}
+                <StepControls
+                  currentStepIndex={currentStepIndex}
+                  totalSteps={steps.length}
+                  isPlaying={isPlaying}
+                  onTogglePlay={handleTogglePlay}
+                  onStepForward={handleStepForward}
+                  onStepBackward={handleStepBackward}
+                  onReset={handleReset}
+                  speed={playbackSpeed}
+                  onChangeSpeed={setPlaybackSpeed}
+                />
+
+                {/* Real-time State & Memory Inspector */}
+                <StateInspector currentStep={currentStep} />
+              </div>
+            )}
           </div>
         )}
 
         {/* PYQ Drawer View */}
-        {activeTab === 'pyq' && <PYQDrawer onLoadPYQ={handleLoadPYQ} />}
+        {activeTab === 'pyq' && (
+          <PYQDrawer
+            onLoadPYQ={handleLoadPYQ}
+            onNavigateToISL={(conceptTag) => {
+              setActiveTab('isl');
+              setLiveAnnouncement(`Navigated to ISL lesson for ${conceptTag}`);
+            }}
+          />
+        )}
 
         {/* Inclusive ISL Classroom View */}
-        {activeTab === 'isl' && <ISLPlayer />}
+        {activeTab === 'isl' && (
+          <ISLPlayer
+            onLoadLessonIntoSandbox={(lessonGraph, op) => {
+              setActiveDomain('data_structure');
+              setGraph(lessonGraph);
+              setCurrentOperation(op);
+              setActiveTab('visualizer');
+              generateStepsForGraph(lessonGraph, op, 9);
+              setLiveAnnouncement('Loaded ISL concept diagram into Interactive Studio sandbox.');
+            }}
+            onOpenKeyboardShortcuts={() => setIsShortcutsOpen(true)}
+          />
+        )}
 
         {/* 8 Validation Gates Architecture View */}
         {activeTab === 'gates' && (
@@ -464,7 +738,7 @@ export const App: React.FC = () => {
                 { num: '01', title: 'Upload & Validate', desc: 'Checks file mime, size limits, and format integrity.', status: 'Active' },
                 { num: '02', title: 'Prepare Media', desc: 'Cloudinary auto-deskew, sharpen & crop bounding box.', status: 'Active' },
                 { num: '03', title: 'Extract Content', desc: 'OCR bounding boxes with normalized coordinates.', status: 'Active' },
-                { num: '04', title: 'Interpret Diagram', desc: 'AI vision prompt bound by strict Zod AST schema.', status: 'Active' },
+                { num: '04', title: 'Interpret Diagram', desc: 'AI vision prompt bound by strict AST schema.', status: 'Active' },
                 { num: '05', title: 'Validate Structure', desc: 'Floyd cycle detection, head integrity & dangling checks.', status: 'Enforced' },
                 { num: '06', title: 'Human Correction', desc: 'Interactive review when OCR confidence < 0.80.', status: 'Enforced' },
                 { num: '07', title: 'Deterministic Render', desc: 'Mathematical state transitions (no AI hallucinations).', status: 'Active' },
@@ -507,10 +781,17 @@ export const App: React.FC = () => {
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}
         onSaveCorrections={(corrected) => {
+          setActiveDomain('data_structure');
           setGraph(corrected);
           generateStepsForGraph(corrected, currentOperation, 9);
           setLiveAnnouncement('Corrections applied. Rendering validated linked list model.');
         }}
+      />
+
+      {/* Keyboard Accessibility Shortcuts Modal (WCAG 2.2 AAA) */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
       />
     </div>
   );
