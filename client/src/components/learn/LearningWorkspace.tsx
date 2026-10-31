@@ -12,6 +12,7 @@ import type {
 import { CONTENT_TYPE_IDS, SUBJECT_IDS, WORKSPACE_PANELS, evaluateMaterial, moveWorkspacePanel } from '@conceptlens/shared';
 import { EducationalFigure } from '../cloudinary/EducationalFigure';
 import { SpeechControls } from '../SpeechControls';
+import { AILessonStudio } from './AILessonStudio';
 
 const SUBJECT_LABELS: Record<SubjectId, string> = {
   mathematics: 'Mathematics',
@@ -90,6 +91,7 @@ interface LearningWorkspaceProps {
   onClose: () => void;
   onSpeechRate: (rate: 0.8 | 1 | 1.25) => void;
   onRetryAnswer?: () => void;
+  onAnnounce?: (msg: string) => void;
 }
 
 export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({
@@ -119,7 +121,8 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({
   onClearCancel,
   onClose,
   onSpeechRate,
-  onRetryAnswer
+  onRetryAnswer,
+  onAnnounce
 }) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
@@ -343,6 +346,12 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({
                 deferUntilRequested={lowData}
               />
             )}
+
+            <AILessonStudio
+              sourceText={recognizedText || explanation.sourceContent}
+              topic={explanation.mainConcept}
+              onAnnounce={onAnnounce}
+            />
           </section>
 
           <section id="material-steps" className="workspace-panel" tabIndex={-1} aria-labelledby="steps-title">

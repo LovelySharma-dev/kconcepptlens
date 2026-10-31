@@ -13,4 +13,5 @@ export * from './schemas/material';
 export * from './learning/materials';
 export * from './learning/evaluation';
 export * from './learning/pdfImages';
+export * from './schemas/generatedLesson';
 export * from './schemas/cloudinaryTransformation';

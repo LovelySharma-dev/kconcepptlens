@@ -13,6 +13,7 @@ import lessonsRouter from './routes/lessons';
 import practiceRouter from './routes/practice';
 import biologyRouter from './routes/biology';
 import materialsRouter from './routes/materials';
+import aiRouter from './routes/ai';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config();
@@ -78,6 +79,7 @@ app.use('/api/lessons', lessonsRouter);
 app.use('/api/practice', practiceRouter);
 app.use('/api/biology', biologyRouter);
 app.use('/api/materials', materialsRouter);
+app.use('/api/ai', aiRouter);
 
 // Frontend Static Assets & SPA Fallback
 const candidatePaths = [
@@ -112,6 +114,17 @@ if (clientDist) {
     });
   });
 }
+
+// Centralized Error Handling Middleware
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const status = typeof err.status === 'number' ? err.status : 500;
+  const message = err instanceof Error ? err.message : 'Internal Server Error';
+  console.error(`[SERVER ERROR] ${req.method} ${req.path}:`, message);
+  res.status(status).json({
+    success: false,
+    error: process.env.NODE_ENV === 'production' ? 'An unexpected server error occurred.' : message
+  });
+});
 
 // Start Server & Connect Database
 async function bootstrap() {

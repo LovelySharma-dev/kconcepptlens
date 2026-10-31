@@ -114,8 +114,9 @@ Return strictly valid JSON conforming to this schema:
       }
     }
 
+    const visionModel = process.env.GEMINI_MODEL?.trim() || process.env.GEMINI_VISION_MODEL?.trim() || 'gemini-3.1-flash-lite';
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${visionModel}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
