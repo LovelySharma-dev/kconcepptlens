@@ -16,16 +16,16 @@ def load_fixture(filename: str) -> dict:
     with open(FIXTURES_DIR / filename, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def test_isc_2025_specimen_invariants():
-    data = load_fixture("isc-2025-q11.json")
+def test_isc_2023_specimen_invariants():
+    data = load_fixture("isc-2023-specimen-q11.json")
     graph = LinkedListGraph(**data["graph"])
     res = validate_graph_invariants(graph)
     assert res.isValid is True
     assert res.floydCycleDetected is False
     assert len(res.orphanNodeIds) == 0
 
-def test_anna_univ_2019_invariants():
-    data = load_fixture("anna-univ-2019.json")
+def test_delete_node_synthetic_invariants():
+    data = load_fixture("delete-node-synthetic.json")
     graph = LinkedListGraph(**data["graph"])
     res = validate_graph_invariants(graph)
     assert res.isValid is True
