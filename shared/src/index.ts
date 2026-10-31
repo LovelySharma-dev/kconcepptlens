@@ -9,3 +9,7 @@ export * from './learning/preferences';
 export * from './learning/themes';
 export * from './learning/content';
 export * from './learning/adaptive';
+export * from './schemas/material';
+export * from './learning/materials';
+export * from './learning/evaluation';
+export * from './learning/pdfImages';

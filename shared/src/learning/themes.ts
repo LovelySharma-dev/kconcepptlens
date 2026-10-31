@@ -177,7 +177,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'visual-learning',
     groupId: 'vision',
     title: 'Visual Learning',
-    description: 'Opens the labeled diagram or 3D model when this lesson has one. Switching to text keeps the same structure.',
+    description: 'Opens the labeled diagram when this lesson has one. Switching to text keeps the same structure.',
     iconLabel: 'Diagram',
     flags: ['visualLearning']
   },
@@ -234,7 +234,7 @@ const THEME_LIST: LearningThemeDefinition[] = [
     id: 'low-data',
     groupId: 'pace',
     title: 'Low-Data Learning',
-    description: 'Loads the writing first, waits to start 3D, and asks before larger images. This does not add offline use.',
+    description: 'Loads the writing first and asks before larger images. This does not add offline use.',
     iconLabel: 'Light',
     flags: ['lowData']
   },

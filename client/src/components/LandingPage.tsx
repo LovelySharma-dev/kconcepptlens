@@ -1,994 +1,803 @@
-import React, { useState, Suspense, lazy } from 'react';
-import { BiologyTopicId } from '@conceptlens/shared';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import type {
+  BiologyTopicId,
+  ContentTypeId,
+  LearningPreferences,
+  MaterialAction,
+  MaterialEvidence,
+  MaterialExplanation,
+  MaterialSourceKind,
+  StrategyWeights,
+  SubjectId,
+  WorkspacePanel
+} from '@conceptlens/shared';
 import {
-  Sparkles,
-  ArrowRight,
-  Layers,
-  Eye,
-  Volume2,
-  Video,
-  Atom,
-  Heart,
-  Dna,
-  Zap,
-  Leaf,
-  Binary,
-  SlidersHorizontal,
-  ChevronRight,
-  ShieldCheck
-} from 'lucide-react';
-import { Cell2DCanvas } from './biology/2d/Cell2DCanvas';
-
-const Cell3DCanvas = lazy(() =>
-  import('./biology/3d/Cell3DCanvas').then((m) => ({ default: m.Cell3DCanvas }))
-);
+  SAMPLE_MATERIALS,
+  clearMaterialEvidence,
+  defaultStrategyWeights,
+  emptyMaterialEvidence,
+  learningThemeById,
+  normalizeMaterialEvidence,
+  toggleLearningTheme,
+  preferredStrategy,
+  presentMaterial,
+  recommendMaterial,
+  validateMaterialFile
+} from '@conceptlens/shared';
+import { LearningWorkspace, type AnswerState } from './learn/LearningWorkspace';
+import { GuidedDemo } from './learn/GuidedDemo';
+import { clearEvidenceRaw, clearProgress, readProgress } from './biology/LearningPaths';
+import { HomeNarrative } from './home/HomeNarrative';
 
 interface LandingPageProps {
+  preferences: LearningPreferences;
+  onPreferences: (next: LearningPreferences) => void;
+  onOpenAccessibility: () => void;
   onExploreTopic: (topicId: BiologyTopicId) => void;
-  onNavigateToHowItWorks: () => void;
-  onNavigateToAccessibility: () => void;
-  onNavigateToTab?: (tab: 'home' | 'biology' | 'cloudinary' | 'practice' | 'isl' | 'stem' | 'gates' | 'about') => void;
-  defer3D?: boolean;
+  onAnnounce: (message: string) => void;
+  onSpeechRate?: (rate: 0.8 | 1 | 1.25) => void;
+}
+
+interface StoredSession {
+  text: string;
+  sourceKind: MaterialSourceKind;
+  sampleId: string | null;
+  subjectOverride: SubjectId | null;
+  contentTypeOverride: ContentTypeId | null;
+  stepIndex: number;
+  evidence: MaterialEvidence;
+  weights: StrategyWeights;
+  fileLabel: string | null;
+}
+
+const SOURCE_KINDS: MaterialSourceKind[] = ['learner_text', 'pdf_text_layer', 'sample', 'image_ocr', 'scanned_pdf'];
+const SESSION_KEY = 'conceptlens-material-session';
+const BIOLOGY_TOPICS: BiologyTopicId[] = ['human_cell', 'human_heart', 'dna_helix', 'neuron', 'plant_cell'];
+
+const BIOLOGY_LABELS: Record<BiologyTopicId, string> = {
+  human_cell: 'Human cell',
+  human_heart: 'Human heart',
+  dna_helix: 'DNA helix',
+  neuron: 'Neuron',
+  plant_cell: 'Plant cell'
+};
+
+function readWeights(value: unknown): StrategyWeights {
+  const fallback = defaultStrategyWeights();
+  if (!value || typeof value !== 'object') return fallback;
+  const row = value as Record<string, unknown>;
+  const keys = ['plain', 'steps', 'example', 'challenge'] as const;
+  if (!keys.every((key) => typeof row[key] === 'number' && Number.isFinite(row[key] as number))) return fallback;
+  return {
+    plain: row.plain as number,
+    steps: row.steps as number,
+    example: row.example as number,
+    challenge: row.challenge as number
+  };
+}
+function readSession(): StoredSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed.text !== 'string' || parsed.text.trim().length === 0) return null;
+    const sourceKind = parsed.sourceKind;
+    if (typeof sourceKind !== 'string' || !SOURCE_KINDS.includes(sourceKind as MaterialSourceKind)) return null;
+    return {
+      text: parsed.text,
+      sourceKind: sourceKind as MaterialSourceKind,
+      sampleId: typeof parsed.sampleId === 'string' ? parsed.sampleId : null,
+      subjectOverride: typeof parsed.subjectOverride === 'string' ? (parsed.subjectOverride as SubjectId) : null,
+      contentTypeOverride: typeof parsed.contentTypeOverride === 'string' ? (parsed.contentTypeOverride as ContentTypeId) : null,
+      stepIndex: typeof parsed.stepIndex === 'number' ? parsed.stepIndex : 0,
+      evidence: normalizeMaterialEvidence(parsed.evidence),
+      weights: readWeights(parsed.weights),
+      fileLabel: typeof parsed.fileLabel === 'string' ? parsed.fileLabel : null
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(session: StoredSession | null) {
+  try {
+    if (!session) localStorage.removeItem(SESSION_KEY);
+    else localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch {
+    /* The lesson still works for this visit when storage is blocked. */
+  }
+}
+
+async function postJson<T>(url: string, body: unknown, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal
+  });
+  const json = (await response.json()) as T & { error?: string; processed?: boolean };
+  if (!response.ok) {
+    throw new Error(json.error || 'The request was not completed.');
+  }
+  return json;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
+  preferences,
+  onPreferences,
+  onOpenAccessibility,
   onExploreTopic,
-  onNavigateToHowItWorks,
-  onNavigateToAccessibility,
-  onNavigateToTab,
-  defer3D = false
+  onAnnounce,
+  onSpeechRate
 }) => {
-  const [heroViewMode, setHeroViewMode] = useState<'3d' | '2d'>('2d');
-  const [heroSceneRequested, setHeroSceneRequested] = useState(false);
+  const fileId = useId();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const pasteRef = useRef<HTMLTextAreaElement>(null);
+  const [composer, setComposer] = useState<'none' | 'paste' | 'question'>('none');
+  const [draft, setDraft] = useState('');
+  const [status, setStatus] = useState('Ready for a question, pasted notes, a PDF with a text layer, or a labeled sample.');
+  const [busy, setBusy] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileLabel, setFileLabel] = useState<string | null>(null);
+  const [pendingText, setPendingText] = useState('');
+  const [pendingNote, setPendingNote] = useState('');
+  const [pendingKind, setPendingKind] = useState<MaterialSourceKind | null>(null);
+  const [pageReading, setPageReading] = useState<'checking' | 'ready' | 'planned'>('checking');
+  const [pendingSample, setPendingSample] = useState<string | null>(null);
+  const [pendingDemo, setPendingDemo] = useState(false);
+  const [explanation, setExplanation] = useState<MaterialExplanation | null>(null);
+  const [recognizedText, setRecognizedText] = useState('');
+  const [stepIndex, setStepIndex] = useState(0);
+  const [evidence, setEvidence] = useState<MaterialEvidence>(emptyMaterialEvidence());
+  const [weights, setWeights] = useState<StrategyWeights>(defaultStrategyWeights());
+  const [representation, setRepresentation] = useState<'match' | 'plain' | 'standard'>('match');
+  const [answerState, setAnswerState] = useState<AnswerState | null>(null);
+  const [clearOpen, setClearOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<WorkspacePanel>('explanation');
+  const abortRef = useRef<AbortController | null>(null);
 
-  React.useEffect(() => {
-    if (!defer3D) return;
-    setHeroViewMode('2d');
-    setHeroSceneRequested(false);
-  }, [defer3D]);
-  const [heroActiveOrganelle, setHeroActiveOrganelle] = useState<string>('nucleus');
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
-  const organelleHighlights: Record<string, { name: string; role: string; analogy: string }> = {
-    nucleus: {
-      name: 'Nucleus',
-      role: 'Stores DNA & controls transcription',
-      analogy: 'The central administration archives'
-    },
-    mitochondria: {
-      name: 'Mitochondria',
-      role: 'Generates cellular ATP through oxidative phosphorylation',
-      analogy: 'The high-efficiency power plant'
-    },
-    endoplasmic_reticulum: {
-      name: 'Endoplasmic Reticulum',
-      role: 'Synthesizes proteins and lipids across membrane folds',
-      analogy: 'The factory assembly line'
-    },
-    golgi_apparatus: {
-      name: 'Golgi Apparatus',
-      role: 'Packages and sorts proteins for vesicle transport',
-      analogy: 'The international shipping depot'
+  useEffect(() => {
+    let cancel = false;
+    fetch('/api/materials/engine')
+      .then((response) => response.json())
+      .then((json: { data?: { ocr?: string } }) => {
+        if (!cancel) setPageReading(json.data?.ocr === 'local-tesseract' ? 'ready' : 'planned');
+      })
+      .catch(() => {
+        if (!cancel) setPageReading('planned');
+      });
+    return () => {
+      cancel = true;
+    };
+  }, []);
+
+  const themeNames = preferences.activeThemes.map((id) => learningThemeById(id).title);
+  if (preferences.highContrast) themeNames.push('High contrast');
+  const preferenceSummary = themeNames.length > 0 ? themeNames.join(', ') : 'Standard lesson';
+  const weightNote = preferredStrategy(weights, ['plain', 'steps', 'example']);
+
+  const viewPreferences: LearningPreferences =
+    representation === 'plain'
+      ? { ...preferences, easyRead: true }
+      : representation === 'standard'
+        ? { ...preferences, easyRead: false, supportedLearning: false }
+        : preferences;
+
+  const presented = explanation ? presentMaterial(explanation, viewPreferences, evidence, stepIndex) : null;
+  const recommendation = explanation
+    ? recommendMaterial({
+        evidence,
+        conceptId: explanation.practice[0]?.conceptId ?? explanation.subject,
+        conceptName: explanation.mainConcept,
+        hasPlain: Boolean(explanation.plainLanguage),
+        plainActive: Boolean(presented?.showingPlain),
+        hasSteps: explanation.steps.length > 1,
+        allowSpeech: !preferences.speechFree,
+        hasChallenge: explanation.practice.some((question) => question.challenge),
+        hasNextStep: stepIndex < explanation.steps.length - 1
+      })
+    : null;
+
+  const remember = (session: StoredSession) => {
+    writeSession({ ...session, fileLabel: session.fileLabel ?? fileLabel });
+  };
+
+  const cancelWork = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setBusy(false);
+    setStatus('Processing cancelled. Nothing new was applied.');
+    onAnnounce('Processing cancelled.');
+  };
+
+  const explainText = async (session: StoredSession) => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setStatus('Building an explanation from the accepted text.');
+    try {
+      const json = await postJson<{ success: boolean; processed: boolean; data: MaterialExplanation }>('/api/materials/explain', {
+        text: session.text,
+        sourceKind: session.sourceKind,
+        sampleId: session.sampleId,
+        subjectOverride: session.subjectOverride,
+        contentTypeOverride: session.contentTypeOverride
+      }, controller.signal);
+      if (!json.processed || !json.data) {
+        setStatus('No explanation was returned.');
+        return;
+      }
+      setExplanation(json.data);
+      setRecognizedText(json.data.sourceContent);
+      setPendingKind(null);
+      setStepIndex(session.stepIndex);
+      setEvidence(session.evidence);
+      setWeights(session.weights);
+      setRepresentation('match');
+      setAnswerState(null);
+      setActivePanel('explanation');
+      remember({ ...session, text: json.data.sourceContent });
+      setStatus(json.data.demo ? 'Sample explanation ready. This is curated content.' : 'Explanation ready from the accepted text.');
+      onAnnounce(json.data.demo ? 'Sample explanation ready.' : 'Explanation ready.');
+      requestAnimationFrame(() => document.getElementById('material-explanation')?.focus());
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
+      setStatus((error as Error).message || 'The request did not reach the server. Nothing was processed.');
+    } finally {
+      setBusy(false);
     }
   };
 
-  const activeInfo = organelleHighlights[heroActiveOrganelle] || organelleHighlights.nucleus;
+  const stageText = async (kind: 'text' | 'question' | 'sample', value: string, sampleId?: string) => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setStatus(kind === 'sample' ? 'Loading the curated sample.' : 'Checking the text.');
+    try {
+      const json = await postJson<{
+        success: boolean;
+        processed: boolean;
+        data: { text: string; note: string; demo: boolean; extractionStatus: string; sampleId: string | null } | null;
+      }>('/api/materials/ingest', kind === 'sample' ? { kind, sampleId } : { kind, text: value }, controller.signal);
+      if (!json.processed || !json.data?.text) {
+        setStatus('The text was not accepted.');
+        return;
+      }
+      setPendingText(json.data.text);
+      setPendingNote(json.data.note);
+      setPendingKind(kind === 'sample' ? 'sample' : 'learner_text');
+      setPendingSample(json.data.sampleId);
+      setPendingDemo(json.data.demo);
+      setExplanation(null);
+      setStatus('Check the text, then explain it. Nothing is explained until you confirm.');
+      onAnnounce('Text ready to confirm.');
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
+      setStatus((error as Error).message || 'The request did not reach the server. Nothing was processed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onFile = async (file: File | undefined) => {
+    if (!file) return;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const validation = validateMaterialFile(bytes, file.type);
+    if (!validation.ok) {
+      setStatus(validation.error || 'The file was not accepted.');
+      onAnnounce('The file was not accepted.');
+      return;
+    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const nextPreview = validation.format === 'jpeg' || validation.format === 'png' || validation.format === 'webp' ? URL.createObjectURL(file) : null;
+    setPreviewUrl(nextPreview);
+    setFileLabel(`${file.name}, ${Math.ceil(file.size / 1024)} KB, detected as ${validation.detectedMime}.`);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setStatus('Checking the file on the server.');
+    let binary = '';
+    const chunk = 0x8000;
+    for (let index = 0; index < bytes.length; index += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
+    }
+    try {
+      const json = await postJson<{
+        success: boolean;
+        processed: boolean;
+        data: { text: string; note: string; extractionStatus: string; demo: boolean; readingOrigin?: MaterialSourceKind | null } | null;
+      }>('/api/materials/ingest', {
+        kind: 'file',
+        fileBase64: btoa(binary),
+        fileName: file.name,
+        declaredMime: file.type
+      }, controller.signal);
+      const origin = json.data?.readingOrigin;
+      const kind: MaterialSourceKind =
+        origin === 'image_ocr' || origin === 'scanned_pdf'
+          ? origin
+          : json.processed && validation.format === 'pdf'
+            ? 'pdf_text_layer'
+            : 'learner_text';
+      setPendingText(json.data?.text ?? '');
+      setPendingNote(json.data?.note ?? 'The file was not read.');
+      setPendingKind(kind);
+      setPendingSample(null);
+      setPendingDemo(false);
+      setExplanation(null);
+      setStatus(json.processed ? 'Text was found. Confirm it before the explanation.' : json.data?.note || 'The file was not interpreted.');
+      onAnnounce(json.processed ? 'Extracted text is ready to confirm.' : 'The file was not interpreted.');
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') return;
+      setStatus((error as Error).message || 'The request did not reach the server. Nothing was processed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirm = () => {
+    if (!pendingKind || pendingText.trim().length === 0) {
+      setStatus('Add the text you want explained. An empty file is not treated as finished.');
+      return;
+    }
+    const sourceKind: MaterialSourceKind =
+      pendingKind === 'pdf_text_layer' || pendingKind === 'sample' || pendingKind === 'image_ocr' || pendingKind === 'scanned_pdf'
+        ? pendingKind
+        : 'learner_text';
+    void explainText({
+      text: pendingText,
+      sourceKind,
+      sampleId: pendingSample,
+      subjectOverride: null,
+      contentTypeOverride: null,
+      stepIndex: 0,
+      evidence,
+      weights,
+      fileLabel
+    });
+  };
+
+  const onAction = (action: MaterialAction) => {
+    if (!explanation || !presented) return;
+    if (action === 'make_simpler') setRepresentation('plain');
+    if (action === 'explain_differently') setRepresentation((current) => (current === 'plain' ? 'standard' : 'plain'));
+    if (action === 'show_steps' || action === 'repeat_step') {
+      setActivePanel('steps');
+      const step = explanation.steps[Math.min(stepIndex, explanation.steps.length - 1)];
+      if (step) onAnnounce(`${step.title}. ${step.detail}`);
+      document.getElementById('material-steps')?.focus();
+    }
+    if (action === 'show_diagram') {
+      setActivePanel('explanation');
+      document.getElementById('material-explanation')?.scrollIntoView({ behavior: preferences.reducedMotion ? 'auto' : 'smooth' });
+    }
+    if (action === 'practice') {
+      setActivePanel('practice');
+      document.getElementById('material-practice')?.focus();
+    }
+    if (action === 'review_mistake') {
+      setActivePanel('practice');
+      onAnnounce(answerState?.explanation || 'Review the stored answer explanation.');
+    }
+    if (action === 'continue') {
+      if (stepIndex < explanation.steps.length - 1) {
+        const next = stepIndex + 1;
+        setStepIndex(next);
+        remember({
+          text: explanation.sourceContent,
+          sourceKind: explanation.sourceKind,
+          sampleId: explanation.sampleId,
+          subjectOverride: explanation.learnerCorrectedSubject ? explanation.subject : null,
+          contentTypeOverride: explanation.learnerCorrectedSubject ? explanation.contentType : null,
+          stepIndex: next,
+          evidence,
+          weights,
+          fileLabel
+        });
+        onAnnounce(explanation.steps[next]?.title || 'Next step.');
+      } else if (explanation.linkedLessonId) {
+        onExploreTopic(explanation.linkedLessonId as BiologyTopicId);
+      }
+    }
+  };
+
+  const onAnswer = async (questionId: string, index: number) => {
+    if (!explanation) return;
+    setBusy(true);
+    try {
+      const json = await postJson<{
+        data: { correct: boolean; explanation: string; why: string; weights: StrategyWeights; conceptId: string };
+      }>('/api/materials/answer', {
+        text: explanation.sourceContent,
+        sourceKind: explanation.sourceKind,
+        sampleId: explanation.sampleId,
+        subjectOverride: explanation.learnerCorrectedSubject ? explanation.subject : null,
+        contentTypeOverride: explanation.learnerCorrectedSubject ? explanation.contentType : null,
+        questionId,
+        selectedIndex: index,
+        weights
+      });
+      const nextEvidence = {
+        ...evidence,
+        concepts: evidence.concepts.includes(json.data.conceptId) ? evidence.concepts : [...evidence.concepts, json.data.conceptId],
+        attempts: [...evidence.attempts, { questionId, conceptId: json.data.conceptId, subject: explanation.subject, correct: json.data.correct }]
+      };
+      const normalized = normalizeMaterialEvidence(nextEvidence);
+      setEvidence(normalized);
+      setWeights(json.data.weights);
+      setAnswerState({ questionId, correct: json.data.correct, explanation: json.data.explanation, why: json.data.why });
+      remember({
+        text: explanation.sourceContent,
+        sourceKind: explanation.sourceKind,
+        sampleId: explanation.sampleId,
+        subjectOverride: explanation.learnerCorrectedSubject ? explanation.subject : null,
+        contentTypeOverride: explanation.learnerCorrectedSubject ? explanation.contentType : null,
+        stepIndex,
+        evidence: normalized,
+        weights: json.data.weights,
+        fileLabel
+      });
+      const nextRecommendation = recommendMaterial({
+        evidence: normalized,
+        conceptId: json.data.conceptId,
+        conceptName: explanation.mainConcept,
+        hasPlain: Boolean(explanation.plainLanguage),
+        plainActive: Boolean(presented?.showingPlain),
+        hasSteps: explanation.steps.length > 1,
+        allowSpeech: !preferences.speechFree,
+        hasChallenge: explanation.practice.some((question) => question.challenge),
+        hasNextStep: stepIndex < explanation.steps.length - 1
+      });
+      setActivePanel('progress');
+      onAnnounce(
+        `${json.data.correct ? 'Correct.' : 'Not the stored answer.'} ${nextRecommendation.title}. ${nextRecommendation.why}`
+      );
+      requestAnimationFrame(() => document.getElementById('material-progress')?.focus());
+    } catch (error) {
+      setStatus((error as Error).message || 'The answer was not saved.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const focusSection = (id: string) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.body.classList.contains('reduced-motion')
+      || document.body.classList.contains('low-stimulation');
+    node.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+    node.focus({ preventScroll: true });
+    onAnnounce(
+      id === 'guided-demo'
+        ? 'Start learning. The guided demo is ready.'
+        : id === 'start-learning'
+          ? 'Start learning. Add text, a PDF text layer, or a labeled sample.'
+          : 'Section ready.'
+    );
+  };
+
+  const continueLearning = () => {
+    const saved = readSession();
+    if (saved) {
+      void explainText(saved);
+      return;
+    }
+    const topic = BIOLOGY_TOPICS.find((id) => readProgress(id));
+    if (topic) {
+      onExploreTopic(topic);
+      return;
+    }
+    setStatus('There is no saved material yet. Paste text or open a sample.');
+    onAnnounce('No saved lesson yet.');
+  };
+
+  const clearSaved = async () => {
+    writeSession(null);
+    setEvidence(clearMaterialEvidence());
+    setWeights(defaultStrategyWeights());
+    setExplanation(null);
+    setAnswerState(null);
+    setClearOpen(false);
+    BIOLOGY_TOPICS.forEach((topic) => clearProgress(topic));
+    clearEvidenceRaw();
+    try {
+      await fetch('/api/materials/progress', { method: 'DELETE' });
+    } catch {
+      /* Local data is already cleared. The Python file remains if the server is offline. */
+    }
+    setStatus('Saved lesson data for this browser was cleared.');
+    onAnnounce('Saved lesson data cleared.');
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '5rem', paddingBottom: '4rem' }}>
-      {/* ====================================================================
-          1. HERO SECTION — THE DIGITAL OBSERVATORY
-          Metaphor: Transition from Flat Knowledge to Spatial Understanding
-          ==================================================================== */}
-      <section className="hero-observatory reveal-step-1">
-        {/* Left Column: Editorial Statement */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Scientific Domain Badge */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              width: 'fit-content',
-              padding: '0.35rem 0',
-              color: 'var(--accent-cyan)'
-            }}
-          >
-            <span style={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.01em', color: 'var(--accent-cyan)' }}>
-              Science lessons
-            </span>
-          </div>
-
-          {/* Hero Headline */}
-          <h1
-            style={{
-              fontSize: 'clamp(2.6rem, 5.5vw, 4.4rem)',
-              fontWeight: 800,
-              lineHeight: 1.08,
-              letterSpacing: '-0.035em',
-              color: 'var(--text-primary)',
-              margin: 0
-            }}
-          >
-            Don&apos;t just study the diagram.
-            <br />
-            <span style={{ color: 'var(--accent-cyan)' }}>Step inside it.</span>
-          </h1>
-
-          {/* Supporting Copy */}
-          <p
-            style={{
-              fontSize: '1.15rem',
-              color: 'var(--text-secondary)',
-              lineHeight: 1.6,
-              maxWidth: '560px',
-              margin: 0
-            }}
-          >
-            Explore science through interactive models, clear explanations, and learning experiences that adapt to you.
-          </p>
-
-          {/* Primary & Secondary Call to Actions */}
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', paddingTop: '0.5rem' }}>
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ fontSize: '1rem', padding: '0.85rem 1.8rem', gap: '0.65rem' }}
-              onClick={() => onExploreTopic('human_cell')}
-            >
-              <span>Start learning</span>
-              <ArrowRight size={18} />
-            </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              style={{ fontSize: '1rem', padding: '0.85rem 1.6rem' }}
-              onClick={onNavigateToHowItWorks}
-            >
-              See how it works
-            </button>
-          </div>
-
-          {/* Restrained Product Descriptor & Authentic Value Indicators */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', paddingTop: '0.5rem' }}>
-            <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', maxWidth: '40rem', lineHeight: 1.55, margin: 0 }}>
-              Suggestions follow the questions you answer. You can customize your learning experience without disclosing a diagnosis.
-            </p>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={onNavigateToAccessibility}
-              style={{ width: 'fit-content', fontSize: '1rem' }}
-            >
-              Customize how you learn
-            </button>
-          </div>
-        </div>
-
-        {/* Right Column: Hero Visual — Scientific Specimen in Digital Observatory */}
-        <div className="hero-specimen reveal-step-2">
-          {/* Understated Radial Observatory Light */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'radial-gradient(circle at 50% 50%, rgba(101, 229, 242, 0.12) 0%, rgba(13, 18, 29, 0) 75%)',
-              pointerEvents: 'none',
-              zIndex: 1
-            }}
-          />
-
-          {/* Observatory Header Overlay: Controls & Status */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '14px',
-              left: '14px',
-              right: '14px',
-              zIndex: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.5rem',
-              pointerEvents: 'auto'
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                background: 'var(--bg-card)',
-                backdropFilter: 'blur(8px)',
-                padding: '0.35rem 0.75rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-medium)',
-                fontSize: '0.75rem',
-                color: 'var(--text-primary)'
-              }}
-            >
-              <div
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: 'var(--accent-mint)',
-                  boxShadow: '0 0 8px var(--accent-mint)'
-                }}
-              />
-              <span style={{ fontWeight: 600 }}>Specimen: Animal Cell (Eukaryotic)</span>
-            </div>
-
-            {/* 3D vs 2D Quick Observatory Toggle */}
-            <div
-              style={{
-                display: 'flex',
-                background: 'var(--bg-card)',
-                backdropFilter: 'blur(8px)',
-                padding: '0.2rem',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-medium)'
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setHeroSceneRequested(true);
-                  setHeroViewMode('3d');
-                }}
-                style={{
-                  border: 'none',
-                  background: heroViewMode === '3d' ? 'var(--bg-elevated)' : 'transparent',
-                  color: heroViewMode === '3d' ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                  padding: '0.25rem 0.55rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                {defer3D ? 'Load 3D model' : '3D view'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setHeroViewMode('2d')}
-                style={{
-                  border: 'none',
-                  background: heroViewMode === '2d' ? 'var(--bg-elevated)' : 'transparent',
-                  color: heroViewMode === '2d' ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                  padding: '0.25rem 0.55rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                2D Fallback
-              </button>
-            </div>
-          </div>
-
-          {/* Interactive Scientific Model Viewport */}
-          <div style={{ width: '100%', height: '100%' }}>
-            {heroViewMode === '3d' && heroSceneRequested ? (
-              <Suspense
-                fallback={
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--accent-cyan)', fontSize: '0.85rem' }}>
-                    Loading 3D observatory model...
-                  </div>
-                }
-              >
-                <Cell3DCanvas
-                  selectedComponentId={heroActiveOrganelle}
-                  onSelectComponent={(id: string) => setHeroActiveOrganelle(id)}
-                  showLabels={true}
-                />
-              </Suspense>
-            ) : (
-              <Cell2DCanvas
-                selectedComponentId={heroActiveOrganelle}
-                onSelectComponent={(id: string) => setHeroActiveOrganelle(id)}
-                showLabels={true}
-              />
-            )}
-          </div>
-
-          {/* Bottom Annotation Drawer: Shows Real Contextual Discovery */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '14px',
-              left: '14px',
-              right: '14px',
-              zIndex: 10,
-              background: 'var(--bg-card)',
-              backdropFilter: 'blur(12px)',
-              padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
-              pointerEvents: 'auto'
-            }}
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.15rem' }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-                  {activeInfo.name}
-                </span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  [{activeInfo.role}]
-                </span>
-              </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                💡 <em>{activeInfo.analogy}</em>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ fontSize: '0.75rem', padding: '0.45rem 0.9rem', flexShrink: 0 }}
-              onClick={() => onExploreTopic('human_cell')}
-            >
-              <span>Full Study Mode</span>
-              <ChevronRight size={13} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          2. THE LEARNING ATLAS — "CHOOSE A WORLD TO EXPLORE"
-          Editorial Grid: Featured Cell + Secondary STEM Worlds
-          ==================================================================== */}
-      <section className="reveal-step-3">
-        <div style={{ marginBottom: '2.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-cyan)' }} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Curated Science Curriculum
-            </span>
-          </div>
-          <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 2.75rem)', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
-            Choose a world to explore.
-          </h2>
-          <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: '680px', margin: 0 }}>
-            Move beyond memorizing labels. Inspect structures, understand relationships, and try practice questions that match the model.
-          </p>
-        </div>
-
-        {/* Editorial Asymmetric Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '1.5rem'
-          }}
-        >
-          {/* FEATURED CARD: Human Cell (Large Visual Area) */}
-          <div
-            className="atlas-card atlas-card-featured"
-            onClick={() => onExploreTopic('human_cell')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onExploreTopic('human_cell');
-              }
-            }}
-            aria-label="Explore Human Animal Cell Biology in 3D and 2D"
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <div
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: 'var(--radius-md)',
-                      background: 'rgba(101, 229, 242, 0.12)',
-                      border: '1px solid rgba(101, 229, 242, 0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--accent-cyan)'
-                    }}
-                  >
-                    <Atom size={24} />
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase' }}>
-                      Featured Living System
-                    </span>
-                    <h3 style={{ fontSize: '1.45rem', fontWeight: 800, margin: 0 }}>The Animal Cell</h3>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '0.35rem' }}>
-                  <span
-                    style={{
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      padding: '0.2rem 0.55rem',
-                      borderRadius: 'var(--radius-xs)',
-                      background: 'rgba(101, 229, 242, 0.15)',
-                      color: 'var(--accent-cyan)',
-                      border: '1px solid rgba(101, 229, 242, 0.3)'
-                    }}
-                  >
-                    3D Studio
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      padding: '0.2rem 0.55rem',
-                      borderRadius: 'var(--radius-xs)',
-                      background: 'rgba(140, 231, 189, 0.15)',
-                      color: 'var(--accent-mint)',
-                      border: '1px solid rgba(140, 231, 189, 0.3)'
-                    }}
-                  >
-                    2D Canvas
-                  </span>
-                </div>
-              </div>
-
-              <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                Step inside the eukaryotic cell. Rotate 8 interactive organelles—including the nucleus, mitochondria, rough ER, and Golgi complex. Discover how ATP synthesis and protein packaging work together.
-              </p>
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: '1rem',
-                borderTop: '1px solid var(--border-subtle)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                color: 'var(--accent-cyan)'
-              }}
-            >
-              <span>Explore Cell Biology</span>
-              <ArrowRight size={18} className="card-arrow" />
-            </div>
-          </div>
-
-          {/* SECONDARY CARD 1: Human Heart */}
-          <div
-            className="atlas-card"
-            onClick={() => onExploreTopic('human_heart')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onExploreTopic('human_heart');
-              }
-            }}
-            aria-label="Explore Human Heart Cardiovascular System"
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(255, 138, 138, 0.12)',
-                    border: '1px solid rgba(255, 138, 138, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-coral)'
-                  }}
-                >
-                  <Heart size={20} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-coral)' }}>
-                  Physiology • 3D + 2D
-                </span>
-              </div>
-
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>The Human Heart</h3>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Trace double circulation through the four chambers, compare pulmonary vs. systemic loops, and adjust cardiac BPM.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-coral)' }}>
-              <span>Simulate Circulation</span>
-              <ArrowRight size={15} className="card-arrow" />
-            </div>
-          </div>
-
-          {/* SECONDARY CARD 2: DNA Double Helix */}
-          <div
-            className="atlas-card"
-            onClick={() => onExploreTopic('dna_helix')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onExploreTopic('dna_helix');
-              }
-            }}
-            aria-label="Explore DNA Double Helix Molecular Genetics"
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(167, 139, 250, 0.12)',
-                    border: '1px solid rgba(167, 139, 250, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-violet)'
-                  }}
-                >
-                  <Dna size={20} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-violet)' }}>
-                  Genetics • 3D + 2D
-                </span>
-              </div>
-
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>DNA Double Helix</h3>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Explore Watson-Crick B-DNA geometry, antiparallel 5'➔3' strands, major and minor grooves, and complementary A=T and G≡C hydrogen bonding.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-violet)' }}>
-              <span>Unravel Helix</span>
-              <ArrowRight size={15} className="card-arrow" />
-            </div>
-          </div>
-
-          {/* SECONDARY CARD 3: Neuron Electrophysiology */}
-          <div
-            className="atlas-card"
-            onClick={() => onExploreTopic('neuron')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onExploreTopic('neuron');
-              }
-            }}
-            aria-label="Explore Neuron Electrophysiology Simulation"
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(245, 189, 112, 0.12)',
-                    border: '1px solid rgba(245, 189, 112, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-amber)'
-                  }}
-                >
-                  <Zap size={20} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-amber)' }}>
-                  Neurobiology • 2D Lab
-                </span>
-              </div>
-
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Neuron &amp; Action Potential</h3>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Trigger nerve impulses, observe saltatory conduction leaping across Nodes of Ranvier, and monitor real-time membrane voltage.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-amber)' }}>
-              <span>Trigger Impulse</span>
-              <ArrowRight size={15} className="card-arrow" />
-            </div>
-          </div>
-
-          {/* SECONDARY CARD 4: Plant Cell */}
-          <div
-            className="atlas-card"
-            onClick={() => onExploreTopic('plant_cell')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onExploreTopic('plant_cell');
-              }
-            }}
-            aria-label="Explore Plant Cell Wall and Chloroplasts"
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(140, 231, 189, 0.12)',
-                    border: '1px solid rgba(140, 231, 189, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-mint)'
-                  }}
-                >
-                  <Leaf size={20} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-mint)' }}>
-                  Botany • 2D Canvas
-                </span>
-              </div>
-
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Plant Cell &amp; Turgor Pressure</h3>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Compare cellulose cell walls, chloroplast thylakoids, and central vacuole osmosis under hypotonic environments.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-mint)' }}>
-              <span>Inspect Plant Cell</span>
-              <ArrowRight size={15} className="card-arrow" />
-            </div>
-          </div>
-
-          {/* SECONDARY CARD 5: Physics & Ray Optics Studio */}
-          <div
-            className="atlas-card"
-            onClick={() => onNavigateToTab?.('stem')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onNavigateToTab?.('stem');
-              }
-            }}
-            aria-label="Explore Physics Ray Optics and Harmonic Motion"
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(101, 229, 242, 0.12)',
-                    border: '1px solid rgba(101, 229, 242, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-cyan)'
-                  }}
-                >
-                  <SlidersHorizontal size={20} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-                  Physics Lab • Interactive
-                </span>
-              </div>
-
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Geometrical Ray Optics</h3>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Adjust focal length (f), object distance (u), and height. Watch dynamic Gaussian ray tracing verify real and virtual image formation.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-cyan)' }}>
-              <span>Launch Physics Lab</span>
-              <ArrowRight size={15} className="card-arrow" />
-            </div>
-          </div>
-
-          {/* SECONDARY CARD 6: Computer Science Concept Engine */}
-          <div
-            className="atlas-card"
-            onClick={() => onNavigateToTab?.('stem')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onNavigateToTab?.('stem');
-              }
-            }}
-            aria-label="Explore Computer Science Linked Lists Deterministic Engine"
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'rgba(167, 139, 250, 0.12)',
-                    border: '1px solid rgba(167, 139, 250, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--accent-violet)'
-                  }}
-                >
-                  <Binary size={20} />
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-violet)' }}>
-                  Data Structures • Deterministic
-                </span>
-              </div>
-
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Linked Lists &amp; Invariant Engine</h3>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                Deterministic step execution and Floyd cycle detection for linked-list practice. Cited exam links are not marked as verified papers.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-violet)' }}>
-              <span>Inspect Pointer Engine</span>
-              <ArrowRight size={15} className="card-arrow" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          3. FROM FLAT PAPER TO SPATIAL UNDERSTANDING
-          Visualizing the Core Metaphor and Educational Problem
-          ==================================================================== */}
-      <section className="glass-panel" style={{ padding: '2.5rem' }}>
-        <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto 2.5rem auto' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-cyan)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-            <Sparkles size={14} />
-            <span>THE CORE METAPHOR</span>
-          </div>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3.2vw, 2.4rem)', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
-            See the media pipeline, then open a model
-          </h2>
-          <p style={{ fontSize: '0.98rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            These two frames are the same public Cloudinary photograph, before and after URL transformations. The cell, heart, and DNA models are separate interactive lessons, not generated from this photo.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', alignItems: 'center' }}>
-          {/* Flat 2D Paper Scanned Textbook */}
-          <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Cloudinary original
-              </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)', fontFamily: 'var(--font-mono)' }}>
-                demo/sample
-              </span>
-            </div>
-            <img
-              src="https://res.cloudinary.com/demo/image/upload/c_scale,w_800/sample.jpg"
-              alt="Untransformed photograph from Cloudinary's public demo cloud. This sample is not a textbook page."
-              width={800}
-              height={220}
-              style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: 'var(--radius-md)' }}
-            />
-            <div style={{ marginTop: '0.85rem', fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Same public asset before sharpening and contrast. Open the media studio to drag the comparison and read the delivery URL.
-            </div>
-          </div>
-
-          {/* Central Transformation Arrow */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem', textAlign: 'center' }}>
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'rgba(101, 229, 242, 0.12)',
-                border: '1px solid rgba(101, 229, 242, 0.35)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--accent-cyan)'
-              }}
-            >
-              <Sparkles size={22} />
-            </div>
-            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-              URL transformations
-            </div>
-            <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', maxWidth: '220px' }}>
-              <code style={{ color: 'var(--accent-cyan)' }}>e_sharpen</code>, <code style={{ color: 'var(--accent-cyan)' }}>e_contrast</code>, <code style={{ color: 'var(--accent-cyan)' }}>f_auto</code>, <code style={{ color: 'var(--accent-cyan)' }}>q_auto</code>
-            </div>
-          </div>
-
-          {/* Explorable 3D Digital Model */}
-          <div
-            style={{
-              background: 'linear-gradient(135deg, rgba(17, 25, 39, 0.9) 0%, rgba(23, 33, 49, 0.9) 100%)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '1.25rem',
-              border: '1px solid rgba(101, 229, 242, 0.3)',
-              boxShadow: 'var(--glow-focal)'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)', textTransform: 'uppercase' }}>
-                Cloudinary transformed
-              </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--accent-mint)', fontFamily: 'var(--font-mono)' }}>
-                f_auto · q_auto
-              </span>
-            </div>
-            <div
-              style={{
-                background: 'var(--bg-primary)',
-                height: '220px',
-                borderRadius: 'var(--radius-md)',
-                overflow: 'hidden',
-                position: 'relative'
-              }}
-            >
-              <img
-                src="https://res.cloudinary.com/demo/image/upload/e_sharpen:80,e_contrast,c_scale,w_800/f_auto,q_auto/sample.jpg"
-                alt="The same Cloudinary demo photograph after sharpen and contrast."
-                width={800}
-                height={220}
-                style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
-              />
-            </div>
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ marginTop: '0.85rem', fontSize: '0.8rem', padding: '0.45rem 1rem' }}
-              onClick={() => onNavigateToTab?.('cloudinary')}
-            >
-              Open media studio
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          4. THE LEARNING PROCESS
-          Three distinct stages: 01 Explore -> 02 Understand -> 03 Practice
-          ==================================================================== */}
-      <section id="how-it-works" className="glass-panel" style={{ padding: '2.5rem' }}>
-        <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto 2.5rem auto' }}>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3.2vw, 2.4rem)', fontWeight: 600, margin: '0 0 0.5rem 0', fontFamily: 'var(--font-display)' }}>
-            How learning adapts
-          </h2>
-          <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            After you answer, ConceptLens can suggest a review, the simpler stored explanation, the labeled diagram, or the next structure. The suggestion names the answer it used. It is a set of rules, not a trained model, and it does not infer a diagnosis.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', background: 'var(--bg-elevated)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--accent-cyan)', fontFamily: 'var(--font-display)' }}>
-              01 — Explore
-            </div>
-            <h4 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Interact with Scientific Structures</h4>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-              Interact with scientific structures and inspect their individual components in spatial 3D or high-contrast 2D viewports.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', background: 'var(--bg-elevated)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--accent-mint)', fontFamily: 'var(--font-display)' }}>
-              02 — Understand
-            </div>
-            <h4 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Investigate Relationships</h4>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-              Read explanations and investigate how components work together through intuitive analogies and physiological mechanisms.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', background: 'var(--bg-elevated)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--accent-amber)', fontFamily: 'var(--font-display)' }}>
-              03 — Practice
-            </div>
-            <h4 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Test Your Understanding</h4>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-              Test your understanding with practice questions, instant feedback, and an explanation of the correct choice.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          5. ACCESSIBILITY & INCLUSION AS CORE ARCHITECTURE
-          ==================================================================== */}
-      <section id="accessibility" className="glass-panel" style={{ padding: '2.5rem' }}>
-        <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto 2.5rem auto' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-mint)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-            <ShieldCheck size={14} />
-            <span>ACCESSIBLE BY DESIGN</span>
-          </div>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3.2vw, 2.4rem)', fontWeight: 800, margin: '0 0 0.5rem 0' }}>
-            Inclusive Learning for Every Student
-          </h2>
-          <p style={{ fontSize: '0.98rem', color: 'var(--text-secondary)' }}>
-            Accessibility is woven directly into the visual and technical architecture—not patched on as an afterthought.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-          <div style={{ background: 'var(--bg-elevated)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <Eye size={22} color="var(--accent-cyan)" style={{ marginBottom: '0.5rem' }} />
-            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.35rem 0' }}>High Contrast Mode</h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              High-contrast colors and a visible focus outline for low-vision learners. This is not a formal WCAG audit.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--bg-elevated)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <Volume2 size={22} color="var(--accent-mint)" style={{ marginBottom: '0.5rem' }} />
-            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.35rem 0' }}>Live Screen Reader</h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Polite ARIA live region announces every organelle selection, state transition, and quiz explanation dynamically.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--bg-elevated)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <Video size={22} color="var(--accent-violet)" style={{ marginBottom: '0.5rem' }} />
-            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.35rem 0' }}>Text lessons</h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Searchable English explanations you can step through with the keyboard. Authentic Indian Sign Language video is not included.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--bg-elevated)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <Layers size={22} color="var(--accent-amber)" style={{ marginBottom: '0.5rem' }} />
-            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.35rem 0' }}>Universal 2D Fallback</h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              High-detail SVG diagrams ensure students on low-power devices, mobile phones, or browsers without WebGL have complete access.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          6. CLOSING CALL TO ACTION
-          ==================================================================== */}
-      <section
-        style={{
-          textAlign: 'center',
-          padding: '4rem 1.5rem',
-          borderRadius: 'var(--radius-xl)',
-          background: 'radial-gradient(circle at center, rgba(101, 229, 242, 0.12) 0%, rgba(8, 11, 18, 0.95) 100%)',
-          border: '1px solid rgba(101, 229, 242, 0.25)',
-          boxShadow: 'var(--shadow-elevated)'
+    <div className="learn-home">
+      <HomeNarrative
+        preferences={preferences}
+        onStartLearning={() => focusSection('guided-demo')}
+        onOpenAccessibility={onOpenAccessibility}
+        onToggleTheme={(id) => {
+          const next = toggleLearningTheme(preferences, id);
+          onPreferences(next);
+          onAnnounce(`${learningThemeById(id).title} ${next.activeThemes.includes(id) ? 'on' : 'off'}.`);
         }}
-      >
-        <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 2.75rem)', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
-          Make difficult concepts easier to explore.
-        </h2>
-        <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: '560px', margin: '0 auto 1.75rem auto', lineHeight: 1.6 }}>
-          Transform your static textbook into an explorable scientific environment. No registration required, zero friction.
+        pageReading={pageReading}
+      />
+
+      <ol className="journey-track" aria-label="Demo journey">
+        {(
+          [
+            ['question', 'Question'],
+            ['preferences', 'Preferences'],
+            ['explanation', 'Explanation'],
+            ['practice', 'Practice'],
+            ['recommendation', 'Recommendation']
+          ] as const
+        ).map(([id, label], index) => {
+          const current = answerState
+            ? 'recommendation'
+            : activePanel === 'practice' && explanation
+              ? 'practice'
+              : explanation
+                ? 'explanation'
+                : 'question';
+          return (
+            <li key={id} aria-current={current === id ? 'step' : undefined}>
+              <span className="step-index">{index + 1}</span>
+              {label}
+            </li>
+          );
+        })}
+      </ol>
+
+      <GuidedDemo
+        preferences={preferences}
+        onPreferences={onPreferences}
+        busy={busy}
+        onOpen={(text, sampleId) => {
+          void explainText({
+            text,
+            sourceKind: sampleId ? 'sample' : 'learner_text',
+            sampleId,
+            subjectOverride: null,
+            contentTypeOverride: null,
+            stepIndex: 0,
+            evidence,
+            weights,
+            fileLabel
+          });
+        }}
+      />
+
+      <section id="start-learning" className="atelier-panel story-target" tabIndex={-1} aria-labelledby="upload-title">
+        <p className="atelier-kicker">Begin</p>
+        <h2 id="upload-title">Start learning</h2>
+        <p className="atelier-quiet">
+          {pageReading === 'ready'
+            ? 'Paste notes, type a question, or choose a JPEG, PNG, WebP, or PDF up to 12 MB. The server checks the file bytes. Printed photographs and scanned PDF pages are read locally. Handwriting is often weak. You confirm the reading before it is explained.'
+            : pageReading === 'checking'
+              ? 'Checking whether photograph reading is available on this server.'
+              : 'Paste notes, type a question, or choose a JPEG, PNG, WebP, or PDF up to 12 MB. The server checks the file bytes. A PDF is read when it has a text layer. Photograph and scanned-page reading is not available on this server, so those uploads stay planned. You can type what you see.'}
         </p>
-        <button
-          type="button"
-          className="btn-primary"
-          style={{ fontSize: '1.1rem', padding: '0.9rem 2.2rem' }}
-          onClick={() => onExploreTopic('human_cell')}
-        >
-          Start Exploring
-        </button>
+        <div className="atelier-actions">
+          <button type="button" className="btn-primary" onClick={() => fileRef.current?.click()}>
+            Choose a file
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => { setComposer('paste'); pasteRef.current?.focus(); }}>
+            Paste text
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => { setComposer('question'); setDraft(''); }}>
+            Type a question
+          </button>
+          <button type="button" className="btn-secondary" onClick={continueLearning}>
+            Continue
+          </button>
+        </div>
+        <div className="pref-summary" aria-label="Active learning preferences">
+          <span>{preferenceSummary}</span>
+          <button type="button" className="atelier-text-link atelier-text-button" onClick={onOpenAccessibility}>
+            Change learning preferences
+          </button>
+        </div>
+        <p className="fine-print">
+          {weights.plain !== 1 || weights.steps !== 1 || weights.example !== 1
+            ? `Saved answers currently give more weight to ${weightNote} explanations. That is a count of answers, not a trained model.`
+            : 'Suggestions stay on the written rules until you practice.'}
+        </p>
+        <label className="sr-only" htmlFor={fileId}>Choose a JPEG, PNG, WebP, or PDF</label>
+        <input
+          id={fileId}
+          className="sr-only"
+          ref={fileRef}
+          type="file"
+          tabIndex={-1}
+          aria-hidden="true"
+          accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = '';
+            void onFile(file);
+          }}
+        />
+        {(composer === 'paste' || composer === 'question') && (
+          <div className="composer">
+            <label htmlFor="learner-draft">{composer === 'question' ? 'Your question' : 'Pasted text'}</label>
+            <textarea
+              id="learner-draft"
+              ref={pasteRef}
+              rows={6}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder={composer === 'question' ? 'Ask about a concept, an error message, or a passage.' : 'Paste a passage, equation, or notes.'}
+            />
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={busy || draft.trim().length === 0}
+              onClick={() => void stageText(composer === 'question' ? 'question' : 'text', draft)}
+            >
+              Check this text
+            </button>
+          </div>
+        )}
+        <p role="status">{status}</p>
+        {busy && (
+          <button type="button" className="btn-secondary" onClick={cancelWork}>
+            Cancel processing
+          </button>
+        )}
+        {pendingKind && !explanation && (
+          <div className="confirm-panel">
+            <h3>{pendingDemo ? 'Sample text' : 'Confirm the text'}</h3>
+            {previewUrl && <img className="material-preview" src={previewUrl} alt="Preview of the selected image." />}
+            {fileLabel && <p>{fileLabel}</p>}
+            <p>{pendingNote}</p>
+            <label htmlFor="confirm-text">Text to explain</label>
+            <textarea id="confirm-text" rows={6} value={pendingText} onChange={(event) => setPendingText(event.target.value)} />
+            <div className="workspace-actions">
+              <button type="button" className="btn-primary" onClick={confirm} disabled={busy || pendingText.trim().length === 0}>
+                Explain this
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setPendingKind(null);
+                  setPendingText('');
+                  fileRef.current?.focus();
+                  setStatus('Ready for another file or another paste.');
+                }}
+              >
+                Retry
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  cancelWork();
+                  setPendingKind(null);
+                  setPendingText('');
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </section>
+
+      <section id="sample-lessons" className="atelier-panel story-target" tabIndex={-1} aria-labelledby="sample-title">
+        <p className="atelier-kicker">Samples</p>
+        <h2 id="sample-title">Open a curated lesson</h2>
+        <p className="atelier-quiet">Choosing one loads its text. It does not read a photograph.</p>
+        <div className="quiet-row">
+          {SAMPLE_MATERIALS.map((sample) => (
+            <button key={sample.id} type="button" className="btn-secondary" onClick={() => void stageText('sample', sample.text, sample.id)}>
+              {sample.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {explanation && presented && recommendation && (
+        <LearningWorkspace
+          explanation={explanation}
+          presented={presented}
+          stepIndex={stepIndex}
+          evidence={evidence}
+          recommendation={recommendation}
+          previewUrl={previewUrl}
+          fileLabel={fileLabel}
+          lowData={preferences.lowData}
+          speechRate={preferences.speechRate}
+          recognizedText={recognizedText}
+          busy={busy}
+          answerState={answerState}
+          clearOpen={clearOpen}
+          activePanel={activePanel}
+          onPanel={setActivePanel}
+          onRecognizedText={setRecognizedText}
+          onUpdateText={() => {
+            if (!explanation) return;
+            void explainText({
+              text: recognizedText,
+              sourceKind: explanation.demo ? 'sample' : explanation.sourceKind,
+              sampleId: explanation.sampleId,
+              subjectOverride: explanation.learnerCorrectedSubject ? explanation.subject : null,
+              contentTypeOverride: null,
+              stepIndex,
+              evidence,
+              weights,
+              fileLabel
+            });
+          }}
+          onCorrect={(subject, contentType) => {
+            void explainText({
+              text: recognizedText || explanation.sourceContent,
+              sourceKind: explanation.sourceKind,
+              sampleId: explanation.sampleId,
+              subjectOverride: subject,
+              contentTypeOverride: contentType,
+              stepIndex,
+              evidence,
+              weights,
+              fileLabel
+            });
+          }}
+          onAction={onAction}
+          onStep={(index) => {
+            setStepIndex(index);
+            const step = explanation.steps[index];
+            if (step) onAnnounce(`${step.title}. ${step.detail}`);
+          }}
+          onAnswer={(questionId, index) => void onAnswer(questionId, index)}
+          onClearRequest={() => setClearOpen(true)}
+          onClearConfirm={() => void clearSaved()}
+          onClearCancel={() => setClearOpen(false)}
+          onClose={() => setExplanation(null)}
+          onSpeechRate={(rate) => onSpeechRate?.(rate)}
+        />
+      )}
+
+      <section id="biology-lessons" className="atelier-panel biology-links story-target" tabIndex={-1} aria-labelledby="biology-links-title">
+        <p className="atelier-kicker">Biology</p>
+        <h2 id="biology-links-title">Five curated lessons</h2>
+        <p className="atelier-quiet">The same models and practice, opened as their own lesson.</p>
+        <div className="quiet-row">
+          {BIOLOGY_TOPICS.map((topic) => (
+            <button key={topic} type="button" className="btn-secondary" onClick={() => onExploreTopic(topic)}>
+              {BIOLOGY_LABELS[topic]}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <footer className="lens-footer">
+        <div>
+          <p className="lens-footer-name">ConceptLens</p>
+          <p>Learning should adapt to you. One concept, shown in the form you choose.</p>
+        </div>
+        <nav aria-label="On this page">
+          <a href="#guided-demo" onClick={(event) => { event.preventDefault(); focusSection('guided-demo'); }}>Start learning</a>
+          <a href="#our-mission" onClick={(event) => { event.preventDefault(); focusSection('our-mission'); }}>Our mission</a>
+          <a href="#how-it-works" onClick={(event) => { event.preventDefault(); focusSection('how-it-works'); }}>How it works</a>
+          <a href="#learning-preferences" onClick={(event) => { event.preventDefault(); focusSection('learning-preferences'); }}>Preferences</a>
+          <a href="#sample-lessons" onClick={(event) => { event.preventDefault(); focusSection('sample-lessons'); }}>Samples</a>
+          <a href="#biology-lessons" onClick={(event) => { event.preventDefault(); focusSection('biology-lessons'); }}>Biology lessons</a>
+        </nav>
+        <p className="lens-note">
+          Aims to support Quality Education and Reduced Inequalities. Not a United Nations program, and not endorsed by the United Nations.
+        </p>
+        <a href="#learn-title" onClick={(event) => { event.preventDefault(); focusSection('learn-title'); }}>Back to top</a>
+      </footer>
     </div>
   );
 };

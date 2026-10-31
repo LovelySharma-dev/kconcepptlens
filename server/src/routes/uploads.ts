@@ -6,7 +6,9 @@ import {
   uploadDirectToCloudinary,
   isSafePublicId,
   inspectDirectUpload,
-  cloudinary
+  cloudinary,
+  signedUploadAllowed,
+  cloudinaryFailureReason
 } from '../config/cloudinary';
 import { Asset } from '../models/Asset';
 import { inMemoryStore, isDbConnected } from '../config/db';
@@ -17,25 +19,27 @@ const router = Router();
  * GET /api/uploads/status
  * Returns real Cloudinary integration status for the client UI
  */
-router.get('/status', async (req: Request, res: Response) => {
+async function readAccount(): Promise<{ configured: boolean; accountReachable: boolean; accountError: string | null }> {
   const configured = isCloudinaryConfigured();
-  let accountReachable = false;
-  let accountError: string | null = null;
-
-  if (configured) {
-    try {
-      await cloudinary.api.ping();
-      accountReachable = true;
-    } catch (error: unknown) {
-      const nested = error && typeof error === 'object' && 'error' in error
-        ? (error as { error?: { message?: unknown } }).error?.message
-        : undefined;
-      const raw = typeof nested === 'string' ? nested : 'Cloudinary account check failed';
-      accountError = raw.length > 120 || /key|secret|auth/i.test(raw)
-        ? 'Cloudinary rejected the server credentials.'
-        : raw;
-    }
+  if (!configured) return { configured, accountReachable: false, accountError: null };
+  try {
+    await cloudinary.api.ping();
+    return { configured, accountReachable: true, accountError: null };
+  } catch (error: unknown) {
+    const nested = error && typeof error === 'object' && 'error' in error
+      ? (error as { error?: { message?: unknown } }).error?.message
+      : undefined;
+    const raw = typeof nested === 'string' ? nested : 'Cloudinary account check failed';
+    return { configured, accountReachable: false, accountError: cloudinaryFailureReason(raw) };
   }
+}
+
+router.get('/status', async (req: Request, res: Response) => {
+  const account = await readAccount();
+  const configured = account.configured;
+  const accountReachable = account.accountReachable;
+  const accountError = account.accountError;
+  const uploadGate = signedUploadAllowed({ configured, accountReachable });
 
   res.json({
     success: true,
@@ -46,7 +50,11 @@ router.get('/status', async (req: Request, res: Response) => {
       cloudName: configured ? process.env.CLOUDINARY_CLOUD_NAME?.trim() : null,
       folder: 'conceptlens/uploads',
       supportedFormats: ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'],
-      maxSizeBytes: 15 * 1024 * 1024 // 15 MB
+      maxSizeBytes: 15 * 1024 * 1024, // 15 MB for the existing media route
+      signedUpload: uploadGate.allowed ? 'enabled' : 'disabled',
+      signedUploadReason: uploadGate.reason,
+      assetAccess: 'authenticated',
+      retention: 'Authenticated uploads stay in the Cloudinary account until deleted. This server does not keep the file.'
     }
   });
 });
@@ -55,12 +63,14 @@ router.get('/status', async (req: Request, res: Response) => {
  * POST /api/uploads/signature
  * Generates restricted signed authorization for client-side direct Cloudinary uploads
  */
-router.post('/signature', (req: Request, res: Response) => {
+router.post('/signature', async (req: Request, res: Response) => {
   try {
-    if (!isCloudinaryConfigured()) {
+    const account = await readAccount();
+    const uploadGate = signedUploadAllowed(account);
+    if (!uploadGate.allowed) {
       return res.status(503).json({
         success: false,
-        error: 'Cloudinary API credentials are not configured in .env. Configure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET for live signed uploads.'
+        error: uploadGate.reason
       });
     }
     const folder = 'conceptlens/uploads';
@@ -92,10 +102,12 @@ router.post('/direct', async (req: Request, res: Response) => {
       return res.status(inspected.status).json({ success: false, error: inspected.error });
     }
 
-    if (!isCloudinaryConfigured()) {
+    const account = await readAccount();
+    const uploadGate = signedUploadAllowed(account);
+    if (!uploadGate.allowed) {
       return res.status(503).json({
         success: false,
-        error: 'Cloudinary API credentials are not configured in .env. Please configure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET or use curated sample diagrams.'
+        error: uploadGate.reason
       });
     }
 

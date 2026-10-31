@@ -159,7 +159,7 @@ const initialDefaultUniversalModel: UniversalInteractiveDiagram = {
 };
 
 export const App: React.FC = () => {
-  // Navigation & Tabs: Home is landing page, Biology is the core interactive 3D platform
+  // Navigation & Tabs: Home is the landing page. Biology lessons use labeled diagrams.
   const [activeTab, setActiveTab] = useState<
     'home' | 'biology' | 'cloudinary' | 'practice' | 'isl' | 'stem' | 'gates' | 'about'
   >('home');
@@ -415,21 +415,7 @@ export const App: React.FC = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span className="brand-title">ConceptLens</span>
-              <span
-                style={{
-                  fontSize: '0.68rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  padding: '0.15rem 0.5rem',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(101, 229, 242, 0.12)',
-                  color: 'var(--accent-cyan)',
-                  border: '1px solid rgba(101, 229, 242, 0.3)',
-                  letterSpacing: '0.04em'
-                }}
-              >
-                Living Atlas
-              </span>
+              <span className="brand-edition">Living Atlas</span>
             </div>
             <span className="brand-tagline">
               One concept. Different ways to understand it.
@@ -522,7 +508,7 @@ export const App: React.FC = () => {
                 }
                 return applyLearningTheme(current, 'low-data');
               });
-              setLiveAnnouncement(preferences.lowData ? 'Low data off.' : 'Low data on. 3D scenes stay unloaded until you ask.');
+              setLiveAnnouncement(preferences.lowData ? 'Low data off.' : 'Low data on. Diagrams stay unloaded until you ask.');
             }}
             aria-pressed={preferences.lowData}
             aria-label={preferences.lowData ? 'Low data on' : 'Low data off'}
@@ -539,7 +525,8 @@ export const App: React.FC = () => {
             aria-controls="learning-theme-dialog"
           >
             <Accessibility size={18} aria-hidden="true" />
-            <span>Learning & Accessibility Themes</span>
+            <span className="lens-label-full">Learning & Accessibility Themes</span>
+            <span className="lens-label-short">Themes</span>
             {preferences.activeThemes.length > 0 && (
               <span className="theme-count">{preferences.activeThemes.length} on</span>
             )}
@@ -563,21 +550,16 @@ export const App: React.FC = () => {
           {/* TAB 1: LANDING PAGE */}
           {activeTab === 'home' && (
             <LandingPage
-              defer3D={preferences.lowData || preferences.textFirst || preferences.lowStimulation}
+              preferences={preferences}
+              onPreferences={setPreferences}
+              onOpenAccessibility={() => setLensOpen(true)}
               onExploreTopic={handleLaunchTopic}
-              onNavigateToHowItWorks={() => {
-                const el = document.getElementById('how-it-works');
-                if (el) el.scrollIntoView({ behavior: preferences.reducedMotion ? 'auto' : 'smooth' });
-              }}
-              onNavigateToAccessibility={() => {
-                const el = document.getElementById('accessibility');
-                if (el) el.scrollIntoView({ behavior: preferences.reducedMotion ? 'auto' : 'smooth' });
-              }}
-              onNavigateToTab={(tab) => setActiveTab(tab as 'home' | 'biology' | 'cloudinary' | 'practice' | 'isl' | 'stem' | 'gates' | 'about')}
+              onAnnounce={setLiveAnnouncement}
+              onSpeechRate={(rate) => setPreferences((current) => ({ ...current, speechRate: rate }))}
             />
           )}
 
-        {/* TAB 2: BIOLOGY 3D & 2D STUDIO */}
+        {/* TAB 2: BIOLOGY LESSONS */}
         {activeTab === 'biology' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Topic Switcher Pills */}
@@ -596,11 +578,11 @@ export const App: React.FC = () => {
             >
               <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                 {[
-                  { id: 'human_cell', label: 'Human Cell (Animal Cell 3D)', badge: '3D' },
-                  { id: 'human_heart', label: 'Human Heart (Circulation 3D)', badge: '3D' },
-                  { id: 'dna_helix', label: 'DNA Double Helix (3D)', badge: '3D' },
-                  { id: 'neuron', label: 'Neuron (Action Potential 2D)', badge: '2D' },
-                  { id: 'plant_cell', label: 'Plant Cell (Wall & Turgor 2D)', badge: '2D' }
+                  { id: 'human_cell', label: 'Human Cell' },
+                  { id: 'human_heart', label: 'Human Heart' },
+                  { id: 'dna_helix', label: 'DNA Double Helix' },
+                  { id: 'neuron', label: 'Neuron' },
+                  { id: 'plant_cell', label: 'Plant Cell' }
                 ].map((t) => (
                   <button
                     key={t.id}
@@ -619,18 +601,6 @@ export const App: React.FC = () => {
                     }}
                   >
                     <span>{t.label}</span>
-                    <span
-                      style={{
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        padding: '0.1rem 0.35rem',
-                        borderRadius: '3px',
-                        background: t.badge === '3D' ? 'rgba(56, 189, 248, 0.25)' : 'rgba(16, 185, 129, 0.25)',
-                        color: t.badge === '3D' ? 'var(--accent-cyan)' : '#34d399'
-                      }}
-                    >
-                      {t.badge}
-                    </span>
                   </button>
                 ))}
               </div>
@@ -733,9 +703,11 @@ export const App: React.FC = () => {
             <ul>
               <li>There is no recorded narration, so Listen and follow stays unavailable. Nothing is spoken automatically.</li>
               <li>There is no reviewed sign-language video. Text on the linked-list page is not sign language.</li>
-              <li>The 3D view is a simplified illustration. The structure list and written explanation carry the same science.</li>
+              <li>The diagram is a simplified illustration. The structure list and written explanation carry the same science.</li>
               <li>This build has not had a formal accessibility audit.</li>
-              <li>Signed media upload needs server credentials. Lessons keep working when that upload is unavailable.</li>
+              <li>Signed media upload stays off while the Cloudinary cloud name and API key do not match. Lessons keep working. Unsigned upload is not turned on instead.</li>
+              <li>Pasted text, typed questions, PDF text layers, and four labeled samples can be explained with local rules. Photographs and scanned PDF pages are read with local Tesseract when that engine loads. If it does not load, those uploads stay unread and no text is invented. You confirm the reading before an explanation is built. Handwriting is often weak.</li>
+              <li>Answer suggestions use counted rules in the browser and a local Python file. That is not a trained model.</li>
               <li>SDG 3 is linked from the cell and heart lessons, and SDG 15 from the plant cell. DNA and the neuron have no curated goal, and none was invented. There is no SDG 7 energy lesson here.</li>
             </ul>
             <h3>Other workspaces</h3>
@@ -942,12 +914,12 @@ export const App: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
               {[
-                { num: '01', title: 'Upload & Validate', desc: 'Checks file mime, size limits (max 15MB), and format integrity.', status: 'Active' },
-                { num: '02', title: 'Prepare Media', desc: 'Cloudinary signed upload, auto-deskew, sharpen & crop bounding box.', status: 'Active' },
-                { num: '03', title: 'Extract Content', desc: 'OCR bounding boxes with normalized coordinates.', status: 'Active' },
-                { num: '04', title: 'Interpret Diagram', desc: 'AI vision prompt bound by strict AST Zod schema.', status: 'Active' },
+                { num: '01', title: 'Upload & Validate', desc: 'Checks file bytes, not only the declared type, and enforces the size limit.', status: 'Active' },
+                { num: '02', title: 'Prepare Media', desc: 'Signed Cloudinary upload stays off until the account check succeeds.', status: 'Guarded' },
+                { num: '03', title: 'Extract Content', desc: 'Typed text and PDF text layers are read locally. Photographs and scanned pages use local Tesseract when it loads. A failed read does not invent text.', status: 'Active' },
+                { num: '04', title: 'Interpret Diagram', desc: 'Curated lessons and checked rules. Arbitrary images are not given invented readings.', status: 'Limited' },
                 { num: '05', title: 'Validate Structure', desc: 'Floyd cycle detection, head integrity & dangling checks.', status: 'Enforced' },
-                { num: '06', title: 'Human Correction', desc: 'Interactive review when OCR confidence < 0.80.', status: 'Enforced' },
+                { num: '06', title: 'Human Correction', desc: 'You confirm an OCR reading and can correct the subject, content type, or text.', status: 'Available' },
                 { num: '07', title: 'Deterministic Render', desc: 'Mathematical state transitions (no AI hallucinations).', status: 'Active' },
                 { num: '08', title: 'Verify Learning', desc: 'Connects answers to original PYQ marking scheme.', status: 'Active' }
               ].map((g) => (

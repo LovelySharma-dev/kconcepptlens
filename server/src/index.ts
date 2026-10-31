@@ -12,6 +12,7 @@ import pyqsRouter from './routes/pyqs';
 import lessonsRouter from './routes/lessons';
 import practiceRouter from './routes/practice';
 import biologyRouter from './routes/biology';
+import materialsRouter from './routes/materials';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config();
@@ -55,6 +56,7 @@ app.use('/api/pyqs', pyqsRouter);
 app.use('/api/lessons', lessonsRouter);
 app.use('/api/practice', practiceRouter);
 app.use('/api/biology', biologyRouter);
+app.use('/api/materials', materialsRouter);
 
 const clientDist = path.resolve(__dirname, '../../client/dist');
 if (process.env.NODE_ENV === 'production' && fs.existsSync(clientDist)) {

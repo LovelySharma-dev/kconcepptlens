@@ -26,6 +26,7 @@ export const EducationalFigure: React.FC<EducationalFigureProps> = ({
   const [requested, setRequested] = useState(false);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [useSource, setUseSource] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export const EducationalFigure: React.FC<EducationalFigureProps> = ({
     setFailed(false);
     setLoading(false);
     setAttempt(0);
+    setUseSource(false);
   }, [conceptId]);
 
   useEffect(() => {
@@ -41,13 +43,13 @@ export const EducationalFigure: React.FC<EducationalFigureProps> = ({
 
   const showImage = Boolean(asset) && !failed && (!deferUntilRequested || requested);
   const image = useMemo(
-    () => (asset && showImage ? buildEducationalImage(asset.remoteUrl, lowData) : null),
-    [asset, showImage, lowData]
+    () => (asset && showImage && !useSource ? buildEducationalImage(asset.remoteUrl, lowData) : null),
+    [asset, showImage, lowData, useSource]
   );
 
   useEffect(() => {
-    setLoading(Boolean(showImage && image));
-  }, [showImage, image, attempt]);
+    setLoading(Boolean(showImage && (image || useSource)));
+  }, [showImage, image, useSource, attempt]);
 
   if (!asset) {
     return <p>No labeled diagram is stored for this lesson. The written explanation still applies.</p>;
@@ -92,9 +94,33 @@ export const EducationalFigure: React.FC<EducationalFigureProps> = ({
           onLoad={() => setLoading(false)}
           onError={() => {
             setLoading(false);
+            if (!useSource) {
+              setUseSource(true);
+              return;
+            }
             setFailed(true);
           }}
         />
+      )}
+      {showImage && useSource && asset && (
+        <img
+          key={`${conceptId}-source-${attempt}`}
+          src={asset.remoteUrl}
+          alt={asset.alt}
+          width={displayWidth}
+          height={displayHeight}
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            setLoading(false);
+            setFailed(true);
+          }}
+        />
+      )}
+      {useSource && !failed && (
+        <p role="status">
+          Cloudinary could not fetch this diagram. The original source image is shown instead. The written lesson still applies.
+          {lowData ? ' This fallback is the original thumbnail, not the smaller Cloudinary version.' : ''}
+        </p>
       )}
       {failed && (
         <div role="status" className="edu-error">
@@ -104,6 +130,7 @@ export const EducationalFigure: React.FC<EducationalFigureProps> = ({
             className="btn-secondary"
             onClick={() => {
               setFailed(false);
+              setUseSource(false);
               setRequested(true);
               setAttempt((value) => value + 1);
             }}

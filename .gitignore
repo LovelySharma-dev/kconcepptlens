@@ -80,3 +80,5 @@ desktop.ini
 tmp/
 temp/
 fixtures/synthetic/
+python/data/*.json
+server/ocr-cache/

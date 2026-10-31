@@ -1,5 +1,17 @@
 # ConceptLens — Notion Documentation & Pitch Deck
 
+## Status checked on 25 October 2026, later pass
+
+This pass adds a deterministic adaptive lesson panel and rechecks media delivery. It does not replace the earlier log below.
+
+- `npm test` printed **194 / 194 passed**.
+- `npm run build` completed for shared, server, and client. The final client build finished in 2.83s. CSS 30.00 kB (gzip 6.77 kB). Main JS 459.95 kB (gzip 136.82 kB). Three.js chunk 564.97 kB (gzip 140.94 kB). The production JavaScript was searched for `CLOUDINARY_API_SECRET` and the string was not present.
+- `GET /api/uploads/status` returned `configured: true`, `accountReachable: false`, `accountError: cloud_name mismatch`, `cloudName: ConceptLens`. No signed upload was attempted.
+- Cloudinary fetch on the public `demo` cloud: animal cell, heart, and plant cell returned HTTP 200 at 800px and 480px. DNA and neuron returned HTTP 400 because Wikimedia returned 429 to Cloudinary's fetcher. The figure falls back to the original thumbnail and keeps the written lesson.
+- In the browser at `http://localhost:5173`: the landing page opened in the saved light theme with the new supporting sentence. The heart lesson stayed on the right atrium while Simple Steps was turned off. Selecting the left ventricle showed a question whose choices are labeled Circle, Square, Triangle, and Diamond. An incorrect choice produced "Let's review this concept." and the suggestion "Explore the labeled diagram" with the reason "You answered a question about Left Ventricle incorrectly, so reviewing the labeled diagram may help." The stage label was "Practicing", not a mastery score.
+- No screen-reader pass, switch-access test, or disability-group test was done. The product is not claimed to be accessible to every learner.
+- The suggestion engine is a set of rules. It is not a trained model. It does not infer a diagnosis.
+
 ## Status checked on 25 October 2026
 
 This section records what was actually run. Older sections below that still say "verified ISL", "verified board paper", "43 tests", or a formal WCAG audit are superseded by this log.

@@ -258,7 +258,7 @@ export const TextFirstPath: React.FC<{
     <h3>{title}</h3>
     <p>{objective}</p>
     <p>{description}</p>
-    <p>This view does not start a 3D scene. The same structure names are in the list beside it.</p>
+    <p>This view does not start a diagram. The same structure names are in the list beside it.</p>
     <ol className="path-steps">
       {parts.map((part) => {
         const current = part.id === selectedId;
@@ -333,7 +333,7 @@ export const LowDataPath: React.FC<{
     <article className="path-reading">
       <p className="path-kicker">Low data</p>
       <h3>{unit.title}</h3>
-      <p>This is the written lesson. Optional pictures and 3D scenes stay unloaded until you ask. Text that is already on this page is not the same as a file saved for offline use.</p>
+      <p>This is the written lesson. Optional pictures stay unloaded until you ask. Text that is already on this page is not the same as a file saved for offline use.</p>
       <h4>{componentName}</h4>
       <p>{simple}</p>
       {conceptId ? (

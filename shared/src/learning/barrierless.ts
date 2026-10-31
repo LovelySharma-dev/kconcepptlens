@@ -140,13 +140,13 @@ export function modesForLesson(lesson: LearningUnitInput): ModeAvailability[] {
       id: 'low-data',
       label: 'Low data',
       available: hasText,
-      reason: hasText ? 'Text stays available. The 3D model stays unloaded until you ask for it.' : 'No text lesson is stored.'
+      reason: hasText ? 'Text stays available. The diagram stays unloaded until you ask for it.' : 'No text lesson is stored.'
     },
     {
       id: 'accessible',
       label: 'Text first',
       available: lesson.components.length > 0,
-      reason: lesson.components.length > 0 ? 'The written lesson, without starting a 3D scene' : 'No structures are stored.'
+      reason: lesson.components.length > 0 ? 'The written lesson, without starting a diagram' : 'No structures are stored.'
     }
   ];
 }
@@ -203,7 +203,7 @@ export function switchLearningMode(state: ContinuityState, lesson: LearningUnitI
       notice = 'No guided stage is mapped to the selected structure. Completed stages were kept.';
     }
   } else if (next === 'simple' || next === 'low-data') {
-    notice = 'This is the written lesson. A 3D camera position is not carried over. The selected structure, completed stages, and quiz answers stay.';
+    notice = 'This is the written lesson. The selected structure, completed stages, and quiz answers stay.';
   } else if (next === 'accessible' || next === 'visual') {
     notice = 'Same structure as before. The view changed, not the concept.';
   }

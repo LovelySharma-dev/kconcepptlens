@@ -267,7 +267,7 @@ export const CloudinaryMediaStudio: React.FC<CloudinaryMediaStudioProps> = ({
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1.25rem' }}
             onClick={() => onSelectTopic(activePreset.topicId)}
           >
-            <span>Explore in 3D Biology Studio</span>
+            <span>Open the biology lesson</span>
             <ArrowRight size={16} />
           </button>
         </div>

@@ -195,13 +195,39 @@ export async function uploadDirectToCloudinary(
     throw new Error('Cloudinary credentials not configured in server environment.');
   }
 
+  // Learner files are authenticated assets. The original file name is not the public id.
+  // The asset remains in the Cloudinary account until an explicit delete. This request does not keep a local copy.
   return cloudinary.uploader.upload(fileContent, {
     folder,
-    tags: ['student-upload', 'conceptlens'],
-    allowed_formats: ['png', 'jpg', 'jpeg', 'webp', 'pdf'],
-    transformation: [
-      { quality: 'auto' },
-      { fetch_format: 'auto' }
-    ]
+    use_filename: false,
+    unique_filename: true,
+    resource_type: 'auto',
+    type: 'authenticated',
+    tags: ['conceptlens', 'learner-material'],
+    allowed_formats: ['png', 'jpg', 'jpeg', 'webp', 'pdf']
   });
+}
+
+/** Signed upload stays off unless the cloud name and API key were accepted together. */
+export function signedUploadAllowed(input: { configured: boolean; accountReachable: boolean }): { allowed: boolean; reason: string } {
+  if (!input.configured) {
+    return { allowed: false, reason: 'Cloudinary credentials are not configured. Signed upload stays off.' };
+  }
+  if (!input.accountReachable) {
+    return {
+      allowed: false,
+      reason: 'Cloudinary did not accept this cloud name and API key together. Signed upload stays off. Unsigned upload is not used instead.'
+    };
+  }
+  return { allowed: true, reason: 'Cloudinary account check succeeded.' };
+}
+
+export function cloudinaryFailureReason(message: string): string {
+  if (/cloud_name mismatch/i.test(message)) {
+    return 'The cloud name does not match the API key. Signed upload stays off.';
+  }
+  if (/key|secret|auth/i.test(message)) {
+    return 'Cloudinary rejected the server credentials. Signed upload stays off.';
+  }
+  return 'Cloudinary could not be reached. Signed upload stays off.';
 }

@@ -34,6 +34,66 @@
 17. [Judging Walkthrough Script (3 Minutes)](#17-judging-walkthrough-script-3-minutes)
 18. [Verified Impact Framework](#18-verified-impact-framework)
 
+[How it works](#how-it-works) — animated flow and screenshots of the current app.
+
+---
+
+## How it works
+
+The animation below is the current app: home, a labeled sample, the three steps, preferences, the start of a lesson, the confirmation, a sample explanation, and the animal-cell lesson. The stills underneath are the same frames, for anyone who prefers a page that does not move.
+
+![ConceptLens flow from the home page through a labeled sample, confirmation, a sample explanation, and the animal-cell lesson](docs/readme/flow.gif)
+
+```mermaid
+flowchart TD
+  home[Home]
+  material["Question, pasted notes, PDF text layer, or labeled sample"]
+  confirm[Confirm the text]
+  explain[Rule-based explanation]
+  check[Practice check]
+  learn[Learn]
+  lesson[Curated biology lesson]
+  home --> material --> confirm --> explain --> check
+  check --> explain
+  learn --> lesson
+```
+
+You confirm the text before it is explained. The mathematics sample is `2x + 3 = 11`, and the check is `x = 4`. Explanations follow written rules. A local Python evidence file can agree on that sample. This is not a trained model. Photographs and scanned pages are not read.
+
+Preferences change the presentation. They are choices, not a diagnosis. Nothing is spoken until you start browser speech. The home page says the project aims at [United Nations Goal 4](https://sdgs.un.org/goals/goal4) and [Goal 10](https://sdgs.un.org/goals/goal10). It is not a United Nations program, and it is not endorsed by the United Nations.
+
+### Home
+
+![Home page with the headline Learn anything, your way, and Start learning](docs/readme/01-hero.png)
+
+### Labeled sample
+
+![Mathematics sample: source 2x + 3 = 11, two operations, and the check x = 4](docs/readme/02-sample.png)
+
+### Three steps
+
+![Three quiet steps: bring the material, then choose the form](docs/readme/03-steps.png)
+
+### Preferences
+
+![Learning preferences, including ADHD-friendly, Easy Read, Simple Steps, Dyslexia-friendly, and Low vision](docs/readme/04-preferences.png)
+
+### Start learning
+
+![Start learning: choose a file, paste text, or type a question. Photos and scans are not read.](docs/readme/06-start.png)
+
+### Confirm the text
+
+![Confirmation panel with the equation and Explain this, Retry, and Cancel](docs/readme/07-confirm.png)
+
+### Sample explanation
+
+![Explanation workspace for the sample equation, labeled as curated sample content](docs/readme/08-explanation.png)
+
+### Biology lesson
+
+![Learn tab with the animal-cell lesson and the heart, DNA, neuron, and plant-cell topics](docs/readme/09-biology.png)
+
 ---
 
 ## 1. Project Overview & Tagline
@@ -43,7 +103,7 @@
 > **Tagline:** *"From Your Textbook to an Experience You Can Explore."*
 
 Textbook learning forces students to decode multi-dimensional physical, biological, and mathematical structures from ink printed on flat paper. ConceptLens bridges the gap between paper textbooks and cognitive understanding:
-- Ingests textbook scans through a server-signed **Cloudinary Media Pipeline** that deskews, sharpens, and optimizes payloads.
+- Accepts a question, pasted notes, a PDF that already has a text layer, or a labeled sample. You confirm that text before it is explained. Photographs and scanned pages are not read, because OCR is not configured.
 - Converts diagrams into **real-time 3D and 2D procedural models** (Human Cell, Cardiac Cycle, DNA Double Helix, Neuron Action Potentials, and Plant Cell Ultrastructure).
 - Provides an **interactive before/after image comparison slider** with keyboard, touch, and mouse controls.
 - Practice questions are written for those topics and labeled as practice, not as official past papers.
@@ -86,18 +146,12 @@ STEM concepts are inherently multi-dimensional, dynamic, and temporal. When seco
 
 ## 5. Core Solution & User Journey
 
-ConceptLens structures the learning journey into a clear, predictable pedagogical loop:
+Two paths are in the running app. The screenshots are in [How it works](#how-it-works).
 
-```
-[Discover ConceptLens] ➔ [Select a Topic] ➔ [Explore the Model] ➔ [Inspect a Component] ➔ [Learn the Explanation] ➔ [Test Understanding]
-```
+1. **Home**: Ask a question, paste notes, open a PDF that already has a text layer, or choose a labeled sample. Confirm the text, then read the rule-based explanation and a practice check. The mathematics sample is `2x + 3 = 11`; the check is `x = 4`.
+2. **Learn**: Open a curated biology lesson (animal cell, heart, DNA, neuron, or plant cell), inspect the 3D or 2D model, and answer the lesson's practice question. These prompts are labeled as practice, not official past papers.
 
-1. **Discover**: Land on the interactive showcase featuring a live rotating 3D cell model and accessibility controls.
-2. **Select Topic**: Choose from Cell Biology, Cardiac Double Circulation, DNA Double Helix, Neuron Action Potentials, Plant Cell, or STEM Labs.
-3. **Explore**: Rotate in 3D or toggle the accessible 2D vector schematic; adjust parameters such as Heart Rate (BPM) or Lens Distance.
-4. **Inspect Component**: Click on any organelle or structure via 3D raycasting or 2D SVG to trigger glowing focus highlights.
-5. **Learn Explanation**: Review the scientific name, real-world analogy (e.g., *Powerhouse of the Cell* for Mitochondria), mechanism, and board exam facts.
-6. **Test Understanding**: Answer a practice question and read the explanation. These prompts are labeled as practice, not official past papers.
+Preferences change how a lesson is shown. They are choices, not a diagnosis. Nothing is spoken until you start browser speech.
 
 ---
 
@@ -113,7 +167,8 @@ ConceptLens structures the learning journey into a clear, predictable pedagogica
 | **DNA Double Helix 2D Vector Canvas** | ✅ **Verified** | Interactive 2D schematic displaying 5'➔3' polarity, A=T (2 H-bonds), G≡C (3 H-bonds), and grooves. |
 | **Neuron & Plant Cell 2D Studios** | ✅ **Verified** | Interactive action potential simulation and plant cell wall/vacuole/chloroplast schematics. |
 | **Cloudinary server-signed upload** | ⚠️ **Credentials present, account check failed** | `cloudinary.api.ping()` on 25 Oct 2026 returned `cloud_name mismatch`. A real upload was not run. The API secret stays on the server and was not found in the production client bundle. |
-| **Cloudinary React lesson diagrams** | ✅ **Partly verified** | `@cloudinary/react` `AdvancedImage` plus `@cloudinary/url-gen` deliver Wikimedia lesson diagrams through the public `demo` cloud with `c_limit`, `f_auto`, and `q_auto`. Animal cell at 800px returned HTTP 200, AVIF, 800×535. The 480px low-data URL returned HTTP 200. Heart and plant-cell fetches returned HTTP 200 earlier the same day. Neuron and DNA fetches returned HTTP 400 because Wikimedia replied 429; the lesson text remains. |
+| **Cloudinary React lesson diagrams** | ✅ **Partly verified on 25 Oct 2026** | `@cloudinary/react` `AdvancedImage` and `@cloudinary/url-gen` fetch Wikimedia diagrams through the public `demo` cloud with `c_limit` (no crop), `f_auto`, and `q_auto`. Animal cell 800px returned HTTP 200, AVIF, 51,638 bytes; 480px returned HTTP 200, PNG, 23,871 bytes. Heart 800px returned HTTP 200, AVIF, 62,084 bytes; 480px returned HTTP 200, AVIF, 34,326 bytes. Plant cell 800px returned HTTP 200, AVIF, 55,371 bytes; 480px returned HTTP 200, PNG, 26,543 bytes. DNA and neuron returned HTTP 400. Cloudinary's `x-cld-error` said Wikimedia replied 429. The written lesson stays, and the figure then tries the original thumbnail. |
+| **Adaptive learning suggestions** | ✅ **Implemented and tested** | A deterministic rule set in `shared/src/learning/adaptive.ts`. It is not a trained model. One incorrect answer suggests a stored alternative. Two incorrect answers suggest the simpler explanation when one is stored. Correct answers can continue. Evidence is stored apart from theme preferences and does not include a diagnosis. |
 | **Cloudinary Media Studio & Slider** | ✅ **Implemented** | Comparison slider loads Cloudinary's public `demo/sample` image. It is not a textbook scan. |
 | **Cloudinary Transformation Recipes** | ✅ **Verified** | `f_auto`, `q_auto`, `e_sharpen:80`, `e_contrast`, `c_limit` applied and tested. `f_auto` served AVIF when the request accepted it. |
 | **Upload failure state** | ✅ **Implemented** | If the account check fails, choosing a file shows an error. It does not mark the file as uploaded. |
@@ -328,7 +383,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 11. Testing & Verified Build Results
 
-### Automated Test Suite: 101 / 101 on 25 October 2026
+### Automated Test Suite: 194 / 194 on 25 October 2026
 Execute the complete test suite:
 ```bash
 npm test
@@ -353,6 +408,8 @@ Verified test coverage:
 - ✅ **Cloudinary Configuration Validator**: Safely executes and detects placeholder vs live credentials.
 - ✅ **Cloudinary Transformation URL Builder**: Generates valid URLs with crop, sharpen, and contrast parameters.
 - ✅ **Cloudinary Public ID Preservation**: URL builder correctly preserves folder and asset identifiers.
+
+- ✅ **Adaptive suggestions**: One incorrect heart answer suggests the labeled diagram. Repeated incorrect answers suggest a stored simpler explanation. A missing alternative does not invent one. Evidence drops a diagnosis field.
 
 ### Python invariant suite: 6 passed in 2.28s on 25 October 2026
 ```bash
@@ -399,20 +456,19 @@ Accessibility was built into ConceptLens from the first line of code:
 - **Low Data**: Text stays available. Optional Cloudinary diagrams and 3D scenes wait for a button. A failed image leaves the written lesson. This is not offline mode.
 - **High-Contrast Mode (`[H]`)**: Single-key toggle switches surfaces to a black background, white text, and yellow focus indicators (`body.high-contrast`).
 - **Centralized Screen Reader Announcer**: `<LiveAnnouncer />` uses `aria-live="polite"` and `aria-atomic="true"` to announce state transitions, organelle selections, and quiz scoring.
-- **Global Keyboard Navigation**:
-  - `[0]`: Switch to Overview / Landing Page
-  - `[1]`: Switch to Biology 3D Studio
-  - `[2]`: Switch to Cloudinary Ingestion Studio
-  - `[3]`: Switch to Exam Practice Sandbox
-  - `[4]`: Switch to Inclusive ISL Classroom
-  - `[5]`: Switch to STEM Labs (Physics, Ray Optics, Data Structures)
-  - `[6]`: Switch to 8 Reliability Gates
-  - `[H]`: Toggle High-Contrast Mode
-  - `[T]`: Toggle Light theme and Dark Observatory
-  - `[V]`: Toggle Live Speech Vocalizer (Web Speech API)
-  - `[Space]` / `[←]` / `[→]` / `[R]`: Play or pause, step backward, step forward, and reset the linked-list visualizer (ignored while typing in a field)
-  - `[?]`: Open Keyboard Shortcuts Cheat-sheet
-  - `[Esc]`: Close any active modal or drawer
+- **Global Keyboard Navigation** (ignored while typing in a field):
+  - `[0]`: Home
+  - `[1]`: Learn (biology lessons)
+  - `[2]`: Practice
+  - `[3]`: About
+  - `[4]`: Cloudinary
+  - `[5]`: STEM labs
+  - `[6]`: Reliability gates
+  - `[H]`: Toggle high contrast
+  - `[T]`: Toggle light and dark
+  - `[?]`: Open the keyboard shortcuts sheet
+  - `[Esc]`: Close an open dialog
+  - Speech starts from **Read this section** in the lesson. There is no global speech key.
 - **Accessible Comparison Slider**: Operable via mouse drag, touch drag, keyboard arrow keys (5% increments, Home/End for full splits), and quick preset buttons (100% Original, 50/50 Split, 100% Enhanced).
 - **Reduced Motion Support**: Detects `prefers-reduced-motion` and disables ambient 3D camera rotation and cardiac pulse animations.
 - **Accessible 2D SVG Fallbacks**: Provides vector schematics for all 3D models when WebGL is unsupported or when context is lost.
@@ -438,11 +494,11 @@ Accessibility was built into ConceptLens from the first line of code:
 
 ### Step-by-Step Verification Flow
 1. **Landing Page**: Navigate to `http://localhost:5173`. With no saved theme, the app opens in light mode. Press `[T]` to switch themes. Open **Accessibility & Learning Settings** to combine learning modes. Press `[H]` to toggle high contrast.
-2. **Explore the Atlas**: Click **Explore the Atlas**. In the animal-cell studio, select **Mitochondria**. The explanation and the practice question both change. An incorrect choice shows "Incorrect answer" plus the explanation.
-3. **DNA Double Helix**: Select the **DNA Double Helix** topic. Inspect the antiparallel sugar-phosphate backbones and base pairs. Toggle to the 2D view to verify the Watson-Crick base-pairing schematic with hydrogen bonds.
-4. **Cloudinary Ingestion Studio**: Click **Cloudinary Ingestion**. The comparison is Cloudinary's `demo/sample` photograph. Open the delivery URL, which includes `f_auto`, `q_auto`, `e_sharpen:80`, and `e_contrast`. If the account badge says the check failed, an upload attempt shows an error.
-5. **Practice**: Press `[3]`. The prompts are practice questions, not official past papers.
-6. **Text lessons**: Press `[4]`. Step through the English transcript. There is no sign-language video in this build.
+2. **Home flow**: Choose **Start learning**, then paste a question or open a labeled sample. Confirm the text and choose **Explain this**. The mathematics sample checks `x = 4`.
+3. **Learn**: Press `[1]` or open **Learn**. The animal-cell lesson lists its objectives. Open **DNA Double Helix** and switch between the 3D model and the 2D schematic.
+4. **Cloudinary**: Press `[4]`. The comparison is Cloudinary's `demo/sample` photograph. Open the delivery URL, which includes `f_auto`, `q_auto`, `e_sharpen:80`, and `e_contrast`. If the account badge says the check failed, an upload attempt shows an error.
+5. **Practice**: Press `[2]`. The prompts are practice questions, not official past papers.
+6. **About**: Press `[3]`. Lessons stay in English text. Speech starts only from **Read this section**. There is no sign-language video in this build.
 
 ---
 
@@ -472,7 +528,7 @@ Accessibility was built into ConceptLens from the first line of code:
 - **0:00 – 0:20 (The Hook & Problem)**:
   "Hello judges! We present ConceptLens, The Living Atlas: *From Your Textbook to an Experience You Can Explore.* Every year, millions of students struggle to understand 3D biology and physics concepts from flat, static textbook paper. ConceptLens transforms static educational materials into interactive experiences. The studio opens in a light study canvas; `[T]` switches to Dark Observatory."
 - **0:20 – 0:55 (Explore 3D Cell & Organelle Inspection)**:
-  "Explore the Atlas opens the animal cell. Selecting Mitochondria updates the explanation and the practice question. The question is practice, not an official paper. 2D Diagram is the non-WebGL view of the same lesson."
+  "Learn opens the animal-cell lesson. The question is practice, not an official paper. 2D Diagram is the non-WebGL view of the same lesson."
 - **0:55 – 1:20 (Cardiovascular Circulation & DNA Double Helix)**:
   "Now let's switch to the Human Heart. We see real-time cardiac circulation with color-coded oxygenation paths and adjustable heart rate. Or inspect the DNA Double Helix, where students can explore Watson-Crick base-pairing, hydrogen bonding, and major/minor grooves."
 - **1:20 – 1:55 (Cloudinary Media Pipeline & Split Slider)**:

@@ -7,12 +7,12 @@ export const clientBiologyCatalog: Record<BiologyTopicId, BiologyLesson> = {
   human_cell: {
     id: 'human_cell',
     title: 'The Animal Cell: Architecture & Organelles',
-    subtitle: 'Interactive 3D / 2D Exploration of Eukaryotic Cellular Machinery',
+    subtitle: 'Labeled diagram of eukaryotic cellular machinery',
     category: 'Cell Biology & Cytology',
     description:
       'Explore the internal anatomy of a eukaryotic animal cell. Examine how membrane-bound organelles synthesize proteins, generate energy via oxidative phosphorylation, process macromolecular shipments, and preserve genetic integrity.',
-    defaultMode: '3d',
-    has3D: true,
+    defaultMode: '2d',
+    has3D: false,
     quickFact:
       'An adult human body contains approximately 37.2 trillion eukaryotic cells, each maintaining specialized microenvironments via selectively permeable lipid membranes.',
     sampleOriginalImageUrl: 'https://res.cloudinary.com/demo/image/upload/c_scale,w_900/sample.jpg',
@@ -344,8 +344,8 @@ export const clientBiologyCatalog: Record<BiologyTopicId, BiologyLesson> = {
     category: 'Human Anatomy & Cardiovascular Physiology',
     description:
       'Investigate the four-chambered mammalian heart. Trace systemic and pulmonary blood flow pathways, understand the mechanical action of atrioventricular and semilunar valves, and observe how systolic pressure drives cardiac output.',
-    defaultMode: '3d',
-    has3D: true,
+    defaultMode: '2d',
+    has3D: false,
     quickFact:
       'The human heart beats approximately 100,000 times each day, pumping roughly 2,000 gallons (7,500 liters) of blood through 60,000 miles of blood vessels.',
     sampleOriginalImageUrl: 'https://res.cloudinary.com/demo/image/upload/c_scale,w_900/sample.jpg',
@@ -654,12 +654,12 @@ export const clientBiologyCatalog: Record<BiologyTopicId, BiologyLesson> = {
   dna_helix: {
     id: 'dna_helix',
     title: 'DNA Double Helix: Molecular Architecture & Base Pairing',
-    subtitle: 'Interactive 3D Watson-Crick B-DNA Model & Genetic Information Flow',
+    subtitle: 'Labeled diagram of the Watson-Crick B-DNA model and genetic information flow',
     category: 'Molecular Biology & Genetics',
     description:
       'Explore the right-handed B-DNA double helix. Inspect the antiparallel sugar-phosphate backbones, major and minor grooves, complementary hydrogen-bonded purine-pyrimidine base pairs, and the Central Dogma linking genes to proteins.',
-    defaultMode: '3d',
-    has3D: true,
+    defaultMode: '2d',
+    has3D: false,
     quickFact:
       'If unwound and tied end-to-end, the DNA in a single microscopic human cell would stretch approximately 2 meters (6 feet) in length, containing ~3.2 billion base pairs.',
     sampleOriginalImageUrl: 'https://res.cloudinary.com/demo/image/upload/c_scale,w_900/sample.jpg',
@@ -764,7 +764,7 @@ export const clientBiologyCatalog: Record<BiologyTopicId, BiologyLesson> = {
         componentId: 'sugar_phosphate_backbone',
         title: 'Step 1: The Antiparallel Strands',
         summary: 'Inspect the two sugar-phosphate chains running in opposite 5\' to 3\' directions.',
-        actionPrompt: 'Rotate the 3D model to observe how the two backbones wrap around a central axis.'
+        actionPrompt: 'Select a backbone in the diagram to see how the two strands run in opposite directions.'
       },
       {
         stepNumber: 2,

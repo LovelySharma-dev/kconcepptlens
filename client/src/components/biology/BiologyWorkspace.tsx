@@ -13,7 +13,6 @@ import {
   resetProgress,
   sdgForConcept,
   selectStructure,
-  shouldMount3D,
   switchLearningMode,
   vocabularyFromComponent,
   markStepComplete,
@@ -50,17 +49,12 @@ import {
   writeProgress
 } from './LearningPaths';
 import { NextStepPanel } from './NextStepPanel';
-import { Cell3DCanvas } from './3d/Cell3DCanvas';
-import { Heart3DCanvas } from './3d/Heart3DCanvas';
-import { Dna3DCanvas } from './3d/Dna3DCanvas';
 import { Cell2DCanvas } from './2d/Cell2DCanvas';
 import { Heart2DCanvas } from './2d/Heart2DCanvas';
 import { Dna2DCanvas } from './2d/Dna2DCanvas';
 import { Neuron2DCanvas } from './2d/Neuron2DCanvas';
 import { PlantCell2DCanvas } from './2d/PlantCell2DCanvas';
 import {
-  Box,
-  Image as ImageIcon,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
@@ -99,7 +93,6 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
   onOpenPractice,
   onRestartLesson
 }) => {
-  const [viewMode, setViewMode] = useState<'3d' | '2d'>('2d');
   const [showLabels, setShowLabels] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [pathNotice, setPathNotice] = useState<string | null>(null);
@@ -125,9 +118,7 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
 
   useEffect(() => {
     const prefs = readLearningPrefs();
-    const blockScene = prefs.lowData;
     setSceneRequested(false);
-    setViewMode(lesson.has3D && !blockScene ? lesson.defaultMode : '2d');
     let next = initialContinuity(unit, prefs);
     const raw = readProgress(lesson.id);
     if (raw) {
@@ -150,7 +141,6 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
   useEffect(() => {
     if (!preferences.textFirst && !preferences.lowData && !preferences.simpleSteps) return;
     setSceneRequested(false);
-    setViewMode('2d');
   }, [preferences.textFirst, preferences.lowData, preferences.simpleSteps]);
 
   useEffect(() => {
@@ -253,13 +243,11 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
     if (mode === 'low-data') {
       onPreferences({ ...preferences, lowData: true });
       setSceneRequested(false);
-      setViewMode('2d');
     } else if (mode === 'accessible') {
       onPreferences({ ...preferences, textFirst: true });
       setSceneRequested(false);
     } else if (mode === 'visual') {
       onPreferences({ ...preferences, textFirst: false, lowData: false });
-      setViewMode(lesson.has3D ? lesson.defaultMode : '2d');
     } else if (mode === 'steps') {
       onPreferences({ ...preferences, simplifiedLayout: true });
     } else if (mode === 'simple') {
@@ -285,15 +273,11 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
     if (next) handleSelectComponent(next.id);
   };
 
-  const deferOptionalScene = preferences.lowData || continuity.lowData || preferences.simpleSteps;
-  const mount3D = shouldMount3D({
-    has3D: lesson.has3D && (viewMode === '3d' || preferences.simpleSteps),
-    mode: preferences.simpleSteps ? 'visual' : continuity.mode,
-    textFirst: preferences.textFirst && !preferences.simpleSteps,
-    lowData: deferOptionalScene,
-    learnerRequestedScene: sceneRequested
-  });
   const showInteractive = !preferences.simpleSteps || sceneRequested;
+  const showDiagram = showInteractive
+    && (continuity.mode === 'visual' || preferences.simpleSteps)
+    && (!preferences.textFirst || preferences.simpleSteps || sceneRequested)
+    && (!(preferences.lowData || continuity.lowData) || sceneRequested);
   const spokenLesson = activeComponent
     ? `${activeComponent.name}. ${activeComponent.simpleExplanation} ${lesson.guidedSteps[currentStepIndex]?.summary || ''}`
     : lesson.description;
@@ -312,10 +296,7 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
   }, [selectedComponentId]);
 
   const activeQuickQuestion = useMemo(() => {
-    return (
-      lesson.practiceQuestions.find((q) => q.diagramComponentId === activeComponent?.id) ||
-      lesson.practiceQuestions[0]
-    );
+    return lesson.practiceQuestions.find((q) => q.diagramComponentId === activeComponent?.id) || null;
   }, [lesson, activeComponent]);
 
   const adapted = useMemo(() => {
@@ -355,7 +336,7 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
     ? misconceptionFor(activeQuickQuestion, selectedOption, unit)
     : null;
 
-  const assessedId = activeQuickQuestion?.diagramComponentId || activeComponent?.id || '';
+  const assessedId = activeComponent?.id || '';
   const assessedName = lesson.components.find((component) => component.id === assessedId)?.name || activeComponent?.name || lesson.title;
   const structureIndexForAssessed = lesson.components.findIndex((component) => component.id === assessedId);
   const nextConcept = structureIndexForAssessed >= 0 ? lesson.components[structureIndexForAssessed + 1] : undefined;
@@ -363,10 +344,7 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
     experience.offerSpeech &&
     !(preferences.speechFree && !preferences.dyslexiaFriendly && !preferences.blindFriendly && !preferences.listenExplore);
   const plainActive = experience.plainLanguage || showPlain;
-  const diagramAvailable =
-    Boolean(educationalAsset(lesson.id)) &&
-    (experience.showAnnotatedDiagram || preferences.visualLearning) &&
-    !preferences.simpleSteps;
+  const diagramAvailable = Boolean(educationalAsset(lesson.id));
   const recommendation = useMemo(() => {
     if (!assessedId) return null;
     return recommendNextStep({
@@ -680,50 +658,7 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
 
         <div id="lesson-explore" className="glass-panel atlas-view" style={{ padding: '1rem', display: 'flex', flexDirection: 'column' }}>
           {/* Top Control Bar */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              {lesson.has3D && (
-                <>
-                  <button
-                    type="button"
-                    className={`btn-secondary ${viewMode === '3d' ? 'active' : ''}`}
-                    onClick={() => {
-                      setSceneRequested(true);
-                      setViewMode('3d');
-                      if (continuity.mode !== 'visual') changePath('visual');
-                      if (onAnnounce) onAnnounce('Loaded the 3D model for this concept.');
-                    }}
-                    style={{
-                      fontSize: '0.8rem',
-                      padding: '0.35rem 0.75rem',
-                      borderColor: viewMode === '3d' ? 'var(--accent-cyan)' : undefined,
-                      background: viewMode === '3d' ? 'rgba(56, 189, 248, 0.15)' : undefined
-                    }}
-                  >
-                    <Box size={14} />
-                    <span>3D Model</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn-secondary ${viewMode === '2d' ? 'active' : ''}`}
-                    onClick={() => {
-                      setViewMode('2d');
-                      if (onAnnounce) onAnnounce('Switched to interactive 2D diagram.');
-                    }}
-                    style={{
-                      fontSize: '0.8rem',
-                      padding: '0.35rem 0.75rem',
-                      borderColor: viewMode === '2d' ? 'var(--accent-cyan)' : undefined,
-                      background: viewMode === '2d' ? 'rgba(56, 189, 248, 0.15)' : undefined
-                    }}
-                  >
-                    <ImageIcon size={14} />
-                    <span>2D Diagram</span>
-                  </button>
-                </>
-              )}
-            </div>
-
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
                 <input
@@ -738,7 +673,6 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
 
           <div
             className="atlas-canvas"
-            data-3d-mounted={mount3D ? 'true' : 'false'}
             style={{ flex: 1, minHeight: '440px', borderRadius: '10px', overflow: 'hidden' }}
           >
             {preferences.simpleSteps && (
@@ -756,11 +690,8 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
                 onTryAgain={() => {
                   if (activeQuickQuestion) setContinuity(clearAnswer(continuity, activeQuickQuestion.id));
                 }}
-                onRequestModel={() => {
-                  setSceneRequested(true);
-                  if (lesson.has3D) setViewMode('3d');
-                }}
-                modelVisible={showInteractive && (mount3D || !lesson.has3D)}
+                onRequestModel={() => setSceneRequested(true)}
+                modelVisible={showInteractive}
               />
             )}
             {continuity.mode === 'simple' && !preferences.simpleSteps && activeComponent && (
@@ -809,32 +740,10 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
                 conceptId={lesson.id}
               />
             )}
-            {showInteractive && mount3D && lesson.id === 'human_cell' && (
-              <Cell3DCanvas
-                selectedComponentId={selectedComponentId}
-                onSelectComponent={handleSelectComponent}
-                showLabels={showLabels}
-                reducedMotion={experience.reduceMotion || experience.neverAutoplay}
-              />
-            )}
-            {showInteractive && mount3D && lesson.id === 'human_heart' && (
-              <Heart3DCanvas
-                selectedComponentId={selectedComponentId}
-                onSelectComponent={handleSelectComponent}
-                reducedMotion={experience.reduceMotion || experience.neverAutoplay}
-              />
-            )}
-            {showInteractive && mount3D && lesson.id === 'dna_helix' && (
-              <Dna3DCanvas
-                selectedComponentId={selectedComponentId}
-                onSelectComponent={handleSelectComponent}
-                reducedMotion={experience.reduceMotion || experience.neverAutoplay}
-              />
-            )}
-            {showInteractive && continuity.mode === 'visual' && !preferences.textFirst && !preferences.lowData && !continuity.lowData && !mount3D && lesson.id === 'human_cell' && (
+            {showDiagram && lesson.id === 'human_cell' && (
               <Cell2DCanvas selectedComponentId={selectedComponentId} onSelectComponent={handleSelectComponent} showLabels={showLabels} />
             )}
-            {showInteractive && continuity.mode === 'visual' && !preferences.textFirst && !preferences.lowData && !continuity.lowData && !mount3D && lesson.id === 'human_heart' && (
+            {showDiagram && lesson.id === 'human_heart' && (
               <Heart2DCanvas
                 selectedComponentId={selectedComponentId}
                 onSelectComponent={handleSelectComponent}
@@ -842,17 +751,17 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
                 autoplay={!experience.neverAutoplay && !experience.reduceMotion}
               />
             )}
-            {showInteractive && continuity.mode === 'visual' && !preferences.textFirst && !preferences.lowData && !continuity.lowData && !mount3D && lesson.id === 'dna_helix' && (
+            {showDiagram && lesson.id === 'dna_helix' && (
               <Dna2DCanvas selectedComponentId={selectedComponentId} onSelectComponent={handleSelectComponent} showLabels={showLabels} />
             )}
-            {showInteractive && continuity.mode === 'visual' && !preferences.textFirst && (!preferences.lowData && !continuity.lowData || sceneRequested) && lesson.id === 'neuron' && (
+            {showDiagram && lesson.id === 'neuron' && (
               <Neuron2DCanvas selectedComponentId={selectedComponentId} onSelectComponent={handleSelectComponent} showLabels={showLabels} />
             )}
-            {showInteractive && continuity.mode === 'visual' && !preferences.textFirst && (!preferences.lowData && !continuity.lowData || sceneRequested) && lesson.id === 'plant_cell' && (
+            {showDiagram && lesson.id === 'plant_cell' && (
               <PlantCell2DCanvas selectedComponentId={selectedComponentId} onSelectComponent={handleSelectComponent} showLabels={showLabels} />
             )}
-            {mount3D && (
-              <p className="path-option-note model-caption">Simplified illustration. The structure list names the same parts without using the 3D view.</p>
+            {showDiagram && (
+              <p className="path-option-note model-caption">Simplified illustration. The structure list names the same parts.</p>
             )}
           </div>
         </div>
@@ -1232,6 +1141,9 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
               )}
               </div>
             </div>
+          )}
+          {!activeQuickQuestion && activeComponent && (
+            <p>No practice question is stored for {activeComponent.name}. The explanation is still available.</p>
           )}
           <SdgPanel connection={sdgForConcept(lesson.id)} />
           <div className="lens-optional"><OfflineText unit={unit} /></div>

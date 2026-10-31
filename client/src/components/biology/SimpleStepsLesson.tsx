@@ -87,7 +87,7 @@ export const SimpleStepsLesson: React.FC<SimpleStepsLessonProps> = ({
           <p>{part.analogy}</p>
           <EducationalFigure conceptId={lesson.id} lowData={lowData} deferUntilRequested={lowData} eager={!lowData} />
           <button type="button" className="btn-secondary" onClick={onRequestModel}>
-            {modelVisible ? 'Interactive model is open' : lesson.has3D ? 'Show the 3D model' : 'Show the interactive diagram'}
+            {modelVisible ? 'Interactive diagram is open' : 'Show the interactive diagram'}
           </button>
           <p className="path-option-note">You can learn this without the model. The text names the same parts.</p>
         </div>
