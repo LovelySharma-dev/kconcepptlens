@@ -1,0 +1,55 @@
+{
+  "id": "fixture_isc_2025_q11",
+  "title": "ISC Class XII Computer Science 2025 Specimen - Question 11",
+  "source": {
+    "exam": "ISC Board",
+    "year": 2025,
+    "subject": "Computer Science (868)",
+    "questionNumber": "11(a)",
+    "marks": 3,
+    "originalPaperUrl": "https://images.openai.com/static-rsc-4/XkO7gSqpO5GsWl0aO5MiA2a68-Km86zCJbP7hacxn3-Do1QE2-J4RFPWiD4Zok-ZLm1nIMK9SHjzJN5m-reEt3NepgQhcNz6LwIOjlOPx1bMFvDtj0NjD7jaa-LMnjFJHJBU7my4ijNaoAQ_LausBSz1KrYgEFjjDhZ1FnR1WuM?purpose=inline",
+    "cropBoundingBox": {
+      "x": 45,
+      "y": 120,
+      "width": 800,
+      "height": 450
+    }
+  },
+  "diagramType": "singly_linked_list",
+  "graph": {
+    "headId": "node_1",
+    "isCircular": false,
+    "nodes": [
+      {
+        "id": "node_1",
+        "value": 15,
+        "next": "node_2",
+        "x": 100,
+        "y": 200,
+        "confidence": 0.98
+      },
+      {
+        "id": "node_2",
+        "value": 28,
+        "next": "node_3",
+        "x": 280,
+        "y": 200,
+        "confidence": 0.96
+      },
+      {
+        "id": "node_3",
+        "value": 42,
+        "next": null,
+        "x": 460,
+        "y": 200,
+        "confidence": 0.97
+      }
+    ]
+  },
+  "expectedOperation": {
+    "name": "insertHead",
+    "value": 9,
+    "expectedHeadAfter": "new_node_0",
+    "expectedFinalList": [9, 15, 28, 42]
+  }
+}

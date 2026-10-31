@@ -1,0 +1,62 @@
+{
+  "id": "fixture_anna_univ_2019",
+  "title": "Anna University CP 5151 - Advanced Data Structures Nov/Dec 2019",
+  "source": {
+    "exam": "Anna University",
+    "year": 2019,
+    "subject": "CP 5151 Advanced Data Structures & Algorithms",
+    "questionNumber": "Part B - Q13(a)",
+    "marks": 13,
+    "originalPaperUrl": "https://images.openai.com/static-rsc-4/NUFO3JUqMASZMvEkj90wZZBIwZZgDux-td4W5U8g84-h9w4dsCB-_1pW0GB1vKg9_oJDTJpyuf2jiPTyKU5XB55khTTfBdg11izPwG9A8rBwUd0EEz5zWlzrmLFx9mhEnDmTIkXHtMAtfg1ZRb44u_CfIxU731I9OnZjFuYlq50?purpose=inline",
+    "cropBoundingBox": {
+      "x": 60,
+      "y": 210,
+      "width": 750,
+      "height": 380
+    }
+  },
+  "diagramType": "singly_linked_list",
+  "graph": {
+    "headId": "n1",
+    "isCircular": false,
+    "nodes": [
+      {
+        "id": "n1",
+        "value": 100,
+        "next": "n2",
+        "x": 80,
+        "y": 180,
+        "confidence": 0.95
+      },
+      {
+        "id": "n2",
+        "value": 200,
+        "next": "n3",
+        "x": 260,
+        "y": 180,
+        "confidence": 0.94
+      },
+      {
+        "id": "n3",
+        "value": 300,
+        "next": "n4",
+        "x": 440,
+        "y": 180,
+        "confidence": 0.93
+      },
+      {
+        "id": "n4",
+        "value": 400,
+        "next": null,
+        "x": 620,
+        "y": 180,
+        "confidence": 0.97
+      }
+    ]
+  },
+  "expectedOperation": {
+    "name": "deleteNode",
+    "targetValue": 200,
+    "expectedFinalList": [100, 300, 400]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "fixture_malformed_cycle",
+  "title": "Malformed Diagram - Unannounced Cyclic Pointer (Gate 05 Test)",
+  "source": {
+    "exam": "Synthetic Invariant Test",
+    "year": 2025,
+    "subject": "Verification Test Suite",
+    "questionNumber": "Gate 05 Test",
+    "marks": 0,
+    "originalPaperUrl": "",
+    "cropBoundingBox": {
+      "x": 0,
+      "y": 0,
+      "width": 500,
+      "height": 300
+    }
+  },
+  "diagramType": "singly_linked_list",
+  "graph": {
+    "headId": "n1",
+    "isCircular": false,
+    "nodes": [
+      {
+        "id": "n1",
+        "value": 10,
+        "next": "n2",
+        "x": 100,
+        "y": 150,
+        "confidence": 0.95
+      },
+      {
+        "id": "n2",
+        "value": 20,
+        "next": "n3",
+        "x": 250,
+        "y": 150,
+        "confidence": 0.95
+      },
+      {
+        "id": "n3",
+        "value": 30,
+        "next": "n1",
+        "x": 400,
+        "y": 150,
+        "confidence": 0.92
+      }
+    ]
+  },
+  "expectedValidationResult": {
+    "valid": false,
+    "gateFailed": "Gate 05 (Floyd Cycle Invariant)",
+    "error": "Acyclicity violation: Detected cycle between node n3 and n1 in non-circular singly linked list"
+  }
+}

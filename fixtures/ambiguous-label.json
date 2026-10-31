@@ -1,0 +1,56 @@
+{
+  "id": "fixture_ambiguous_label",
+  "title": "Low Confidence OCR Label - Triggers Human Correction (Gate 06 Test)",
+  "source": {
+    "exam": "Synthetic Invariant Test",
+    "year": 2025,
+    "subject": "Verification Test Suite",
+    "questionNumber": "Gate 06 Test",
+    "marks": 0,
+    "originalPaperUrl": "",
+    "cropBoundingBox": {
+      "x": 0,
+      "y": 0,
+      "width": 500,
+      "height": 300
+    }
+  },
+  "diagramType": "singly_linked_list",
+  "graph": {
+    "headId": "node_1",
+    "isCircular": false,
+    "nodes": [
+      {
+        "id": "node_1",
+        "value": 50,
+        "next": "node_2",
+        "x": 100,
+        "y": 150,
+        "confidence": 0.98
+      },
+      {
+        "id": "node_2",
+        "value": "?B7",
+        "next": "node_3",
+        "x": 260,
+        "y": 150,
+        "confidence": 0.48
+      },
+      {
+        "id": "node_3",
+        "value": 90,
+        "next": null,
+        "x": 420,
+        "y": 150,
+        "confidence": 0.96
+      }
+    ]
+  },
+  "expectedValidationResult": {
+    "valid": false,
+    "needsReview": true,
+    "gateFailed": "Gate 06 (Human-in-the-Loop Review Trigger)",
+    "ambiguousNodes": ["node_2"],
+    "promptMessage": "Node node_2 value '?B7' has low OCR confidence (0.48). Please confirm or correct label."
+  }
+}

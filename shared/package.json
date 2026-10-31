@@ -1,0 +1,16 @@
+{
+  "name": "@conceptlens/shared",
+  "version": "2.0.0",
+  "description": "Shared Zod schemas and TypeScript interfaces for ConceptLens 2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}
