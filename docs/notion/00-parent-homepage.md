@@ -11,7 +11,6 @@
 | :--- | :--- |
 | Product | ConceptLens · The Living Atlas |
 | Tagline | From Your Textbook to an Experience You Can Explore. |
-| Event | SheBuilds Hacktoberfest HackDays 2026 |
 | Coverage | 17 October 2026 – 30 October 2026 |
 | Live shell | https://conceptlens-58cq.onrender.com/ |
 | Repository | https://github.com/LovelySharma-dev/ConceptLens |

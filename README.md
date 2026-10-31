@@ -125,7 +125,7 @@ Preferences change the presentation. They are choices, not a diagnosis. Nothing 
 
 ## 1. Project Overview & Tagline
 
-**ConceptLens** (**The Living Atlas**) is an accessible, multi-disciplinary educational platform designed for **SheBuilds Hacktoberfest HackDays 2026**.
+**ConceptLens** (**The Living Atlas**) is an accessible, multi-disciplinary educational platform.
 
 > **Tagline:** *"From Your Textbook to an Experience You Can Explore."*  
 > **Live Deployment:** [https://conceptlens-58cq.onrender.com/](https://conceptlens-58cq.onrender.com/)
@@ -765,7 +765,7 @@ An interactive, self-running browser showcase video player is included in this r
 
 This project is licensed under the **MIT License**, as declared in `package.json`.
 
-Built with ❤️ for accessible, reliable STEM education at **SheBuilds Hacktoberfest HackDays 2026**.
+Built with ❤️ for accessible, reliable STEM education.
 
 <div align="center">
 

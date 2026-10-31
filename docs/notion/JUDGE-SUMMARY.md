@@ -3,7 +3,7 @@
 **ConceptLens — The Living Atlas**  
 *From Your Textbook to an Experience You Can Explore.*
 
-**Event:** SheBuilds Hacktoberfest HackDays 2026 · **Window documented:** 17–30 October 2026  
+**Window documented:** 17–30 October 2026  
 **Live shell:** https://conceptlens-58cq.onrender.com/ · **Repo:** https://github.com/LovelySharma-dev/ConceptLens
 
 ### Problem

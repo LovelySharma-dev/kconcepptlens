@@ -122,7 +122,7 @@
 **Say:**
 
 > “ConceptLens: prove the structure, confirm the text, deliver media honestly, adapt by choice.  
-> Live at conceptlens-58cq.onrender.com — built for SheBuilds Hacktoberfest HackDays 2026.  
+> Live at conceptlens-58cq.onrender.com.  
 > Thank you — questions welcome.”
 
 ---

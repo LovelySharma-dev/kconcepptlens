@@ -18,7 +18,7 @@ Textbook captures are large, glare-heavy, and format-chaotic. ConceptLens needs:
 | **Pedagogy** | Different *views* of one asset (optimize, crop, low-data, AI ops) without re-uploading |
 | **Trust** | Server-signed uploads only; if the account check fails, the UI says so |
 
-Rubric weight for SheBuilds HackDays: **~30% meaningful Cloudinary media pipeline**.
+Rubric weight for the media track: **~30% meaningful Cloudinary media pipeline**.
 
 ---
 

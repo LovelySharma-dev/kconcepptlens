@@ -45,7 +45,7 @@ Earlier the same day:
 > **Tagline:** *From Your Textbook to an Experience You Can Explore.*  
 > **Live Demo:** https://conceptlens-58cq.onrender.com/  
 > **Repository:** `LovelySharma-dev/ConceptLens`  
-> **Hackathon Event:** SheBuilds Hacktoberfest HackDays 2026 (Submission Deadline: 25 October 2026, 11:59 PM IST)  
+> **Submission deadline:** 25 October 2026, 11:59 PM IST  
 > **Judging Criteria Weighting:**  
 > - **50%** Problem Statement & Solution Execution  
 > - **30%** Meaningful Cloudinary Media Pipeline Integration  
@@ -530,7 +530,7 @@ Every year, millions of students struggle to understand the spatial depth of a m
 - **Slide 1: Title & Hook**
   - *Title*: ConceptLens — The Living STEM Atlas
   - *Tagline*: From Your Textbook to an Experience You Can Explore.
-  - *Team*: Lovely & Kavita Kumari (SheBuilds Hacktoberfest HackDays 2026).
+  - *Team*: Lovely & Kavita Kumari.
 - **Slide 2: The Problem**
   - Flat pages cannot teach 3D depth, dynamic circulation, or data structure pointer updates.
   - Generative AI chatbots hallucinate unverified science.
@@ -572,4 +572,4 @@ Every year, millions of students struggle to understand the spatial depth of a m
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
-Built with ❤️ for accessible, reliable STEM education at **SheBuilds Hacktoberfest HackDays 2026**.
+Built with ❤️ for accessible, reliable STEM education.

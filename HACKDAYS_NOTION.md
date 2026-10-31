@@ -10,7 +10,7 @@ Project documentation for **17–25 October 2026**. This follows the Hack Days t
 
 The git history records the repository commits on **24 and 25 October 2026**. Days 17–23 are the working calendar for that same body of work. They are not separate commit dates.
 
-Event named in the repository: **SheBuilds Hacktoberfest HackDays 2026**. Repository note: submission deadline **25 October 2026, 11:59 PM IST**.
+Repository note: submission deadline **25 October 2026, 11:59 PM IST**.
 
 ---
 
@@ -32,7 +32,7 @@ A longer technical log, including the 25 October test and browser notes, is in [
 | --- | --- |
 | Project name | ConceptLens (The Living Atlas) |
 | Team name | ConceptLens |
-| Track / theme | SheBuilds Hacktoberfest HackDays 2026. Media work is the Cloudinary delivery and signed-upload path. |
+| Track / theme | Media work is the Cloudinary delivery and signed-upload path. |
 | One-line pitch | From your textbook to an experience you can explore: confirm the text, then read a rule-based explanation or open a curated 2D and 3D STEM lesson. |
 | Repository link | https://github.com/LovelySharma-dev/ConceptLens |
 | Live demo link | https://conceptlens-58cq.onrender.com/ (Live on Render; local runner: http://localhost:5173) |
@@ -400,7 +400,7 @@ Built during Hacktober Hack Days.
 
 ## 16. Judges' Scoring Rubric Guide
 
-Direct mapping to the **SheBuilds Hacktoberfest HackDays 2026** evaluation criteria:
+Direct mapping to the evaluation criteria:
 
 | Weight | Criterion | How ConceptLens Fulfills It | Direct Evidence in Repo |
 | :---: | :--- | :--- | :--- |
