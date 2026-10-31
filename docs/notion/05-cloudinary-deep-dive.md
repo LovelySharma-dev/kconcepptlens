@@ -1,7 +1,8 @@
 # 5. Cloudinary Integration Deep Dive
 
 > Callout (Success): This page is the primary **30% rubric** case study.  
-> Callout (Warning): Never paste API secrets, raw signatures, or `.env` values into Notion.
+> Callout (Warning): Never paste API secrets, raw signatures, or `.env` values into Notion.  
+> Callout (Info): Repo source of truth for what ships today: [`docs/CLOUDINARY-COMPLETE-USAGE.md`](../CLOUDINARY-COMPLETE-USAGE.md). Plant-cell `/learning-media` notes below are **historical** unless that route is re-added.
 
 ## Why media delivery matters to the product
 

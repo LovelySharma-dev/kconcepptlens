@@ -1,5 +1,7 @@
 # Cloudinary Integration & Media Pipeline Architecture
 
+> **Prefer** [CLOUDINARY-COMPLETE-USAGE.md](./CLOUDINARY-COMPLETE-USAGE.md) for the current route table, Media Studio walkthrough, and demo-vs-project honesty matrix. This page keeps the detailed feature inventory and credit schedule.
+
 ## 1. Architectural Overview & System Inventory
 
 ConceptLens utilizes a decoupled Single Page Application (React 18 + TypeScript + Vite) with a dedicated Express/Node.js backend. Unlike server-rendered frameworks like Next.js, ConceptLens enforces strict boundaries between client-side view logic and server-side secret management.

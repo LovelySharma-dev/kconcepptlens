@@ -47,11 +47,13 @@
 14. [Demonstration Instructions](#14-demonstration-instructions)
 15. [Development Journal & Milestones](#15-development-journal--milestones)
 16. [Future Roadmap](#16-future-roadmap)
-17. [Judging Walkthrough Script (3 Minutes)](#17-judging-walkthrough-script-3-minutes)
+17. [Judging Walkthrough Script (4 Minutes)](#17-judging-walkthrough-script-4-minutes)
 18. [Verified Impact Framework](#18-verified-impact-framework)
 19. [Product Showcase Video & Interactive Demo (72 Seconds)](#19-product-showcase-video--interactive-demo-72-seconds)
 
 [How it works](#how-it-works) — animated flow and screenshots of the current app.  
+[Complete Cloudinary usage](docs/CLOUDINARY-COMPLETE-USAGE.md) — signed uploads, transforms, Media Studio, env, honesty matrix.  
+[4-minute judging walkthrough](docs/WALKTHROUGH-4MIN.md) — timed say-and-click script for demo day.  
 [Interactive Video Showcase](docs/video-demo.html) — self-running 72-second product showcase with narration and audio cues.
 
 ---
@@ -129,7 +131,7 @@ Textbook learning forces students to decode multi-dimensional physical, biologic
 - The home screen opens on one lesson: a four-node list that reverses only after Floyd’s cycle check passes. Breaking the list stops the lesson. Repairing the closing arrow lets it continue. That check runs on the server. The drawing is the model state, not a separate animation.
 - Accepts a question, pasted notes, a PDF that already has a text layer, or a labeled sample. You confirm that text before it is explained. PDF text is read with pypdfium2. Compressed PDF bytes are not treated as document text. A paper longer than 20,000 characters is truncated, and the review notice says so. A password-protected PDF and a file the parser cannot read are reported as failures. A PDF with no text layer still asks for the local OCR reader instead of returning symbols. The signature lesson does not read a photograph into a data structure. Image OCR runs only when the local Tesseract worker is ready; otherwise the app does not invent text.
 - Converts curated biology topics into **2D and 3D procedural models** (animal cell, heart, DNA, neuron, and plant cell). These are illustrations for those lessons, not a scan of an arbitrary textbook page.
-- On the local runner, the home screen also shows one project-account illustration of a plant cell in four deliveries: the stored original, Explore (`c_limit,w_960/f_auto/q_auto`), Focus (a crop that keeps the chloroplast label), and Low data (`c_limit,w_320/f_auto/q_auto:low`). Those addresses are on the configured cloud. For this PNG, every delivery returned `image/png`. `f_auto` did not turn it into WebP. The public `demo` cloud is not used as evidence of this account. On 30 October 2026 the Render service at the live URL did not have `GET /api/uploads/learning-media` (HTTP 404) and `GET /api/uploads/status` reported Cloudinary as not configured.
+- **Cloudinary Media Studio** (`[4]`): server-signed uploads to folder `conceptlens/uploads`, natural-language transforms (Zod-validated), diagram sharpen/contrast, low-data eco delivery, AI ops with educational safeguards, and video trim/poster/WebP paths. Public **demo** assets (`sample`, `elephants`) power judge-visible transforms when the project account is offline. Secrets never leave the Express process. Full inventory: [docs/CLOUDINARY-COMPLETE-USAGE.md](docs/CLOUDINARY-COMPLETE-USAGE.md). Re-check `GET /api/uploads/status` before claiming a live signed upload on Render.
 - Practice questions are written for those topics and labeled as practice, not as official past papers.
 - Opens as a **light study canvas** (The Living Atlas). `[T]` switches theme. `[H]` turns on high contrast. Focus mode keeps the page scrollable.
 
@@ -207,7 +209,7 @@ ConceptLens is structured around four clear, focused destinations:
 | **Physics Lab (Ray Optics, Pendulum)** | ✅ **Verified** | Thin lens ray tracing (`1/f = 1/v - 1/u`) and pendulum SHM energy conservation. |
 | **Computer Science Concept Engine** | Implemented and unit-tested | Deterministic reversal steps for a singly linked list. A cycle fails Floyd’s check, names the closing edge, and `generateExecutionSteps` throws instead of animating it. See `server/tests/pointerLie.test.ts`. |
 | **8-Stage Reliability Gates** | Implemented for linked lists | Floyd cycle detection, a confidence warning below 0.80, and a review path. This does not mean every screen on the site passed every gate. |
-| **Cloudinary Media Studio & Delivery** | Project asset verified locally. Not on the current Render deploy. | The local home lesson loads `conceptlens/learning/plant-cell-illustration` from the configured cloud, with separate Explore, Focus, and Low data URLs. Those responses were `image/png`. A public demo image is not substituted when the account is unavailable. The live Render service checked on 30 October 2026 does not serve this route and has no Cloudinary credentials configured. |
+| **Cloudinary Media Studio & Delivery** | ✅ **Verified in code + tests** | Media Studio: status badge, signed upload (`/signature` + direct CDN or `/direct` proxy), `/transform-spec` NL engine, slash-delimited `f_auto`/`q_auto`, low-data eco, AI ops + educational safeguard, video variants. Demo cloud for presets when account unreachable. See [Complete Cloudinary usage](docs/CLOUDINARY-COMPLETE-USAGE.md). Re-verify Render env before live upload claims. |
 | **ConceptLens Everywhere Extension** | ✅ **Verified** | Manifest V3 Chrome extension with activeTab reading assistance, dyslexia typography, and isolated Shadow DOM. |
 | **Global Readability & Design Tokens** | Token review only | Light, dark, high-contrast, and low-stimulation tokens exist. The ADHD timer has ready, running, paused, and completed labels. This is not a formal WCAG 2.2 audit and not a conformance claim. |
 | **Website-Wide Voice Guide** | Implemented | "Guide Me" and `[G]` use browser speech, with visible text when speech is unavailable. Not re-checked against every page in this pass. |
@@ -260,7 +262,10 @@ graph TD
 
 ## 8. Cloudinary Upload & Transformation Pipeline
 
-Cloudinary plays a central, verified role in transforming noisy physical textbook captures into clean educational assets:
+**Canonical guide:** [docs/CLOUDINARY-COMPLETE-USAGE.md](docs/CLOUDINARY-COMPLETE-USAGE.md) (routes, NL profiles, AI credits, env, demo vs project account).  
+**Deep-dive companions:** [docs/cloudinary-integration.md](docs/cloudinary-integration.md) · [docs/cloudinary-transformations.md](docs/cloudinary-transformations.md).
+
+Cloudinary turns noisy textbook captures into readable, bandwidth-fair lesson media—without putting `CLOUDINARY_API_SECRET` in the browser.
 
 ```mermaid
 sequenceDiagram
@@ -270,37 +275,48 @@ sequenceDiagram
     participant Server as Express API
     participant Cloudinary as Cloudinary CDN Edge
 
-    Student->>Browser: Selects textbook diagram / photo (PNG, JPG, PDF)
-    Browser->>Browser: Pre-upload validation (MIME check, max 15MB)
+    Student->>Browser: Selects textbook diagram / photo (PNG, JPG, PDF, video)
+    Browser->>Browser: Pre-upload validation (MIME check, 15MB image / 30MB video)
     
-    alt Live Cloudinary Mode (Configured)
+    alt Live Cloudinary Mode (Configured + ping OK)
         Browser->>Server: POST /api/uploads/signature { folder: 'conceptlens/uploads' }
-        Server->>Server: Generate SHA-256 signature using CLOUDINARY_API_SECRET
+        Server->>Server: HMAC signature using CLOUDINARY_API_SECRET
         Server-->>Browser: { signature, timestamp, apiKey, cloudName, folder }
         
-        Browser->>Cloudinary: POST https://api.cloudinary.com/v1_1/:cloud/auto/upload
+        Browser->>Cloudinary: POST https://api.cloudinary.com/v1_1/:cloud/image|video/upload
         Cloudinary-->>Browser: { public_id, secure_url, bytes, format, width, height }
         
-        Browser->>Server: POST /api/uploads/transform { publicId, crop, sharpen: true, contrast: true }
-        Server-->>Browser: { transformedUrl: "https://res.cloudinary.com/.../c_limit,w_900/e_sharpen:80,e_contrast/f_auto,q_auto/..." }
+        Browser->>Server: POST /api/uploads/transform-spec { prompt, assetId, ... }
+        Server-->>Browser: { transformedUrl with slash-delimited /f_auto/q_auto, creditCostEstimate }
         
-        Browser->>Browser: Computes measured bandwidth savings (%)
-        Browser->>Student: Renders dual-layer comparison slider (Original vs. Transformed)
-    else Local Demo Mode (Unconfigured)
-        Server-->>Browser: Status indicates credentials unconfigured
-        Browser->>Student: Displays "Local Demo Mode" with curated curriculum presets & honest labels
+        Browser->>Student: Split slider + alt text + optional educational safeguard
+    else Demo / Offline Account Mode
+        Server-->>Browser: GET /api/uploads/status → signedUpload disabled + reason
+        Browser->>Student: Honest badge; demo/sample and elephants transforms still work
     end
 ```
+
+### API surface (`/api/uploads`)
+
+| Method | Path | Role |
+| :--- | :--- | :--- |
+| GET | `/status` | Config + `api.ping()` + signed-upload gate |
+| POST | `/signature` | Folder-locked HMAC for direct client upload |
+| POST | `/direct` | Server proxy fallback |
+| POST | `/transform` | Crop / sharpen / contrast URL builder |
+| POST | `/transform-spec` | Natural-language → Zod → delivery URL |
+| POST | `/record` | Persist Cloudinary metadata |
 
 ### Transformation Parameters Applied
 
 | Transformation Tag | Educational Rationale & Technical Operation |
 | :--- | :--- |
-| `f_auto` | Automatically negotiates modern formats (WebP or AVIF) based on browser capability, cutting mobile load times. |
-| `q_auto` | Applies perceptual quality compression, preserving fine organelle membrane edges while shedding redundant bytes. |
-| `e_sharpen:80` | High-frequency edge enhancement that restores faint pencil sketch outlines and printed diagram lines. |
-| `e_contrast` | Micro-contrast normalization that flattens camera page glare, shadows, and uneven classroom lighting. |
-| `c_limit,w_900` | Downsamples multi-megapixel smartphone camera captures to a max 900px display width, eliminating mobile data waste. |
+| `f_auto` | Negotiates modern formats (WebP/AVIF when applicable). Emitted as its **own** path segment. |
+| `q_auto` / `q_auto:eco` | Perceptual quality; eco path for low-data (~72% est. savings—re-measure before quoting). |
+| `e_sharpen:80` | Restores faint pencil / print edges on diagrams. |
+| `e_contrast` | Flattens glare, shadows, uneven classroom lighting. |
+| `c_limit,w_900` / `w_480` | Caps megapixel phone dumps; 480px for low-data. |
+| AI ops (`e_auto_enhance`, `e_background_removal`, `b_gen_fill`, …) | Media Studio AI tab; generative edits on scientific diagrams require explicit safeguard confirmation. |
 
 ---
 
@@ -541,7 +557,7 @@ Accessibility was built into ConceptLens from the first line of code:
 ## 13. Known Limitations & Failure Modes
 
 1. **3D Organelle Interior Fly-Through**: The current Animal Cell uses translucent cutaways and external orbit controls. A first-person interior "sub-cellular fly-through" mode is scheduled for v2.2.
-2. **Cloudinary account**: Public `demo` delivery is verified for the animal-cell, heart, and plant-cell diagrams, and for `demo/sample`. Neuron and DNA fetches were not verified in this session because Wikimedia returned 429 to Cloudinary. Signed upload is blocked until `CLOUDINARY_CLOUD_NAME` matches the API key's cloud (`cloud_name mismatch` on 25 Oct 2026). Rotate `CLOUDINARY_API_SECRET` if the local `.env` has been shared. Do not commit `.env`.
+2. **Cloudinary account**: Media Studio and educational figures use public **demo** delivery (`sample`, `elephants`) when the project account is unreachable. Signed upload requires matching `CLOUDINARY_CLOUD_NAME` + key ownership and a successful ping. Rotate `CLOUDINARY_API_SECRET` if `.env` was ever shared. Do not commit `.env`. A plant-cell `/learning-media` four-variant lab appeared in older notes; it is **not** in the current route table—do not claim it unless re-shipped.
 3. **Voice Synthesizer Naturalness & Availability**: The speech vocalizer relies on the browser's native `window.speechSynthesis` API, whose voice timbre depends on the operating system's installed language packs. In environments where speech synthesis is disabled or unsupported (such as headless test browsers or privacy-hardened profiles), VoiceGuide falls back gracefully to non-modal, readable textual guidance.
 4. **Authentic ISL vs. AI Avatar Limitations**: Machine-generated 3D sign avatars and automated English-to-gloss translation engines lack valid spatial grammar, grammatical facial expressions, and scientific vocabulary in Indian Sign Language. To prevent harmful educational misconceptions, ConceptLens avoids synthetic signing avatars and relies exclusively on human-recorded, linguistically reviewed ISL curriculum videos (ISLRTC & NCERT). Lessons lacking certified footage display honest "In Development" states.
 5. **Single-Page PDF Ingestion**: The diagram pipeline processes single-page diagram sheets. Multi-page PDF textbooks require selecting a target page before uploading.
@@ -560,7 +576,7 @@ Accessibility was built into ConceptLens from the first line of code:
 1. **Landing Page**: Navigate to `http://localhost:5173`. With no saved theme, the app opens in light mode. Press `[T]` to switch themes. Open **Accessibility & Learning Settings** to combine learning modes. Press `[H]` to toggle high contrast.
 2. **Home flow**: Choose **Start learning**, then paste a question or open a labeled sample. Confirm the text and choose **Explain this**. The mathematics sample checks `x = 4`.
 3. **Learn**: Press `[1]` or open **Learn**. The animal-cell lesson lists its objectives. Open **DNA Double Helix** and switch between the 3D model and the 2D schematic.
-4. **Cloudinary**: Press `[4]`. The comparison is Cloudinary's `demo/sample` photograph. Open the delivery URL, which includes `f_auto`, `q_auto`, `e_sharpen:80`, and `e_contrast`. If the account badge says the check failed, an upload attempt shows an error.
+4. **Cloudinary**: Press `[4]`. Follow [docs/WALKTHROUGH-4MIN.md](docs/WALKTHROUGH-4MIN.md) §4. Show the status badge, an optimized `demo/sample` URL (`/f_auto/q_auto`, sharpen, contrast), low-data or NL transform, and the comparison slider. If the badge says signed upload is blocked, say so—do not fake success.
 5. **Practice**: Press `[2]`. The prompts are practice questions, not official past papers.
 6. **About**: Press `[3]`. Lessons stay in English text. Speech starts only from **Read this section**. There is no sign-language video in this build.
 
@@ -589,35 +605,29 @@ Accessibility was built into ConceptLens from the first line of code:
 
 ---
 
-## 17. Finale walkthrough (about 90 seconds)
+## 17. Judging Walkthrough Script (4 Minutes)
 
-Use the home screen. The API must be running. Do not improvise a success state if the status line says the engine is offline.
+**Printable full script (say + click):** [docs/WALKTHROUGH-4MIN.md](docs/WALKTHROUGH-4MIN.md)  
+**Cloudinary inventory for the 30% beat:** [docs/CLOUDINARY-COMPLETE-USAGE.md](docs/CLOUDINARY-COMPLETE-USAGE.md)
 
-1. **The problem.** A static arrow cannot show a pointer changing. The heading is “We will not teach a structure we cannot prove.”
-2. **A valid reversal.** Press “Watch the reversal.” The inspector shows `prev`, `curr`, and `next` from the step the server returned.
-3. **The break.** Press “Break the structure.” The list 10 → 20 → 30 → 40 points back to 20.
-4. **The stop.** The status reads Stopped. The edge is labeled CYCLE. Playback does not start.
-5. **The repair.** Press “Repair this pointer.” The same check now passes, and the reversal can play.
-6. **The pictures.** This step is the local runner, not the live Render URL. Under the list, open Explore, then Focus, then Low data. They are three delivery URLs for one illustration on the project Cloudinary account. Focus keeps the chloroplast label. Low data is 320 pixels wide. The returned format for this drawing is PNG. The pixels are not parsed into the list.
+Prefer local `npm run dev`. Do not invent upload success if `GET /api/uploads/status` shows signed upload disabled.
 
-The longer notes below are an older script. Where they disagree with this walkthrough, follow this walkthrough.
+| Time | Beat | Do | Say (short) |
+| :---: | :--- | :--- | :--- |
+| **0:00–0:25** | Hook | Home hero | “ConceptLens — textbook friction to something you can explore; presentation by **choice**, not diagnosis.” |
+| **0:25–1:20** | Proof | Reverse → Break → Stopped/CYCLE → Repair | “We will not teach a structure we cannot prove. Floyd fails closed.” |
+| **1:20–2:00** | Learn | `[1]` animal cell; 3D ↔ 2D | “Procedural models + SVG fallback—not a fragile remote GLTF.” |
+| **2:00–3:15** | Cloudinary | `[4]` badge → optimized URL → low-data/NL → slider → AI/video brief | “Server-signed uploads; slash `f_auto`/`q_auto`; Zod NL transforms; educational safeguard on generative science edits. Demo delivery if account blocked—we say so.” |
+| **3:15–3:40** | Inclusive | Settings: Easy Read / Focus / `[H]` | “Combinable modes. No synthetic ISL. Practice ≠ official papers.” |
+| **3:40–4:00** | Close | Home or About + live URL | “Prove, confirm, deliver honestly, adapt by choice. Thank you.” |
 
-## 17b. Earlier judging notes
+### Micro-script (Cloudinary only — if judges ask for media)
 
-- **0:00 – 0:20 (The Hook & Problem)**:
-  "Hello judges! We present ConceptLens, The Living Atlas: *From Your Textbook to an Experience You Can Explore.* Every year, millions of students struggle to understand 3D biology and physics concepts from flat, static textbook paper. ConceptLens transforms static educational materials into interactive experiences. The studio opens in a light study canvas; `[T]` switches to Dark Observatory."
-- **0:20 – 0:55 (Explore 3D Cell & Organelle Inspection)**:
-  "Learn opens the animal-cell lesson. The question is practice, not an official paper. 2D Diagram is the non-WebGL view of the same lesson."
-- **0:55 – 1:20 (Cardiovascular Circulation & DNA Double Helix)**:
-  "Now let's switch to the Human Heart. We see real-time cardiac circulation with color-coded oxygenation paths and adjustable heart rate. Or inspect the DNA Double Helix, where students can explore Watson-Crick base-pairing, hydrogen bonding, and major/minor grooves."
-- **1:20 – 1:55 (Cloudinary Media Pipeline & Split Slider)**:
-  "This comparison is Cloudinary's public demo/sample photograph, not a textbook scan. The delivery URL applies f_auto, q_auto, sharpen, and contrast. Signed upload stays blocked, and is labeled as blocked, until the cloud name matches the API key."
-- **1:55 – 2:20 (Exam Practice & Inclusive ISL Classroom)**:
-  "Practice questions explain why an answer is right or wrong, and they are labeled as practice rather than official papers. The text-lesson tab is an English transcript. It is not an Indian Sign Language video."
-- **2:20 – 2:45 (Architecture, Invariant Gates & Fallbacks)**:
-  "Unlike brittle AI wrappers that hallucinate facts, ConceptLens enforces an 8-Stage Reliability Pipeline with Floyd cycle detection and Zod schema guards before rendering any model. If Cloudinary credentials are not present, the app gracefully runs in Local Demo Mode."
-- **2:45 – 3:00 (Summary & Impact)**:
-  "On 25 October 2026 the server suite printed 337 of 337 passed, pytest printed 6 passed, and the production build completed in 2.94s. ConceptLens is deployed live at https://conceptlens-58cq.onrender.com/."
+1. Badge matches `/api/uploads/status`.  
+2. Show `.../c_limit,w_900/e_sharpen:80/e_contrast/f_auto/q_auto/sample`.  
+3. Low-data or prompt *“Make a low-data version”* → `w_480` / `q_auto:eco`.  
+4. Slider proves before/after.  
+5. If ping OK: mention folder `conceptlens/uploads` and that the secret never ships to Vite.
 
 ---
 

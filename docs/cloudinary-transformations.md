@@ -1,5 +1,7 @@
 # Natural-Language Cloudinary Transformation Engine
 
+> Companion to [CLOUDINARY-COMPLETE-USAGE.md](./CLOUDINARY-COMPLETE-USAGE.md) §7. Demo script beat: [WALKTHROUGH-4MIN.md](./WALKTHROUGH-4MIN.md) §4.
+
 ## 1. Engine Overview
 
 ConceptLens features a **Natural-Language Cloudinary Transformation Engine** designed to let students and educators adapt visual learning materials using conversational instructions (e.g. *"Crop to a square"*, *"Make a low-data version for 2G mobile"*, *"Resize for a lesson card"*, *"Sharpen diagram labels"*, *"Apply AI auto enhance"*).
