@@ -51,6 +51,8 @@
 18. [Verified Impact Framework](#18-verified-impact-framework)
 19. [Product Showcase Video & Interactive Demo (72 Seconds)](#19-product-showcase-video--interactive-demo-72-seconds)
 
+[Open Gemma 4](#open-gemma-4) — which open model handles lessons, rewrites, and diagrams.  
+[Best Use of Gemma 4](#best-use-of-gemma-4) — how this learning tool uses that open model.  
 [How it works](#how-it-works) — animated flow and screenshots of the current app.  
 [Complete Cloudinary usage](docs/CLOUDINARY-COMPLETE-USAGE.md) — signed uploads, transforms, Media Studio, env, honesty matrix.  
 [4-minute judging walkthrough](docs/WALKTHROUGH-4MIN.md) — timed say-and-click script for demo day.  
@@ -324,13 +326,48 @@ sequenceDiagram
 
 ### Core Stack
 - **Frontend**: React 18.3, TypeScript 5.5, Vite 5.4, Lucide React icons. Display type is Space Grotesk, body type is Inter, and mono type is IBM Plex Mono.
-- **Open vision**: Gemma 4 31B (`gemma-4-31b-it`) reads uploads that miss the curated catalogs when `GEMMA_API_KEY` or `GEMINI_API_KEY` is set. Diagram bytes are sent only for data URIs and `res.cloudinary.com` images.
+- **Open model**: Gemma 4, configured with `GEMMA_API_KEY`, `GEMMA_MODEL`, and `GEMMA_FAST_MODEL`. See [Open Gemma 4](#open-gemma-4).
 - **3D Graphics**: Three.js `^0.186.1` with procedural geometries and `OrbitControls`.
 - **Backend**: Express 4.19, TypeScript, tsx, Helmet, Morgan, CORS.
 - **Data Contracts**: Zod 3.23 shared schemas (`@conceptlens/shared`).
 - **Media Engine**: Cloudinary Node SDK `^2.4.0` for server-signed uploads. Client delivery of public lesson diagrams uses `@cloudinary/react` (`AdvancedImage`) and `@cloudinary/url-gen`, the same packages installed by the official [create-cloudinary-react](https://github.com/cloudinary-devs/create-cloudinary-react) starter kit (MIT, React + Vite scaffold). That kit was not used to generate ConceptLens. Running it here would create a separate React 19 app and write the cloud name into a client `.env`. The plant-cell Media Lab stays on the Express proxy so the project cloud name is not placed in the browser bundle. `next-cloudinary` is not used.
 - **Persistence**: MongoDB Mongoose with resilient in-memory session caching when MongoDB is not running locally.
 - **Python Microservice**: FastAPI, Pytest, NumPy, NetworkX, Pillow.
+
+### Open Gemma 4
+
+Gemma is the teaching model. A free key from [Google AI Studio](https://aistudio.google.com/app/apikey) goes in `GEMMA_API_KEY`. Google hosts the open weights on the Gemini API, so the server calls `generativelanguage.googleapis.com`. The key stays on the server. Do not copy it into a `VITE_` variable.
+
+Each size is used for the work it is best at:
+
+| Work | Env model | Id | Thinking |
+| :--- | :--- | :--- | :--- |
+| Lessons, curriculum translation, diagram reading | `GEMMA_MODEL` | `gemma-4-31b-it` | `high` |
+| Simplify, summarize, explain a term, study notes | `GEMMA_FAST_MODEL` | `gemma-4-26b-a4b-it` | `minimal` |
+
+`gemma-4-31b-it` is the dense 31B instruction model. It gets the long tasks: building a lesson, translating a curriculum passage while keeping formulas and scientific names, and reading a diagram that is not already in the curated catalog. Thinking stays on so the model can work through those steps. Diagram bytes are sent only for a `data:image` upload or a `https://res.cloudinary.com` image.
+
+`gemma-4-26b-a4b-it` is the mixture-of-experts model with 4B active parameters. Short rewrites use it with thinking turned down, so a simplify or summary does not wait on a long reasoning trace.
+
+Teaching rules go in the system instruction. The student's text stays in the user turn, so that text is source material rather than a new set of instructions. Thinking traces are dropped before the JSON is checked against the Zod lesson schema. If Gemma is missing, rate-limited, or returns invalid JSON, the server uses Hugging Face when `HF_TOKEN` is set, then the local rules engine.
+
+`AI_PROVIDER=gemma` is the default whenever `GEMMA_API_KEY` is set. If that variable is empty, the server accepts `GEMINI_API_KEY` as the same key. `AI_PROVIDER=gemini` is the opt-out that calls the closed model instead. `AI_PROVIDER=huggingface` skips Google. Leave the key blank and the app stays on curated diagrams and the local rules engine.
+
+### Best Use of Gemma 4
+
+Gemma 4 is a lightweight open-weights model. ConceptLens reaches it through the Gemini API with `GEMMA_API_KEY`, and the open model is what turns a student's material into a lesson.
+
+**Multimodal.** The app takes both text and images. `gemma-4-31b-it` writes the lesson from the passage, and it reads a diagram that is not already in the curated catalog. Image bytes are sent only for a `data:image` upload or a `https://res.cloudinary.com` file. Thinking stays on for that work.
+
+**A focused learning tool.** One concept can be read as a standard explanation, plain language, or one step at a time. `gemma-4-31b-it` builds the lesson and translates curriculum text while keeping formulas, units, and scientific names. `gemma-4-26b-a4b-it` does the short rewrites: simplify, summarize, explain a term, and study notes. Teaching rules stay in the system instruction. The student's text stays in the user turn.
+
+**A working prototype.** Set `GEMMA_API_KEY`, `GEMMA_MODEL=gemma-4-31b-it`, `GEMMA_FAST_MODEL=gemma-4-26b-a4b-it`, and `AI_PROVIDER=gemma`. If the call is missing, rate-limited, or not valid JSON, the server uses Hugging Face when `HF_TOKEN` is set, then the local rules engine. The class still gets a lesson. `AI_PROVIDER=gemini` is the closed-model opt-out.
+
+### Open-weight AI in the product
+
+The open model is part of how the product works, not a sticker on an unrelated demo. Lesson generation, curriculum translation, and unmatched diagram reading go through Gemma 4 open weights. The local rules engine remains so the same screens still run with no key. The repository is MIT licensed.
+
+This is the role those two briefs ask for: a multimodal learning tool on Gemma 4, and an original project where open-weight AI does real work. It is not a claim that a prize, a DEV badge, or an MLH swag bag has been awarded.
 
 ### Key Architectural Decisions
 1. **Procedural Three.js Geometries over Fragile Remote GLTF Files**:
@@ -382,12 +419,13 @@ Environment variable reference:
 PORT=5000
 NODE_ENV=development
 
-# Open Gemma 4. The Google AI Studio key calls gemma-4-31b-it and gemma-4-26b-a4b-it.
-# Leave the key blank to stay on curated presets and the local rules engine.
-GEMINI_API_KEY=your_gemini_api_key_here
+# Open Gemma 4. Free key: https://aistudio.google.com/app/apikey
+# Leave GEMMA_API_KEY blank to stay on curated presets and the local rules engine.
+GEMMA_API_KEY=your_gemma_api_key_here
 GEMMA_MODEL=gemma-4-31b-it
 GEMMA_FAST_MODEL=gemma-4-26b-a4b-it
 AI_PROVIDER=gemma
+AI_TIMEOUT_MS=15000
 
 # Cloudinary Integration (Required for Live Signed CDN Uploads)
 # Get free tier credentials from https://cloudinary.com
@@ -403,7 +441,9 @@ MONGODB_URI=mongodb://localhost:27017/conceptlens
 CLIENT_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
 ```
 
-The React app calls `/api` on the same origin. It does not read `VITE_API_URL` or `VITE_CLOUDINARY_CLOUD_NAME`. Do not put `CLOUDINARY_API_SECRET` in any `VITE_` variable.
+The React app calls `/api` on the same origin. It does not read `VITE_API_URL` or `VITE_CLOUDINARY_CLOUD_NAME`. Do not put `CLOUDINARY_API_SECRET`, `GEMMA_API_KEY`, or `GEMINI_API_KEY` in any `VITE_` variable.
+
+`GEMMA_MODEL` defaults to `gemma-4-31b-it`. `GEMMA_FAST_MODEL` defaults to `gemma-4-26b-a4b-it`. Reason tasks wait up to 45 seconds so thinking can finish. `AI_TIMEOUT_MS` still bounds the fast rewrites and the closed-model opt-out. `GEMINI_API_KEY` is optional and is read only when `GEMMA_API_KEY` is empty, or when `AI_PROVIDER=gemini`.
 
 `CLOUDINARY_CLOUD_NAME` must be the cloud that owns `CLOUDINARY_API_KEY`. A mismatch makes `GET /api/uploads/status` return `accountReachable: false` with `cloud_name mismatch`. Public delivery of `demo/sample` still works. Rotate `CLOUDINARY_API_SECRET` in the Cloudinary console if it has been exposed, then update `.env` yourself. Do not commit `.env`.
 

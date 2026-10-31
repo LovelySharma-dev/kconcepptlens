@@ -21,5 +21,13 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: GEMMA_API_KEY
+        sync: false
+      - key: GEMMA_MODEL
+        value: gemma-4-31b-it
+      - key: GEMMA_FAST_MODEL
+        value: gemma-4-26b-a4b-it
+      - key: AI_PROVIDER
+        value: gemma
       - key: GEMINI_API_KEY
         sync: false

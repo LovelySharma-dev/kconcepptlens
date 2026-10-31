@@ -1902,8 +1902,8 @@ export function publicEngineStatus(input: {
     uploadAccess: 'authenticated',
     retention: 'A private Cloudinary asset stays in that account until it is deleted. This app does not keep a copy of the file after the request.',
     note: ocrReady
-      ? 'No extra API key is required. Photographs and scanned PDF pages are read locally with Tesseract. The file stays on this server. Handwriting is often weak, and you confirm the reading before it is explained. GEMINI_API_KEY is not used for this pipeline.'
-      : 'No extra API key is required. Pasted text, typed questions, PDF text layers, sample lessons, and the local Python evidence file work without one. Photograph and scanned-page reading is not configured. GEMINI_API_KEY is not used for this pipeline.'
+      ? 'No extra API key is required. Photographs and scanned PDF pages are read locally with Tesseract. The file stays on this server. Handwriting is often weak, and you confirm the reading before it is explained. GEMMA_API_KEY is not used for this pipeline.'
+      : 'No extra API key is required. Pasted text, typed questions, PDF text layers, sample lessons, and the local Python evidence file work without one. Photograph and scanned-page reading is not configured. GEMMA_API_KEY is not used for this pipeline.'
   };
 }
 

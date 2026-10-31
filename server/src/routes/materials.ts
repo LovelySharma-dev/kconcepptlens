@@ -26,7 +26,7 @@ import { runPythonEngine } from '../services/pythonEngine';
 const router = Router();
 
 function secretValues(): string[] {
-  return [process.env.CLOUDINARY_API_SECRET, process.env.CLOUDINARY_API_KEY, process.env.GEMINI_API_KEY]
+  return [process.env.CLOUDINARY_API_SECRET, process.env.CLOUDINARY_API_KEY, process.env.GEMMA_API_KEY, process.env.GEMINI_API_KEY]
     .map((value) => value?.trim() ?? '')
     .filter((value) => value.length >= 8 && !value.includes('your_'));
 }
