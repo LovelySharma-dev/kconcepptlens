@@ -8,7 +8,7 @@ import {
   applyOcrReading,
   buildMaterialExplanation,
   defaultStrategyWeights,
-  gradePractice,
+  gradePracticeSubmission,
   ingestPrepared,
   parseExternalExplanation,
   publicEngineStatus,
@@ -224,29 +224,24 @@ router.post('/answer', (req: Request, res: Response) => {
   ) {
     return res.status(400).json({ success: false, error: 'The answer could not be checked because the question was incomplete.' });
   }
-  let explanation: MaterialExplanation;
-  try {
-    explanation = buildMaterialExplanation({
-      text,
-      sourceKind: sourceKind as MaterialSourceKind,
-      sampleId: typeof body.sampleId === 'string' ? body.sampleId : null,
-      subjectOverride: body.subjectOverride ?? null,
-      contentTypeOverride: body.contentTypeOverride ?? null
-    });
-  } catch {
-    return res.status(400).json({ success: false, error: 'The question could not be rebuilt from the source text.' });
+  const graded = gradePracticeSubmission({
+    text,
+    sourceKind: sourceKind as MaterialSourceKind,
+    sampleId: typeof body.sampleId === 'string' ? body.sampleId : null,
+    subjectOverride: body.subjectOverride ?? null,
+    contentTypeOverride: body.contentTypeOverride ?? null,
+    questionId,
+    selectedIndex
+  });
+  if (!graded.ok) {
+    return res.status(graded.status).json({ success: false, error: graded.error });
   }
-  const question = explanation.practice.find((item) => item.id === questionId);
-  if (!question) {
-    return res.status(404).json({ success: false, error: 'That practice question is not part of this explanation.' });
-  }
-  const graded = gradePractice(question, selectedIndex);
   const currentWeights = isWeights(body.weights) ? body.weights : defaultStrategyWeights();
   const localWeights = adjustStrategyWeights(currentWeights, graded.correct);
   const python = runPythonEngine({
     command: 'record',
-    subject: explanation.subject,
-    conceptId: question.conceptId,
+    subject: graded.subject,
+    conceptId: graded.conceptId,
     correct: graded.correct
   });
   const pythonWeights = python.ok && isWeights(python.data.weights) ? python.data.weights : null;
@@ -254,9 +249,11 @@ router.post('/answer', (req: Request, res: Response) => {
     success: true,
     data: {
       correct: graded.correct,
-      explanation: graded.explanation,
-      conceptId: question.conceptId,
-      subject: explanation.subject,
+      explanation: graded.feedback,
+      conceptId: graded.conceptId,
+      subject: graded.subject,
+      stage: graded.stage,
+      relatedStepIndex: graded.relatedStepIndex,
       weights: pythonWeights ?? localWeights,
       weightSource: pythonWeights ? 'python-evidence' : 'local-rules',
       trainedModel: false,

@@ -41,6 +41,8 @@ export const GuidedDemo: React.FC<GuidedDemoProps> = ({ preferences, onPreferenc
   const [sampleId, setSampleId] = useState<string | null>(SAMPLE_MATERIALS[0].id);
   const [draft, setDraft] = useState(SAMPLE_MATERIALS[0].text);
   const [preset, setPreset] = useState<PresetId>('standard');
+  const [demoStepIndex, setDemoStepIndex] = useState(0);
+  const [demoAnnouncement, setDemoAnnouncement] = useState('');
 
   const preview = useMemo(() => {
     const text = draft.trim();
@@ -130,32 +132,108 @@ export const GuidedDemo: React.FC<GuidedDemoProps> = ({ preferences, onPreferenc
           <div className="demo-grid">
             <article className="workspace-panel">
               <h3>Standard</h3>
+              <p><strong>Question:</strong> {explanation.sourceContent}</p>
               <p>{views.standard.paragraphs[0]}</p>
+              {explanation.verified.length > 0 && (
+                <p className="fine-print"><strong>Solution:</strong> {explanation.verified[0]}</p>
+              )}
               <p className="fine-print">{views.standard.visibleStepIndexes.length} steps visible. Speech text is available.</p>
             </article>
             <article className="workspace-panel">
               <h3>Easy Read</h3>
               <p>{views.easyRead.paragraphs[0]}</p>
               <p className="fine-print">
-                {views.easyRead.showingPlain ? 'Plain wording is showing.' : views.easyRead.fallbackNote}
+                {views.easyRead.showingPlain ? 'Plain wording with short sentences. Unfamiliar terms explained.' : views.easyRead.fallbackNote}
               </p>
             </article>
             <article className="workspace-panel">
               <h3>Simple Steps</h3>
+              <p className="step-progress-label">Step 1 of {explanation.steps.length}</p>
               <p>
                 {explanation.steps.find((step) => step.index === views.simpleSteps.visibleStepIndexes[0])?.title ?? 'No step is stored.'}
               </p>
               <p className="fine-print">
-                {views.simpleSteps.visibleStepIndexes.length} of {explanation.steps.length} steps visible. The others stay available when you move forward.
+                {views.simpleSteps.visibleStepIndexes.length} of {explanation.steps.length} steps visible. Earlier and later steps remain accessible.
+              </p>
+            </article>
+            <article className="workspace-panel">
+              <h3>Speech-free</h3>
+              <p>{views.speechFree.paragraphs[0]}</p>
+              <p className="fine-print">
+                {views.speechFree.speechNote ?? 'Speech text removed. All essential learning information remains available in writing.'}
               </p>
             </article>
           </div>
           <h3>With the preset you selected</h3>
-          <p>{selected.paragraphs[0]}</p>
-          <p className="fine-print">
-            {selected.visibleStepIndexes.length} step{selected.visibleStepIndexes.length === 1 ? '' : 's'} visible.
-            {selected.speechText ? ' Speech can read this text when you start it.' : ' Speech text is off.'}
-          </p>
+          {preset === 'simple-steps' && explanation.steps.length > 0 ? (
+            <div className="workspace-panel" style={{ marginTop: '0.5rem' }}>
+              <p className="step-progress-label" aria-live="polite">
+                Step {demoStepIndex + 1} of {explanation.steps.length}
+              </p>
+              <h4>{explanation.steps[demoStepIndex]?.title}</h4>
+              <p>{explanation.steps[demoStepIndex]?.detail}</p>
+              <div className="workspace-actions" style={{ marginTop: '0.75rem' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={demoStepIndex === 0}
+                  onClick={() => {
+                    const prev = Math.max(0, demoStepIndex - 1);
+                    setDemoStepIndex(prev);
+                    setDemoAnnouncement(`Step ${prev + 1} of ${explanation.steps.length}: ${explanation.steps[prev]?.title}`);
+                  }}
+                  aria-label="Previous step"
+                >
+                  Previous step
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setDemoAnnouncement(`Step ${demoStepIndex + 1} of ${explanation.steps.length}: ${explanation.steps[demoStepIndex]?.title}. ${explanation.steps[demoStepIndex]?.detail}`);
+                  }}
+                  aria-label={`Repeat step ${demoStepIndex + 1}`}
+                >
+                  Repeat step
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={demoStepIndex >= explanation.steps.length - 1}
+                  onClick={() => {
+                    const next = Math.min(explanation.steps.length - 1, demoStepIndex + 1);
+                    setDemoStepIndex(next);
+                    setDemoAnnouncement(`Step ${next + 1} of ${explanation.steps.length}: ${explanation.steps[next]?.title}`);
+                  }}
+                  aria-label="Next step"
+                >
+                  Next step
+                </button>
+              </div>
+              {demoAnnouncement && <p className="sr-only" role="status" aria-live="polite">{demoAnnouncement}</p>}
+            </div>
+          ) : (
+            <>
+              <p>{selected.paragraphs[0]}</p>
+              {preset === 'easy-read' && explanation.glossary.length > 0 && (
+                <dl className="glossary">
+                  {explanation.glossary.slice(0, 2).map((item) => (
+                    <div key={item.term}>
+                      <dt>{item.term}</dt>
+                      <dd>{item.meaning}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+              {preset === 'standard' && explanation.verified.length > 0 && (
+                <p><strong>Verified solution:</strong> {explanation.verified[0]}</p>
+              )}
+              <p className="fine-print">
+                {selected.visibleStepIndexes.length} step{selected.visibleStepIndexes.length === 1 ? '' : 's'} visible.
+                {selected.speechText ? ' Speech can read this text when you start it.' : ' Speech-free: audio instructions are disabled and never required.'}
+              </p>
+            </>
+          )}
           <h3>Measured checks</h3>
           <ul className="measure-list">
             <li>

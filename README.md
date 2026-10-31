@@ -33,8 +33,10 @@
 16. [Future Roadmap](#16-future-roadmap)
 17. [Judging Walkthrough Script (3 Minutes)](#17-judging-walkthrough-script-3-minutes)
 18. [Verified Impact Framework](#18-verified-impact-framework)
+19. [Product Showcase Video & Interactive Demo (72 Seconds)](#19-product-showcase-video--interactive-demo-72-seconds)
 
-[How it works](#how-it-works) — animated flow and screenshots of the current app.
+[How it works](#how-it-works) — animated flow and screenshots of the current app.  
+[Interactive Video Showcase](docs/video-demo.html) — self-running 72-second product showcase with narration and audio cues.
 
 ---
 
@@ -558,6 +560,51 @@ To ensure absolute credibility, all claims are categorized using our transparent
 ### Intended
 - **Spatial Mental Model Formation**: Expected to reduce cognitive friction when visualizing 3D cellular and organ structures.
 - **Deaf & Hard-of-Hearing Inclusion**: Expected to provide equal access to STEM terminology for non-verbal learners.
+
+---
+
+## 19. Product Showcase Video & Interactive Demo (72 Seconds)
+
+> **Product Showcase Video**: *"One concept. Different ways to understand it."*  
+> **Tagline**: *"Learn anything. Your way."*  
+> **Runtime**: 72 Seconds • 16:9 4K/1080p • 60fps
+
+An interactive, self-running browser showcase video player is included in this repository to demonstrate the platform for judges, teachers, and learners without requiring external video hosting.
+
+### 🎮 How to View the Interactive Video Demo
+
+- **Direct File (Offline)**: Open [`docs/video-demo.html`](docs/video-demo.html) in any web browser.
+- **Live Local Server**: With the client running (`npm run dev:client`), open:
+  ```
+  http://localhost:5173/video-demo.html
+  ```
+- **Features Included**:
+  - Auto-play with scrubber controls and scene jumping.
+  - Optional browser narration toggle (`window.speechSynthesis`).
+  - Web Audio synthesized sonic signature and interface clicks.
+  - Interactive mode comparison on `2x + 3 = 11` (Standard, Easy Read, Simple Steps).
+  - Interactive practice sandbox with real rule-based feedback.
+  - Live Director's Production Notes and verified codebase cross-references.
+
+### 🎬 Shot-by-Shot Director's Storyboard
+
+| Scene & Time | On-Screen Visuals & UI State | On-Screen Typography (OST) | Closed Captions / Narration | Audio & Sound Design |
+| :--- | :--- | :--- | :--- | :--- |
+| **Scene 1: The Hook**<br>`0:00 - 0:06` | Deep slate canvas (`#0B0F17`). Pure typography: `2x + 3 = 11` fluidly splits into written explanation, plain wording, and stepped action. | **"One concept."**<br>*(Pause)*<br>**"Different ways to understand it."** | *"One concept. Different ways to understand it."* | Sub-bass 45Hz pulse with tape-filtered acoustic piano chord in D-flat. |
+| **Scene 2: The Problem**<br>`0:06 - 0:13` | Intimidating wall of dense textbook paragraphs. Layout breathes, expands whitespace, and isolates core operations. | **"Learning isn't one-size-fits-all."** | *"Learning isn't one-size-fits-all. When textbooks only offer a single format, learners get left behind."* | Piano motif starts a quiet, reflective arpeggio; friction clears. |
+| **Scene 3: The Arrival**<br>`0:13 - 0:20` | Real ConceptLens landing page hero in crisp light mode. Sample preview card with `2x + 3 = 11`. Cursor clicks **Start Learning**. | **"Meet ConceptLens."**<br>**"Learning, presented your way."** | *"Meet ConceptLens. An accessible learning platform built to adapt educational material to you."* | Warm acoustic bass entrance. Crisp tactile relay click on button press. |
+| **Scene 4: Core Demo**<br>`0:20 - 0:36` | Same equation `2x + 3 = 11`. Switches from **Standard** to **Easy Read** (short sentences, plain language) to **Simple Steps** (Step 1 isolated: `2x = 8`, advancing to Step 2: `x = 4`). | **"Same question."**<br>**"Different presentation."**<br>**"Your pace."** | *"Take a foundational algebra equation: 2x + 3 = 11. Switch seamlessly from standard academic text, to plain-language Easy Read, or step-by-step Simple Steps."* | Rhythmic 82 BPM clockwork pulse with clean interface toggle clicks. |
+| **Scene 5: Interactive Practice**<br>`0:36 - 0:47` | Practice prompt: *"Which operation should be undone first in 2x + 3 = 11?"* Learner selects **Subtract 3**. Immediate verified green checkmark and feedback. The solution `x = 4` is never pre-revealed. | **"Understand."**<br>**"Try."**<br>**"Learn from the next step."** | *"Understand, try, and learn from rule-based checks that guide you without giving away the answer."* | Organic woodblock tap on selection, bright harmonic chime on success. |
+| **Scene 6: Accessibility by Choice**<br>`0:47 - 0:57` | Split editorial view demonstrating real preference switches: **Dyslexia-friendly** spacing, **Speech-free** quiet mode, and **Low-stimulation** calm. | **"Accessibility isn't one setting."**<br>**"Choose what works for you."** | *"Accessibility isn't a single setting. Choose dyslexia-friendly spacing, speech-free quiet, or low-stimulation views."* | Layered organic clicks; acoustic piano voicings broaden warmly. |
+| **Scene 7: Our Mission**<br>`0:57 - 1:05` | Editorial cards for **SDG 4: Quality Education** and **SDG 10: Reduced Inequalities**. Restrained editorial presentation. | **"More ways to engage with learning."**<br>*(Aligned with SDG 4 & SDG 10)* | *"Building toward United Nations Goals 4 and 10—because every learner deserves a fair opportunity to understand."* | Music swells to emotional apex with lush piano and strings. |
+| **Scene 8: The Final Frame**<br>`1:05 - 1:12` | Equation resolves cleanly into `x = 4`, dissolving into **CONCEPTLENS** logomark and tagline. Clean fade to black. | **CONCEPTLENS**<br>***"Learn anything. Your way."***<br>`One concept. Different ways to understand it.` | *(Brand signature resonance)* | Pure three-note signature chime ($D\flat_5 \rightarrow A\flat_5 \rightarrow F_6$) with warm reverb tail. |
+
+### ⚖️ Technical Honesty & Compliance Mandate
+
+1. **Rule-Based Engine**: Explanations and checks are generated by deterministic Python and TypeScript solvers (`shared/src/learning/materials.ts`), not an ungrounded or hallucinating large language model.
+2. **Separated Practice Keys**: Answer keys are never exposed in learner-facing prompts. Feedback is strictly recomputed from mathematical substitution.
+3. **Choice, Not Diagnosis**: Accessibility preferences adjust font scale, line height, contrast, and audio autoplay. They are choices, not medical diagnoses.
+4. **UN SDG Alignment**: The project aims to support United Nations Sustainable Development Goals 4 and 10. It is not a UN program and is not endorsed by the United Nations.
 
 ---
 

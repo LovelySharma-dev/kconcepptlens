@@ -58,6 +58,8 @@ export interface AnswerState {
   correct: boolean;
   explanation: string;
   why: string;
+  relatedStepIndex?: number;
+  stage?: string;
 }
 
 interface LearningWorkspaceProps {
@@ -87,6 +89,7 @@ interface LearningWorkspaceProps {
   onClearCancel: () => void;
   onClose: () => void;
   onSpeechRate: (rate: 0.8 | 1 | 1.25) => void;
+  onRetryAnswer?: () => void;
 }
 
 export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({

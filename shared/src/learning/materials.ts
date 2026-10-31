@@ -685,7 +685,7 @@ export interface LinearSolution {
   isolated: number;
 }
 
-interface PracticeKey {
+export interface PracticeKey {
   id: string;
   correctOptionIndex: number;
   correctFeedback: string;
@@ -694,7 +694,7 @@ interface PracticeKey {
   stage: PracticeStage;
 }
 
-interface ComposedMaterial {
+export interface ComposedMaterial {
   explanation: MaterialExplanation;
   keys: PracticeKey[];
 }
@@ -1235,7 +1235,7 @@ function plainFrom(paragraphs: string[]): string | null {
     .replace(/\bnucleus\b/gi, 'nucleus (the cell part that holds DNA)');
 }
 
-function composeMaterial(input: {
+export function composeMaterial(input: {
   text: string;
   sourceKind: MaterialSourceKind;
   sampleId?: string | null;

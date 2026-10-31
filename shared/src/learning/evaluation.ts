@@ -9,12 +9,14 @@ import { applyLearningTheme } from './themes';
 import type { MaterialExplanation } from '../schemas/material';
 import {
   balanceReaction,
+  composeMaterial,
   emptyMaterialEvidence,
   learnerPracticeIsSeparated,
   lensDistanceStatement,
   presentMaterial,
   solveLinearEquation,
   traceSafeAccumulator,
+  type PracticeKey,
   type PresentedMaterial
 } from './materials';
 
@@ -81,7 +83,7 @@ export function presentForPreferences(explanation: MaterialExplanation, preferen
   return presentMaterial(explanation, preferences, emptyMaterialEvidence(), 0);
 }
 
-export function evaluateMaterial(explanation: MaterialExplanation): MaterialEvaluation {
+export function evaluateMaterial(explanation: MaterialExplanation, keys?: readonly PracticeKey[]): MaterialEvaluation {
   const items: ExplanationCheck[] = [];
   const linear = solveLinearEquation(explanation.sourceContent);
   if (linear && explanation.subject === 'mathematics') {
@@ -193,8 +195,27 @@ export function evaluateMaterial(explanation: MaterialExplanation): MaterialEval
 
   const standardWords = meanWordsPerSentence(standardText);
   const easyWords = meanWordsPerSentence(explanation.plainLanguage ? easyText : standardText);
+  let keysToUse = keys;
+  if (!keysToUse && explanation.practice.length > 0) {
+    try {
+      const composed = composeMaterial({
+        text: explanation.sourceContent,
+        sourceKind: explanation.sourceKind,
+        sampleId: explanation.sampleId,
+        subjectOverride: explanation.learnerCorrectedSubject ? explanation.subject : null,
+        contentTypeOverride: explanation.contentTypeUncertain ? null : explanation.contentType
+      });
+      keysToUse = composed.keys;
+    } catch {
+      keysToUse = undefined;
+    }
+  }
+  const firstKey = keysToUse?.[0];
   const question = explanation.practice[0];
-  const answer = question ? question.options[question.correctOptionIndex] : null;
+  const answer =
+    question && firstKey && Number.isInteger(firstKey.correctOptionIndex) && firstKey.correctOptionIndex >= 0 && firstKey.correctOptionIndex < question.options.length
+      ? question.options[firstKey.correctOptionIndex]
+      : null;
   const corpus = [
     explanation.plainLanguage ?? '',
     ...explanation.sections.flatMap((section) => section.paragraphs),

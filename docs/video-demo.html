@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConceptLens — Interactive 72-Second Product Showcase Demo</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f17;
+      --bg-card: #131b28;
+      --bg-light: #f8fafc;
+      --surface-border: #1e293b;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-teal: #14b8a6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-purple: #a855f7;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      padding: 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 1.5rem auto;
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-live {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent-green);
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: currentColor;
+      animation: pulseAnim 2s infinite;
+    }
+
+    @keyframes pulseAnim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-top: 0.25rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .main-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      flex-grow: 1;
+    }
+
+    @media (min-width: 992px) {
+      .main-grid {
+        grid-template-columns: 7.5fr 4.5fr;
+      }
+    }
+
+    /* Video Player Canvas Frame */
+    .player-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .screen-canvas {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #06090e;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.75rem;
+      overflow: hidden;
+    }
+
+    .scene-view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .scene-view.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scene Specific Styling */
+    .eq-hero {
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      transition: all 0.5s ease;
+    }
+
+    .lead-caption {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+
+    /* Dense textbook problem view */
+    .textbook-wall {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      text-align: left;
+      max-width: 540px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #94a3b8;
+    }
+
+    .highlight-box {
+      color: var(--accent-cyan);
+      border-left: 3px solid var(--accent-cyan);
+      padding-left: 0.75rem;
+      margin-top: 0.5rem;
+      font-weight: 600;
+    }
+
+    /* Landing Card Reveal */
+    .landing-card {
+      background: #f8fafc;
+      color: #0f172a;
+      width: 100%;
+      max-width: 520px;
+      padding: 1.5rem;
+      border-radius: 0.85rem;
+      text-align: left;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .landing-card h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent-teal);
+      color: white;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 0.5rem 1.1rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      margin-top: 0.75rem;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #0d9488;
+    }
+
+    /* Interactive tabs in demo */
+    .demo-frame {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: left;
+    }
+
+    .demo-tabs {
+      display: flex;
+      gap: 0.4rem;
+      background: rgba(11, 15, 23, 0.7);
+      padding: 0.25rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--surface-border);
+      width: fit-content;
+      margin-bottom: 0.75rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.35rem;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-cyan);
+      color: #0b0f17;
+    }
+
+    .demo-content-box {
+      background: #0e1624;
+      border: 1px solid var(--surface-border);
+      border-radius: 0.65rem;
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Practice Sandbox */
+    .practice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      max-width: 480px;
+    }
+
+    .practice-btn {
+      background: #131b28;
+      border: 1px solid #1e293b;
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .practice-btn:hover {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .practice-btn.correct {
+      border-color: var(--accent-green) !important;
+      background: rgba(16, 185, 129, 0.15) !important;
+      color: #34d399 !important;
+    }
+
+    .practice-btn.wrong {
+      border-color: var(--accent-red) !important;
+      background: rgba(239, 68, 68, 0.15) !important;
+      color: #f87171 !important;
+    }
+
+    .feedback-note {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.4rem;
+      background: #0b0f17;
+      border: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Mission SDGs */
+    .sdg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .sdg-card {
+      padding: 1rem;
+      border-radius: 0.75rem;
+      text-align: left;
+    }
+
+    .sdg-4 {
+      background: rgba(197, 25, 45, 0.15);
+      border: 1px solid rgba(197, 25, 45, 0.35);
+    }
+
+    .sdg-10 {
+      background: rgba(221, 19, 103, 0.15);
+      border: 1px solid rgba(221, 19, 103, 0.35);
+    }
+
+    .sdg-num {
+      font-size: 1.5rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    .sdg-4 .sdg-num { color: #f87171; }
+    .sdg-10 .sdg-num { color: #f472b6; }
+
+    /* Bottom Subtitles & Audio bar */
+    .subtitles-bar {
+      background: rgba(6, 9, 14, 0.95);
+      border-top: 1px solid var(--surface-border);
+      padding: 0.65rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .cc-text {
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .audio-cue {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .scrubber-track {
+      width: 100%;
+      height: 5px;
+      background: #1e293b;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .scrubber-fill {
+      height: 100%;
+      background: var(--accent-cyan);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* Playback Controls */
+    .controls-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 0.75rem;
+      padding: 0.65rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-ctrl {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-ctrl.primary {
+      background: var(--accent-teal);
+      border-color: var(--accent-teal);
+      color: white;
+    }
+
+    .btn-ctrl:hover {
+      filter: brightness(1.1);
+    }
+
+    .time-readout {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .scene-jumps {
+      display: flex;
+      gap: 0.25rem;
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 2px;
+    }
+
+    .scene-pill {
+      background: transparent;
+      border: 1px solid #1e293b;
+      color: #94a3b8;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.35rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .scene-pill.active {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    /* Side Column: Director's Notes & Verification */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 0.75rem;
+      padding: 1.15rem;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .meta-row {
+      margin-bottom: 0.65rem;
+      font-size: 0.75rem;
+    }
+
+    .meta-label {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .meta-value {
+      color: #f1f5f9;
+      font-weight: 500;
+    }
+
+    .meta-code {
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      word-break: break-all;
+    }
+
+    .takeaways-list {
+      list-style: none;
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .takeaways-list li {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+
+    .check-icon {
+      color: var(--accent-green);
+      font-weight: bold;
+    }
+
+    footer {
+      max-width: 1200px;
+      margin: 1.5rem auto 0 auto;
+      width: 100%;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--surface-border);
+      padding-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span class="badge"><span class="pulse-dot"></span> 72s Showcase Demo</span>
+        <span class="badge badge-live">Deterministic Engine Verified</span>
+      </div>
+      <h1>ConceptLens — Interactive Product Video Demo</h1>
+      <p class="subtitle">"One concept. Different ways to understand it."</p>
+    </div>
+
+    <!-- Speech & Audio Synthesis Controls -->
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <button id="toggleAudioBtn" class="btn-ctrl" onclick="toggleSpeechNarration()">
+        <span id="speechIcon">🔊</span> Narration: <span id="speechStatus" style="color:var(--accent-cyan);">Off</span>
+      </button>
+      <button class="btn-ctrl" onclick="playSignatureChime()">
+        <span>🎵</span> Test Sonic Signature
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewport & Production Notes Grid -->
+  <main class="main-grid">
+    
+    <!-- Video Player Column -->
+    <div class="player-container">
+      
+      <!-- Video Frame Screen -->
+      <div class="screen-canvas">
+        <div class="viewport" id="viewport">
+          
+          <!-- Scene 1: The Hook (0 - 6s) -->
+          <div id="scene1" class="scene-view active">
+            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-cyan); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem;">Scene 1: The Hook</span>
+            <div id="s1Equation" class="eq-hero">2x + 3 = 11</div>
+            <p id="s1Caption" class="lead-caption">One concept.</p>
+          </div>
+
+          <!-- Scene 2: The Problem (6 - 13s) -->
+          <div id="scene2" class="scene-view">
+            <div class="textbook-wall">
+              <span style="color: #f59e0b; font-size: 0.7rem; text-transform: uppercase;">Scene 2: The Friction</span>
+              <p style="margin-top: 0.4rem; color: #cbd5e1;">
+                Linear equations require isolating variable terms by balancing inverse operations across equivalence relations. Standard formats present proof steps in dense paragraphs without alternative modalities.
+              </p>
+              <div class="highlight-box">
+                When textbooks only offer a single format, learners stall.
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 3: Meet ConceptLens (13 - 20s) -->
+          <div id="scene3" class="scene-view">
+            <div class="landing-card">
+              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-teal); font-weight: 700; text-transform: uppercase;">Scene 3: The Arrival</span>
+              <h2>Learn anything. Your way.</h2>
+              <p style="font-size: 0.8rem; color: #475569; margin-bottom: 0.6rem;">
+                ConceptLens adapts supported educational material to your selected presentation preferences.
+              </p>
+              <div style="background: #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 0.4rem; font-family: var(--font-mono); font-size: 0.75rem; color: #1e293b;">
+                <strong>Sample:</strong> Solve 2x + 3 = 11 → Check: x = 4
+              </div>
+              <button class="btn-action" onclick="jumpToScene(4)">
+                Start Learning →
+              </button>
+            </div>
+          </div>
+
+          <!-- Scene 4: Core Demonstration (20 - 36s) -->
+          <div id="scene4" class="scene-view">
+            <div class="demo-frame">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div>
+                  <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-cyan); text-transform: uppercase;">Scene 4: Core Demo</span>
+                  <div style="font-weight: 700; font-size: 0.95rem;">Solve 2x + 3 = 11</div>
+                </div>
+                <div class="demo-tabs">
+                  <button id="tabStandard" class="tab-btn active" onclick="setDemoMode('standard')">Standard</button>
+                  <button id="tabEasy" class="tab-btn" onclick="setDemoMode('easy')">Easy Read</button>
+                  <button id="tabSteps" class="tab-btn" onclick="setDemoMode('steps')">Simple Steps</button>
+                </div>
+              </div>
+
+              <div id="demoContent" class="demo-content-box">
+                <!-- Populated dynamically via JS -->
+              </div>
+
+              <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">
+                <span id="demoCallout" style="color: var(--accent-cyan); font-weight: 600; font-family: var(--font-mono);">Same question.</span>
+                <span>Deterministic checked arithmetic</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 5: Interactive Practice (36 - 47s) -->
+          <div id="scene5" class="scene-view">
+            <div style="text-align: left; width: 100%; max-width: 500px;">
+              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-green); text-transform: uppercase;">Scene 5: Active Practice</span>
+              <h3 style="font-size: 1rem; font-weight: 700; margin: 0.25rem 0 0.2rem 0;">Which operation should be undone first in 2x + 3 = 11?</h3>
+              <p style="font-size: 0.7rem; color: var(--text-muted); font-style: italic;">Note: The answer key (x = 4) is omitted until attempted.</p>
+
+              <div class="practice-grid">
+                <button class="practice-btn" onclick="handlePractice(0)">A) Subtract 3</button>
+                <button class="practice-btn" onclick="handlePractice(1)">B) Divide by 2</button>
+                <button class="practice-btn" onclick="handlePractice(2)">C) Add 3</button>
+                <button class="practice-btn" onclick="handlePractice(3)">D) Multiply by 2</button>
+              </div>
+
+              <div id="practiceFeedback" class="feedback-note">
+                Select an option above to trigger verified feedback.
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 6: Accessibility by Choice (47 - 57s) -->
+          <div id="scene6" class="scene-view">
+            <div style="text-align: left; width: 100%; max-width: 520px;">
+              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-purple); text-transform: uppercase;">Scene 6: Accessibility by Choice</span>
+              <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.65rem;">Accessibility isn't one setting. Choose what works for you.</h3>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                <div style="background: #131b28; border: 1px solid #1e293b; padding: 0.65rem; border-radius: 0.5rem;">
+                  <span style="color: var(--accent-teal); font-weight: 700; font-size: 0.75rem;">Dyslexia</span>
+                  <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">Large scale & relaxed line height.</p>
+                </div>
+                <div style="background: #131b28; border: 1px solid #1e293b; padding: 0.65rem; border-radius: 0.5rem;">
+                  <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.75rem;">Speech-Free</span>
+                  <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">Removes audio cues for calm focus.</p>
+                </div>
+                <div style="background: #131b28; border: 1px solid #1e293b; padding: 0.65rem; border-radius: 0.5rem;">
+                  <span style="color: #f59e0b; font-weight: 700; font-size: 0.75rem;">Low-Stim</span>
+                  <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">Distraction-free quiet interface.</p>
+                </div>
+              </div>
+              <p style="font-size: 0.7rem; color: var(--text-muted); font-style: italic; margin-top: 0.6rem;">
+                Preferences are choices, not medical diagnoses.
+              </p>
+            </div>
+          </div>
+
+          <!-- Scene 7: Our Mission (57 - 65s) -->
+          <div id="scene7" class="scene-view">
+            <div style="text-align: left; width: 100%; max-width: 520px;">
+              <span style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--accent-cyan); text-transform: uppercase;">Scene 7: Our Mission</span>
+              <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.65rem;">More ways to engage with learning.</h3>
+
+              <div class="sdg-grid">
+                <div class="sdg-card sdg-4">
+                  <div class="sdg-num">4</div>
+                  <h4 style="font-size: 0.8rem; font-weight: 700; color: white;">Quality Education</h4>
+                  <p style="font-size: 0.7rem; color: #cbd5e1; margin-top: 0.2rem;">Accessible, equitable learning tailored to learner presentation preferences.</p>
+                </div>
+                <div class="sdg-card sdg-10">
+                  <div class="sdg-num">10</div>
+                  <h4 style="font-size: 0.8rem; font-weight: 700; color: white;">Reduced Inequalities</h4>
+                  <p style="font-size: 0.7rem; color: #cbd5e1; margin-top: 0.2rem;">Eliminating barriers created by rigid, monolithic textbook formats.</p>
+                </div>
+              </div>
+              <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.5rem;">
+                ConceptLens aims to support these goals. Not endorsed by the United Nations.
+              </p>
+            </div>
+          </div>
+
+          <!-- Scene 8: The Final Frame (65 - 72s) -->
+          <div id="scene8" class="scene-view">
+            <div style="width: 44px; height: 44px; border-radius: 0.75rem; background: linear-gradient(135deg, var(--accent-teal), var(--accent-cyan)); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0b0f17; font-size: 1.1rem; margin-bottom: 0.5rem;">
+              CL
+            </div>
+            <h2 style="font-size: 1.75rem; font-weight: 900; letter-spacing: -0.02em;">CONCEPTLENS</h2>
+            <p style="color: var(--accent-teal); font-weight: 600; font-size: 0.95rem; margin: 0.2rem 0;">"Learn anything. Your way."</p>
+            <p style="color: var(--text-muted); font-size: 0.75rem;">One concept. Different ways to understand it.</p>
+            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: #64748b; margin-top: 0.75rem;">github.com/LovelySharma-dev/ConceptLens</span>
+          </div>
+
+        </div>
+
+        <!-- Video Captions Overlay -->
+        <div class="subtitles-bar">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-family: var(--font-mono); font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); padding: 0.15rem 0.4rem; border-radius: 0.2rem; font-weight: 700;">CC</span>
+            <span id="ccText" class="cc-text">"One concept. Different ways to understand it."</span>
+          </div>
+          <div id="cueText" class="audio-cue">
+            <span class="pulse-dot"></span> <span>Audio: Low piano pulse (Db)</span>
+          </div>
+        </div>
+
+        <!-- Scrubber Track -->
+        <div class="scrubber-track" onclick="seekClick(event)">
+          <div id="scrubberFill" class="scrubber-fill"></div>
+        </div>
+      </div>
+
+      <!-- Playback Controls Bar -->
+      <div class="controls-panel">
+        <div class="ctrl-group">
+          <button id="playPauseBtn" class="btn-ctrl primary" onclick="togglePlay()">
+            <span id="playIcon">▶ Play</span>
+          </button>
+          <button class="btn-ctrl" onclick="resetVideo()">Reset</button>
+          <span id="timecode" class="time-readout">00:00 / 01:12</span>
+        </div>
+
+        <!-- Scene Jump Buttons -->
+        <div class="scene-jumps">
+          <button class="scene-pill active" onclick="jumpToScene(1)">1: Hook</button>
+          <button class="scene-pill" onclick="jumpToScene(2)">2: Problem</button>
+          <button class="scene-pill" onclick="jumpToScene(3)">3: Arrival</button>
+          <button class="scene-pill" onclick="jumpToScene(4)">4: Core</button>
+          <button class="scene-pill" onclick="jumpToScene(5)">5: Practice</button>
+          <button class="scene-pill" onclick="jumpToScene(6)">6: Access</button>
+          <button class="scene-pill" onclick="jumpToScene(7)">7: Mission</button>
+          <button class="scene-pill" onclick="jumpToScene(8)">8: Final</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Production Notes & Truthfulness Verification Sidebar -->
+    <aside class="sidebar">
+      
+      <!-- Current Scene Metadata -->
+      <div class="card">
+        <div class="card-title">
+          <span>Director's Log</span>
+          <span id="sceneBadge" class="badge">Scene 1 (0–6s)</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Camera & Motion:</span>
+          <span id="cameraMeta" class="meta-value">Static macro framing on deep slate (#0B0F17). Focus on raw equation typography.</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Audio Design Stem:</span>
+          <span id="audioMeta" class="meta-value">Sub-bass 45Hz pulse, tape-filtered acoustic piano chord in Db.</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Codebase Verification:</span>
+          <span id="codeMeta" class="meta-code">shared/src/learning/materials.ts (Linear solver)</span>
+        </div>
+      </div>
+
+      <!-- 5 Key Takeaways Checklist -->
+      <div class="card">
+        <div class="card-title">Core Video Takeaways</div>
+        <ul class="takeaways-list">
+          <li>
+            <span class="check-icon">✓</span>
+            <span><strong>1. Problem:</strong> Static textbook presentations fail diverse learners.</span>
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            <span><strong>2. Agency:</strong> Learners choose how material is structured.</span>
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            <span><strong>3. Real Differences:</strong> Standard, Easy Read, and Simple Steps on 2x + 3 = 11.</span>
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            <span><strong>4. Guided Practice:</strong> Rule-based checks without pre-revealing answers.</span>
+          </li>
+          <li>
+            <span class="check-icon">✓</span>
+            <span><strong>5. Real Software:</strong> 100% verified deterministic code—no fake AI mockups.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Technical Integrity Notice -->
+      <div class="card" style="font-size: 0.75rem; color: #94a3b8; border-color: rgba(20, 184, 166, 0.3);">
+        <strong style="color: #f1f5f9; display: block; margin-bottom: 0.25rem;">⚖️ Technical Honesty Mandate</strong>
+        The Python and TypeScript engines are strictly rule-based arithmetic solvers and keyword classifiers. No proprietary deep learning models are claimed.
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    ConceptLens — SheBuilds Hacktoberfest HackDays 2026 • Aligned with UN SDGs 4 & 10 (Not endorsed by the UN)
+  </footer>
+
+  <!-- Script Logic -->
+  <script>
+    const TOTAL_SECONDS = 72;
+    let currentTime = 0;
+    let isPlaying = false;
+    let playTimer = null;
+    let audioContext = null;
+    let speechEnabled = false;
+
+    const SCENES = [
+      { id: 1, start: 0, end: 6, title: "Scene 1: The Hook",
+        camera: "Static macro framing on deep slate (#0B0F17). Focus on raw equation typography.",
+        audio: "Sub-bass 45Hz pulse, tape-filtered acoustic piano chord in Db.",
+        code: "shared/src/learning/materials.ts (2x + 3 = 11)",
+        caption: "One concept. Different ways to understand it.",
+        speechText: "One concept. Different ways to understand it.",
+        cue: "Low piano pulse (Db)"
+      },
+      { id: 2, start: 6, end: 13, title: "Scene 2: The Problem",
+        camera: "Gentle pull-out from 120% zoom to 100%. Dense textbook layout breathing into whitespace.",
+        audio: "Piano motif starts quiet arpeggio; friction resolves to open space.",
+        code: "client/src/index.css (Editorial typography & line spacing)",
+        caption: "Learning isn't one-size-fits-all. When textbooks only offer a single format, learners get left behind.",
+        speechText: "Learning isn't one-size-fits-all. When textbooks only offer a single format, learners get left behind.",
+        cue: "Gentle piano momentum"
+      },
+      { id: 3, start: 13, end: 20, title: "Scene 3: The Arrival",
+        camera: "Camera push-in (100% to 115%) focusing on Hero headline and math sample preview card.",
+        audio: "Warm acoustic bass entrance; crisp tactile relay click on 'Start Learning'.",
+        code: "client/src/components/home/HomeNarrative.tsx (Hero & preview card)",
+        caption: "Meet ConceptLens. An accessible learning platform built to adapt educational material to you.",
+        speechText: "Meet ConceptLens. An accessible learning platform built to adapt educational material to you.",
+        cue: "Warm bass lift"
+      },
+      { id: 4, start: 20, end: 36, title: "Scene 4: Core Demonstration",
+        camera: "Crisp capture focused on real three-column comparison & workspace mode toggles.",
+        audio: "Steady rhythmic synth pulse begins. 82 BPM clockwork precision.",
+        code: "client/src/components/learn/GuidedDemo.tsx (Standard vs Easy Read vs Simple Steps)",
+        caption: "Same question. Different presentation. Your pace.",
+        speechText: "Take a foundational equation: 2x plus 3 equals 11. Switch seamlessly from standard academic text, to plain-language Easy Read, or step-by-step Simple Steps.",
+        cue: "Rhythmic UI clicks & pulse"
+      },
+      { id: 5, start: 36, end: 47, title: "Scene 5: Interactive Practice",
+        camera: "Focused crop on Practice Sandbox fieldset; correct answer omitted until attempted.",
+        audio: "Woodblock tap on selection, uplifting harmonic chime on verified correct answer.",
+        code: "shared/src/learning/materials.ts (linearPractice without pre-revealed keys)",
+        caption: "Understand. Try. Learn from the next step.",
+        speechText: "Understand, try, and learn from rule-based checks that guide you without giving away the answer.",
+        cue: "Woodblock tap & success chime"
+      },
+      { id: 6, start: 47, end: 57, title: "Scene 6: Accessibility by Choice",
+        camera: "Split-screen editorial layout: Preference switches on left, live app transformations on right.",
+        audio: "Layered organic clicks synced to each toggle; broad warm piano voicings.",
+        code: "shared/src/learning/themes.ts (dyslexia, speech-free, low-stim)",
+        caption: "Accessibility isn't one setting. Choose what works for you.",
+        speechText: "Accessibility isn't a single setting. Choose dyslexia-friendly spacing, speech-free quiet, or low-stimulation views.",
+        cue: "Layered harmonic progression"
+      },
+      { id: 7, start: 57, end: 65, title: "Scene 7: Our Mission",
+        camera: "Slow, elegant pan across restrained editorial cards for UN SDGs 4 & 10.",
+        audio: "Music reaches emotional apex; lush piano, gentle strings, resonant low-end.",
+        code: "client/src/components/home/HomeNarrative.tsx (SDG 4 & SDG 10 cards)",
+        caption: "Building toward United Nations Goals 4 and 10—because every learner deserves a fair opportunity.",
+        speechText: "Aligned with United Nations Goals 4 and 10, because every learner deserves a fair opportunity to understand.",
+        cue: "Warm resonant finish"
+      },
+      { id: 8, start: 65, end: 72, title: "Scene 8: The Final Frame",
+        camera: "Centered static lock. Equation resolves into x = 4, dissolves into clean ConceptLens branding.",
+        audio: "Pure three-note signature chime (Db5 - Ab5 - F6) with warm analog reverb tail into silence.",
+        code: "Brand signature: ConceptLens — Learn anything. Your way.",
+        caption: "CONCEPTLENS — Learn anything. Your way. One concept. Different ways to understand it.",
+        speechText: "ConceptLens. Learn anything. Your way.",
+        cue: "Signature 3-Note Chime"
+      }
+    ];
+
+    const DEMO_MODES = {
+      standard: {
+        title: "Standard Academic Presentation",
+        body: "The source writes 2x + 3 = 11. The solution is a value of x, not the equation itself. Subtract 3 from both sides to isolate the variable term, then divide both sides by 2 to solve for x.",
+        callout: "Same question.",
+        steps: "4 of 4 steps visible. Full academic phrasing."
+      },
+      easy: {
+        title: "Easy Read (Plain Language)",
+        body: "2x + 3 = 11 means both sides are equal. An equation says two amounts match. The letter x is a variable. Undo the added 3 first. Subtract 3 from both sides. Then divide both sides by 2. x is 4.",
+        callout: "Different presentation.",
+        steps: "Short sentences, plain vocabulary."
+      },
+      steps: {
+        title: "Simple Steps (Isolated Progression)",
+        body: "Step 1 of 4: Subtract 3 from both sides.\nResult: 2x = 8.\n[Next step: Divide both sides by 2 → x = 4]",
+        callout: "Your pace.",
+        steps: "1 of 4 steps visible at a time."
+      }
+    };
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playTone(freq, duration, type = 'sine', gainVal = 0.15) {
+      try {
+        initAudio();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + duration);
+      } catch(e) {}
+    }
+
+    function playSignatureChime() {
+      initAudio();
+      // Three-note signature chime: Db5 (554.37Hz), Ab5 (830.61Hz), F6 (1396.91Hz)
+      playTone(554.37, 1.2, 'triangle', 0.18);
+      setTimeout(() => playTone(830.61, 1.4, 'triangle', 0.15), 180);
+      setTimeout(() => playTone(1396.91, 1.8, 'sine', 0.12), 360);
+    }
+
+    function playClick() {
+      playTone(1200, 0.04, 'triangle', 0.08);
+    }
+
+    function playSuccess() {
+      playTone(523.25, 0.3, 'sine', 0.15); // C5
+      setTimeout(() => playTone(659.25, 0.5, 'sine', 0.15), 120); // E5
+    }
+
+    function toggleSpeechNarration() {
+      speechEnabled = !speechEnabled;
+      document.getElementById('speechStatus').textContent = speechEnabled ? 'On' : 'Off';
+      document.getElementById('speechStatus').style.color = speechEnabled ? 'var(--accent-green)' : 'var(--accent-cyan)';
+      if (speechEnabled) {
+        speakCurrentScene();
+      } else {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakText(text) {
+      if (!speechEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.05;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    let lastSpokenSceneId = null;
+    function speakCurrentScene() {
+      const scene = SCENES.find(s => currentTime >= s.start && currentTime < s.end) || SCENES[SCENES.length - 1];
+      if (scene && scene.id !== lastSpokenSceneId) {
+        lastSpokenSceneId = scene.id;
+        speakText(scene.speechText);
+      }
+    }
+
+    function setDemoMode(modeKey) {
+      playClick();
+      const mode = DEMO_MODES[modeKey];
+      const box = document.getElementById('demoContent');
+      box.innerHTML = `
+        <div style="font-weight: 700; color: var(--accent-teal); font-size: 0.8rem; margin-bottom: 0.25rem;">${mode.title}</div>
+        <p style="white-space: pre-line; color: #cbd5e1; font-size: 0.8rem; line-height: 1.5; font-family: var(--font-mono);">${mode.body}</p>
+        <span style="font-size: 0.65rem; color: #64748b; font-family: var(--font-mono); margin-top: 0.4rem; display: block;">${mode.steps}</span>
+      `;
+      document.getElementById('demoCallout').textContent = mode.callout;
+      ['standard', 'easy', 'steps'].forEach(key => {
+        const btn = document.getElementById('tab' + key.charAt(0).toUpperCase() + key.slice(1));
+        if (btn) {
+          if (key === modeKey) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+    }
+
+    function handlePractice(index) {
+      const feedback = document.getElementById('practiceFeedback');
+      const buttons = document.querySelectorAll('.practice-btn');
+      buttons.forEach(b => b.classList.remove('correct', 'wrong'));
+
+      if (index === 0) { // Subtract 3 (Correct)
+        playSuccess();
+        buttons[0].classList.add('correct');
+        feedback.innerHTML = '<span style="color: var(--accent-green); font-weight: bold;">✓ Correct.</span> That is the operation to undo first.';
+      } else {
+        playTone(220, 0.15, 'sawtooth', 0.08);
+        buttons[index].classList.add('wrong');
+        feedback.innerHTML = '<span style="color: var(--accent-red); font-weight: bold;">✗ Not quite.</span> Undo the added constant (3) before dividing.';
+      }
+    }
+
+    function updateView(time) {
+      const scene = SCENES.find(s => time >= s.start && time < s.end) || SCENES[SCENES.length - 1];
+
+      // Switch active scene view
+      for (let i = 1; i <= 8; i++) {
+        const el = document.getElementById(`scene${i}`);
+        if (el) {
+          if (i === scene.id) el.classList.add('active');
+          else el.classList.remove('active');
+        }
+      }
+
+      // Micro-animations within scenes
+      if (scene.id === 1) {
+        const eq = document.getElementById('s1Equation');
+        const cap = document.getElementById('s1Caption');
+        if (time >= 3.2) {
+          eq.textContent = "Undo 3 first → Subtract 3";
+          cap.textContent = "Different ways to understand it.";
+        } else {
+          eq.textContent = "2x + 3 = 11";
+          cap.textContent = "One concept.";
+        }
+      }
+
+      if (scene.id === 4) {
+        if (time < 25) setDemoMode('standard');
+        else if (time < 30) setDemoMode('easy');
+        else setDemoMode('steps');
+      }
+
+      if (scene.id === 8 && time >= 66 && time < 67) {
+        playSignatureChime();
+      }
+
+      // Update Subtitles & Audio Cue
+      document.getElementById('ccText').textContent = `"${scene.caption}"`;
+      document.getElementById('cueText').innerHTML = `<span class="pulse-dot"></span> Audio: ${scene.cue}`;
+
+      // Update Scrubber
+      const pct = (time / TOTAL_SECONDS) * 100;
+      document.getElementById('scrubberFill').style.width = `${pct}%`;
+
+      // Update Timecode
+      const mins = Math.floor(time / 60).toString().padStart(2, '0');
+      const secs = Math.floor(time % 60).toString().padStart(2, '0');
+      document.getElementById('timecode').textContent = `${mins}:${secs} / 01:12`;
+
+      // Update Scene Pills
+      const pills = document.querySelectorAll('.scene-pill');
+      pills.forEach((pill, idx) => {
+        if (idx + 1 === scene.id) pill.classList.add('active');
+        else pill.classList.remove('active');
+      });
+
+      // Update Director's Notes
+      document.getElementById('sceneBadge').textContent = `${scene.title} (${scene.start}–${scene.end}s)`;
+      document.getElementById('cameraMeta').textContent = scene.camera;
+      document.getElementById('audioMeta').textContent = scene.audio;
+      document.getElementById('codeMeta').textContent = scene.code;
+
+      if (speechEnabled) {
+        speakCurrentScene();
+      }
+    }
+
+    function togglePlay() {
+      initAudio();
+      if (isPlaying) {
+        pauseVideo();
+      } else {
+        playVideo();
+      }
+    }
+
+    function playVideo() {
+      isPlaying = true;
+      document.getElementById('playIcon').textContent = '⏸ Pause';
+      playTimer = setInterval(() => {
+        currentTime += 0.5;
+        if (currentTime >= TOTAL_SECONDS) {
+          currentTime = 0;
+        }
+        updateView(currentTime);
+      }, 500);
+    }
+
+    function pauseVideo() {
+      isPlaying = false;
+      document.getElementById('playIcon').textContent = '▶ Play';
+      clearInterval(playTimer);
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    }
+
+    function resetVideo() {
+      pauseVideo();
+      currentTime = 0;
+      lastSpokenSceneId = null;
+      updateView(0);
+    }
+
+    function jumpToScene(id) {
+      initAudio();
+      const scene = SCENES.find(s => s.id === id);
+      if (scene) {
+        currentTime = scene.start;
+        lastSpokenSceneId = null;
+        updateView(currentTime);
+      }
+    }
+
+    function seekClick(event) {
+      initAudio();
+      const rect = event.currentTarget.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+      currentTime = ratio * TOTAL_SECONDS;
+      lastSpokenSceneId = null;
+      updateView(currentTime);
+    }
+
+    // Default initialization
+    setDemoMode('standard');
+    updateView(0);
+  </script>
+</body>
+</html>
