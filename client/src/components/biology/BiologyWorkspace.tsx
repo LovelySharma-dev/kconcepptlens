@@ -741,7 +741,13 @@ export const BiologyWorkspace: React.FC<BiologyWorkspaceProps> = ({
               />
             )}
             {showDiagram && lesson.id === 'human_cell' && (
-              <Cell2DCanvas selectedComponentId={selectedComponentId} onSelectComponent={handleSelectComponent} showLabels={showLabels} />
+              <Cell2DCanvas
+                selectedComponentId={selectedComponentId}
+                onSelectComponent={handleSelectComponent}
+                showLabels={showLabels}
+                onToggleLabels={() => setShowLabels((v) => !v)}
+                onAnnounce={onAnnounce}
+              />
             )}
             {showDiagram && lesson.id === 'human_heart' && (
               <Heart2DCanvas
