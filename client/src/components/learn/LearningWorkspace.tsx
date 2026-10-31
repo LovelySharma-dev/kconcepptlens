@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type {
   ContentTypeId,
   MaterialAction,
@@ -118,10 +118,13 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({
   onClearConfirm,
   onClearCancel,
   onClose,
-  onSpeechRate
+  onSpeechRate,
+  onRetryAnswer
 }) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const [showHint, setShowHint] = useState(false);
+  const [practiceStepIndex, setPracticeStepIndex] = useState(0);
 
   useEffect(() => {
     if (clearOpen) cancelRef.current?.focus();
@@ -345,6 +348,11 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({
           <section id="material-steps" className="workspace-panel" tabIndex={-1} aria-labelledby="steps-title">
             <h3 id="steps-title">Learning steps</h3>
             {visibleSteps.length === 0 && <p>No separate steps are stored. The explanation above is the whole lesson.</p>}
+            {explanation.steps.length > 0 && (
+              <p className="step-progress-label" aria-live="polite">
+                Step {stepIndex + 1} of {explanation.steps.length}
+              </p>
+            )}
             <ol>
               {visibleSteps.map((step) => (
                 <li key={step.index} aria-current={step.index === stepIndex ? 'step' : undefined}>
@@ -356,14 +364,29 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({
             </ol>
             {explanation.steps.length > 1 && (
               <div className="workspace-actions">
-                <button type="button" className="btn-secondary" onClick={() => onStep(Math.max(0, stepIndex - 1))} disabled={stepIndex === 0}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => onStep(Math.max(0, stepIndex - 1))}
+                  disabled={stepIndex === 0}
+                  aria-label="Previous step"
+                >
                   Previous step
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => onStep(stepIndex)}
+                  aria-label={`Repeat step ${stepIndex + 1}`}
+                >
+                  Repeat step
                 </button>
                 <button
                   type="button"
                   className="btn-secondary"
                   onClick={() => onStep(Math.min(explanation.steps.length - 1, stepIndex + 1))}
                   disabled={stepIndex >= explanation.steps.length - 1}
+                  aria-label="Next step"
                 >
                   Next step
                 </button>
@@ -373,30 +396,157 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({
 
           <section id="material-practice" className="workspace-panel" tabIndex={-1} aria-labelledby="practice-title">
             <h3 id="practice-title">Practice</h3>
-            {presented.hint && <p>Hint: {presented.hint}</p>}
-            {explanation.practice.length === 0 && <p>No practice question is stored for this material.</p>}
-            {explanation.practice.map((question) => (
-              <fieldset key={question.id}>
-                <legend>{question.prompt}</legend>
-                {question.options.map((option, index) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className="btn-secondary choice"
-                    onClick={() => onAnswer(question.id, index)}
-                    disabled={busy}
-                  >
-                    {option}
-                  </button>
-                ))}
-                {answerState?.questionId === question.id && (
-                  <p role="status">
-                    {answerState.correct ? 'Correct. ' : 'Not the stored answer. '}
-                    {answerState.explanation} {answerState.why}
-                  </p>
+            {explanation.practice.length === 0 ? (
+              <p>No practice question is stored for this material. A clear limitation is stated: specialized practice is available for supported linear equations, arithmetic, thin-lens physics, accumulator code, and biology structures.</p>
+            ) : (
+              <div>
+                {explanation.practice.length > 1 && (
+                  <div className="practice-progression-nav" role="tablist" aria-label="Practice progression steps" style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                    {explanation.practice.map((q, idx) => {
+                      const isCompleted = evidence.attempts.some(a => a.questionId === q.id && a.correct);
+                      const isCurrent = idx === practiceStepIndex;
+                      return (
+                        <button
+                          key={q.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={isCurrent}
+                          className={`btn-secondary ${isCurrent ? 'active' : ''}`}
+                          style={{
+                            fontSize: '0.8rem',
+                            padding: '0.3rem 0.6rem',
+                            borderColor: isCurrent ? 'var(--accent-cyan)' : undefined,
+                            background: isCompleted ? 'rgba(34, 197, 94, 0.15)' : undefined
+                          }}
+                          onClick={() => {
+                            setPracticeStepIndex(idx);
+                            setShowHint(false);
+                            onRetryAnswer?.();
+                          }}
+                        >
+                          {isCompleted ? '✓ ' : ''}{idx + 1}. {q.stage}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </fieldset>
-            ))}
+
+                {(() => {
+                  const activeQuestion = explanation.practice[practiceStepIndex] ?? explanation.practice[0];
+                  if (!activeQuestion) return null;
+                  const isAnsweredForActive = answerState?.questionId === activeQuestion.id;
+
+                  return (
+                    <fieldset key={activeQuestion.id}>
+                      <legend>
+                        <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                          Step {practiceStepIndex + 1} of {explanation.practice.length} • Stage: {activeQuestion.stage}
+                        </span>
+                        <strong>{activeQuestion.prompt}</strong>
+                      </legend>
+
+                      <div className="options-grid" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.75rem' }}>
+                        {activeQuestion.options.map((option, index) => (
+                          <button
+                            key={option}
+                            type="button"
+                            className="btn-secondary choice"
+                            onClick={() => onAnswer(activeQuestion.id, index)}
+                            disabled={busy}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+
+                      {activeQuestion.hint && (
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}
+                            onClick={() => setShowHint(prev => !prev)}
+                            aria-expanded={showHint}
+                          >
+                            {showHint ? 'Hide hint' : 'Request a hint'}
+                          </button>
+                          {showHint && (
+                            <p className="practice-hint" role="note" style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                              <strong>Hint: </strong>{activeQuestion.hint}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {isAnsweredForActive && (
+                        <div
+                          role="status"
+                          style={{
+                            marginTop: '1rem',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '8px',
+                            background: answerState.correct ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            border: `1px solid ${answerState.correct ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
+                          }}
+                        >
+                          <p style={{ margin: 0, fontWeight: 600 }}>
+                            {answerState.correct ? '✓ Correct! ' : '✗ Not the stored answer. '}
+                          </p>
+                          <p style={{ margin: '0.35rem 0' }}>
+                            {answerState.explanation} {answerState.why}
+                          </p>
+                          <div className="workspace-actions" style={{ marginTop: '0.75rem', gap: '0.5rem' }}>
+                            {!answerState.correct && (
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => onRetryAnswer?.()}
+                              >
+                                Retry this question
+                              </button>
+                            )}
+                            {!answerState.correct && !showHint && activeQuestion.hint && (
+                              <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => setShowHint(true)}
+                              >
+                                Request hint
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="btn-secondary"
+                              onClick={() => {
+                                onStep(activeQuestion.relatedStepIndex);
+                                onPanel('steps');
+                                document.getElementById('material-steps')?.focus();
+                              }}
+                            >
+                              Review relevant step ({activeQuestion.relatedStepIndex + 1})
+                            </button>
+                            {answerState.correct && practiceStepIndex < explanation.practice.length - 1 && (
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={() => {
+                                  const nextIdx = practiceStepIndex + 1;
+                                  setPracticeStepIndex(nextIdx);
+                                  setShowHint(false);
+                                  onRetryAnswer?.();
+                                }}
+                              >
+                                Next practice step: {explanation.practice[practiceStepIndex + 1].stage}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </fieldset>
+                  );
+                })()}
+              </div>
+            )}
           </section>
 
           <section id="material-progress" className="workspace-panel" tabIndex={-1} aria-labelledby="progress-title">

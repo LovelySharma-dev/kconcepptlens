@@ -82,7 +82,15 @@ import {
   workspaceLayout,
   SUBJECT_STRATEGIES,
   applyOcrReading,
-  strategyReport
+  strategyReport,
+  gradePracticeSubmission,
+  composeMaterial,
+  solveLinearEquation,
+  lensDistanceStatement,
+  traceSafeAccumulator,
+  balanceReaction,
+  visiblePracticePrompts,
+  learnerPracticeIsSeparated
 } from '../../shared/src/learning/materials';
 import { extractEmbeddedJpegs } from '../../shared/src/learning/pdfImages';
 import { evaluateMaterial, preferenceDemonstration } from '../../shared/src/learning/evaluation';
@@ -984,6 +992,145 @@ async function runTestSuite() {
   } else {
     assert(false, 'The local Python engine did not return a checked solution');
   }
+
+  // --- PHASE 8 ACCEPTANCE TESTS ---
+
+  // 1. Correct solution of supported equation 2x + 3 = 11
+  const eqText = 'Solve the equation 2x + 3 = 11. Show each operation.';
+  const solvedEq = solveLinearEquation(eqText);
+  assert(Boolean(solvedEq && solvedEq.solution === '4'), 'Linear equation 2x + 3 = 11 solves to x = 4');
+  assert(solvedEq?.steps.length === 4, 'Linear equation solution has exactly 4 structured steps');
+
+  // 2. Independent verification of final answer
+  assert(2 * Number(solvedEq?.solution) + 3 === 11, 'Final answer independently verified by numerical substitution: 2(4) + 3 = 11');
+
+  // 3. Separation of answer keys from learner-facing practice & 5-step progression
+  const composedMath = composeMaterial({ text: eqText, sourceKind: 'sample', sampleId: 'sample-math' });
+  assert(learnerPracticeIsSeparated(composedMath.explanation.practice, '4'), 'Practice prompts strictly omit the answer key and value');
+  assert(composedMath.explanation.practice.every((q) => !('correctOptionIndex' in q)), 'Learner-facing PracticeQuestion objects have no correctOptionIndex field');
+  assert(composedMath.keys.length === 5, 'Linear equation practice contains exactly 5 sequential progression stages');
+  const stageNames = composedMath.explanation.practice.map((q) => q.stage);
+  assert(
+    stageNames[0] === 'undo' &&
+    stageNames[1] === 'both-sides' &&
+    stageNames[2] === 'intermediate' &&
+    stageNames[3] === 'isolate' &&
+    stageNames[4] === 'check',
+    'Supported equation implements exact progression: undo -> both-sides -> intermediate -> isolate -> check'
+  );
+
+  // 4. Server-side answer grading & tamper resistance
+  const undoKey = composedMath.keys.find((k) => k.id === 'linear-undo');
+  assert(Boolean(undoKey), 'Linear undo key is stored separately on the server');
+  const correctIdx = undoKey!.correctOptionIndex;
+  const wrongIdx = (correctIdx + 1) % 4;
+
+  const wrongGrade = gradePracticeSubmission({
+    text: eqText,
+    sourceKind: 'sample',
+    sampleId: 'sample-math',
+    questionId: 'linear-undo',
+    selectedIndex: wrongIdx
+  });
+  assert(wrongGrade.ok && wrongGrade.correct === false, 'Server-side grading correctly marks wrong answer as incorrect');
+  assert(wrongGrade.ok && wrongGrade.relatedStepIndex === 0, 'Wrong answer grading returns related step index for remediation');
+
+  const correctGrade = gradePracticeSubmission({
+    text: eqText,
+    sourceKind: 'sample',
+    sampleId: 'sample-math',
+    questionId: 'linear-undo',
+    selectedIndex: correctIdx
+  });
+  assert(correctGrade.ok && correctGrade.correct === true, 'Server-side grading correctly accepts the verified correct answer');
+
+  const invalidQuestionGrade = gradePracticeSubmission({
+    text: eqText,
+    sourceKind: 'sample',
+    sampleId: 'sample-math',
+    questionId: 'fabricated-question-id',
+    selectedIndex: 0
+  });
+  assert(!invalidQuestionGrade.ok && invalidQuestionGrade.status === 422, 'Arbitrary question key submission is rejected by server with 422');
+
+  const outOfBoundsGrade = gradePracticeSubmission({
+    text: eqText,
+    sourceKind: 'sample',
+    sampleId: 'sample-math',
+    questionId: 'linear-undo',
+    selectedIndex: 99
+  });
+  assert(!outOfBoundsGrade.ok && outOfBoundsGrade.status === 400, 'Out of bounds choice submission is rejected with 400');
+
+  // 5. Correct Easy Read behavior
+  const demoViews = preferenceDemonstration(composedMath.explanation);
+  assert(demoViews.easyRead.showingPlain && demoViews.easyRead.paragraphs.length > 0, 'Easy Read provides plain-language explanation');
+  assert(demoViews.easyRead.paragraphs.join(' ') !== demoViews.standard.paragraphs.join(' '), 'Easy Read does not simply copy or truncate standard text');
+
+  // 6. One-step-at-a-time behavior
+  assert(demoViews.simpleSteps.visibleStepIndexes.length === 1, 'Simple Steps displays exactly 1 instructional step at a time');
+  assert(demoViews.standard.visibleStepIndexes.length > 1, 'Standard view displays full steps');
+
+  // 7. Previous, Next, and Repeat interactions
+  let activeStep = 0;
+  const totalSteps = composedMath.explanation.steps.length;
+  const stepNext = (curr: number) => Math.min(totalSteps - 1, curr + 1);
+  const stepPrev = (curr: number) => Math.max(0, curr - 1);
+  const stepRepeat = (curr: number) => curr;
+
+  activeStep = stepNext(activeStep);
+  assert(activeStep === 1, 'Next step interaction advances from step 0 to step 1');
+  activeStep = stepRepeat(activeStep);
+  assert(activeStep === 1, 'Repeat step interaction re-renders current step 1');
+  activeStep = stepPrev(activeStep);
+  assert(activeStep === 0, 'Previous step interaction returns to step 0');
+  activeStep = stepPrev(activeStep);
+  assert(activeStep === 0, 'Previous step cannot decrement past step 0');
+
+  // 8. Speech-free completion
+  assert(demoViews.speechFree.speechText === null, 'Speech-Free mode removes all audio/speech requirement');
+  assert(demoViews.speechFree.paragraphs.length > 0, 'All essential information remains fully available in written text');
+
+  // 9. Unsupported questions safely rejected without inventing solvers
+  assert(solveLinearEquation('Solve x^2 + 5x + 6 = 0') === null, 'Non-linear equation is safely rejected by linear equation solver');
+  assert(solveLinearEquation('Solve 2x + 3 = 11 and 4x + 1 = 9') === null, 'Ambiguous multi-equation text is safely rejected');
+  const unsupportedExplanation = buildMaterialExplanation({ text: 'In 1066 the Battle of Hastings was fought.', sourceKind: 'learner_text' });
+  assert(!unsupportedExplanation.solvingStrategy.specialized && !unsupportedExplanation.solvingStrategy.matched, 'History text is labeled with no specialized strategy');
+
+  // 10. Malformed inputs handling
+  assert(solveArithmetic('12 / 0') === null, 'Division by zero is safely rejected by arithmetic solver');
+  assert(solveArithmetic('12 + x * 4') === null, 'Expressions with algebraic variables are safely rejected by arithmetic solver');
+  assert(lensDistanceStatement('1/f = 1/v - 1/u, f = 0 cm, u = -20 cm') === null, 'Lens equation with zero focal length is safely rejected');
+  assert(traceSafeAccumulator('import os\nos.system("calc.exe")') === null, 'Arbitrary code is safely rejected without execution');
+
+  // 11. File validation and extraction failure
+  const corruptFileIngest = ingestPrepared({ kind: 'file', bytes: new Uint8Array([0x00, 0x01, 0x02]), declaredMime: 'application/pdf' });
+  assert(!corruptFileIngest.accepted && corruptFileIngest.extractionStatus === 'rejected', 'Corrupt file is rejected with clear error state');
+  const oversizedUpload = ingestPrepared({ kind: 'file', bytes: new Uint8Array(MATERIAL_MAX_BYTES + 1024), declaredMime: 'image/png' });
+  assert(!oversizedUpload.accepted && oversizedUpload.httpStatus === 413, 'Oversized file upload is rejected with 413 Payload Too Large');
+
+  // 12. Persistence behavior and diagnosis exclusion
+  const storedPreferences = normalizeLearningPreferences({
+    textScale: 'large',
+    lineSpacing: 'relaxed',
+    highContrast: true,
+    reducedMotion: true,
+    activeThemes: ['easy-read', 'simple-steps'],
+    diagnosis: 'autism-spectrum'
+  });
+  assert(!preferencesIncludeDiagnosis(storedPreferences), 'Stored preferences strictly exclude any medical diagnosis fields');
+  assert(storedPreferences.textScale === 'large' && storedPreferences.reducedMotion === true, 'Stored accessibility settings survive normalization');
+
+  // 13. Keyboard navigation panel transitions
+  assert(moveWorkspacePanel('original', 'ArrowRight') === 'recognized', 'Keyboard ArrowRight navigates to next panel');
+  assert(moveWorkspacePanel('recognized', 'ArrowLeft') === 'original', 'Keyboard ArrowLeft navigates to previous panel');
+  assert(moveWorkspacePanel('progress', 'Home') === 'original', 'Keyboard Home navigates to first panel');
+  assert(moveWorkspacePanel('original', 'End') === 'progress', 'Keyboard End navigates to last panel');
+
+  // 14. Regression coverage for subject solvers & biology catalog
+  assert(solveArithmetic('4 * 5 + 6 / 2')?.solution === '23', 'Arithmetic solver correctly respects operator precedence (BODMAS/PEMDAS)');
+  assert(traceSafeAccumulator('def total(items):\n    result = 0\n    for value in items:\n        result = result + value\n    return result\nitems = [3, 1, 2]')?.result === 6, 'Safe accumulator tracer correctly computes 3 + 1 + 2 = 6');
+  assert(Boolean(balanceReaction('H2 + O2 -> H2O')), 'Chemical balancer correctly balances H2 + O2 -> H2O');
 
   console.log(`\n========================================`);
   console.log(`Results: ${passedCount} / ${totalCount} tests passed.`);

@@ -936,6 +936,7 @@ function linearPractice(solved: LinearSolution): Array<{ prompt: PracticeQuestio
 }
 
 export function solveLinearEquation(text: string): LinearSolution | null {
+  if (/x\s*[\^²³]|x\s*\*\*/i.test(text)) return null;
   const matches = [...text.matchAll(/(-?\d*)\s*x\s*([+-])\s*(\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)/gi)];
   if (matches.length !== 1) return null;
   const match = matches[0];

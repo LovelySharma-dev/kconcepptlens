@@ -71,6 +71,8 @@ def adjust(weights: dict, correct: bool) -> dict:
 
 
 def solve_linear(text: str):
+    if re.search(r"x\s*[\^²³]|x\s*\*\*", text, re.I):
+        return None
     match = re.search(r"(-?\d*)\s*x\s*([+-])\s*(\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)", text, re.I)
     if not match:
         return None
